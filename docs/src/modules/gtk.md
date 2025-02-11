@@ -5,7 +5,7 @@ targets for GTK themes, such as GTK2, qt6gtk2, gnome-shell, etc. are currently
 not supported.
 
 The niji theme is a modified version of the amazing [Colloid theme](https://github.com/vinceliuice/Colloid-gtk-theme)
-by vinceliuise.
+by vinceliuice.
 
 ## Activating
 
