@@ -37,12 +37,11 @@ apply the theme and config in the least invasive way possible, while `reload` do
 ## Module Config
 
 The module config, which is passed as the first parameter to both the `apply` and the `reload` handlers, is a table with string keys
-
 and arbitrary values. It comes from combining the module-specific configuration for your module with the global module configuration, both
 of which are defined in `config.toml`. See [Configuration](../configuration.md) for more information.
 
-Simple modules for personal use probably won't use this feature much, but it is recommended for modules that are used by multiple users
-and may be merged to be builtin modules use the config feature to provide options to users, and respond to certain global configuration
+Simple modules for personal use probably won't use this feature much, but it is recommended that modules which are used by multiple users
+and may be merged to be builtin modules use the config feature to provide options to users, and conform to certain global configuration
 options like `font_scale`.
 
 ## Theme
