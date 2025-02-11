@@ -32,7 +32,7 @@ file like this:
 {{% "color" : "rgba({r}, {g}, {b}, {a})" %}}
 
 .some-class {
-    background-color {{my_color}}
+    background-color: {{my_color}}
 }
 ```
 
