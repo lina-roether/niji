@@ -27,7 +27,7 @@ The module defines two handlers, `apply` and `reload`.
 The `apply` handler receives the [module config](#module-config) and the [theme](#theme) as parameters. It is responsible for
 taking the theme, transforming its contents and writing them to where they need to go for the theming target to use them.
 
-THe `reload` handler is optional. It is responsible for reloading the theming target to apply the new config. The reason why these
+The `reload` handler is optional. It is responsible for reloading the theming target to apply the new config. The reason why these
 two are separate is so that niji can more easily tell which modules support live reloading, and so that users can selectively
 disable live reloading for certain modules.
 
