@@ -318,6 +318,12 @@ by default, is located at `~/.local/share/niji/<module name>`.
 - `content`: The content to write to the file (`string`)
 - returns: The absolute path of the file that was written to (`string`)
 
+### `niji.fs.get_output_dir()`
+
+Returns the directory that `niji.fs.output` places files into.
+
+- returns: the output directory
+
 ### `niji.fs.read_config_asset(path)`
 
 Reads a file with a path relative to `.config/niji`. This is often used for things
