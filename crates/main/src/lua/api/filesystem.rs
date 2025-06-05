@@ -1,4 +1,8 @@
-use std::{fs, path::Path, rc::Rc};
+use std::{
+	fs,
+	path::{Path, PathBuf},
+	rc::Rc
+};
 
 use log::info;
 use mlua::{IntoLua, Lua};
@@ -11,11 +15,15 @@ use super::ApiModule;
 
 pub struct FilesystemApi;
 
+fn expand_path(path: &str) -> PathBuf {
+	let expanded = shellexpand::tilde(path);
+	PathBuf::from(&*expanded)
+}
+
 impl FilesystemApi {
 	fn write(lua: &Lua, (path, content): (String, String)) -> mlua::Result<String> {
 		let file_mgr = lua.app_data_ref::<Rc<FileManager>>().unwrap();
-		let expanded = shellexpand::tilde(&path);
-		let path = Path::new(&*expanded);
+		let path = expand_path(&path);
 
 		fs::create_dir_all(path.parent().unwrap()).map_err(mlua::Error::runtime)?;
 
@@ -61,14 +69,14 @@ impl FilesystemApi {
 
 	fn read_config(lua: &Lua, path: String) -> mlua::Result<mlua::Value> {
 		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
-		fs::read_to_string(xdg.config_home.join(path))
+		fs::read_to_string(xdg.config_home.join(expand_path(&path)))
 			.map_err(mlua::Error::runtime)?
 			.into_lua(lua)
 	}
 
 	fn read_state(lua: &Lua, path: String) -> mlua::Result<mlua::Value> {
 		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
-		fs::read_to_string(xdg.state_home.join(path))
+		fs::read_to_string(xdg.state_home.join(expand_path(&path)))
 			.map_err(mlua::Error::runtime)?
 			.into_lua(lua)
 	}
@@ -83,7 +91,10 @@ impl FilesystemApi {
 	fn output(lua: &Lua, (path, content): (String, String)) -> mlua::Result<String> {
 		let mod_ctx = lua.app_data_ref::<ModuleContext>().unwrap();
 		let files = lua.app_data_ref::<Rc<Files>>().unwrap();
-		let path = files.output_dir().join(&mod_ctx.name).join(path);
+		let path = files
+			.output_dir()
+			.join(&mod_ctx.name)
+			.join(expand_path(&path));
 
 		info!("Outputting to {}", path.display());
 		fs::create_dir_all(path.parent().unwrap()).map_err(mlua::Error::runtime)?;
@@ -93,7 +104,11 @@ impl FilesystemApi {
 
 	fn read_config_asset(lua: &Lua, path: String) -> mlua::Result<mlua::Value> {
 		let files = lua.app_data_ref::<Rc<Files>>().unwrap();
-		let path = files.config_file().parent().unwrap().join(path);
+		let path = files
+			.config_file()
+			.parent()
+			.unwrap()
+			.join(expand_path(&path));
 
 		fs::read_to_string(path)
 			.map_err(mlua::Error::runtime)?
