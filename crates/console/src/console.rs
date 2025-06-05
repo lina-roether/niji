@@ -114,7 +114,12 @@ impl Console {
 
 		out.set_color(message_color).unwrap();
 
-		writeln!(out, "{message}")?;
+		let string = format!("{message}");
+		let mut lines = string.lines();
+		writeln!(out, "{}", lines.next().unwrap_or_default())?;
+		for line in lines {
+			writeln!(out, "{}   {line}", " ".repeat(tag.len()))?;
+		}
 
 		out.reset().unwrap();
 		Ok(())
