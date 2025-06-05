@@ -44,4 +44,7 @@ here with their default values):
 # Can be either "background", "surface", "primary" or "secondary".
 # This value determines which theme color is used for focused window borders.
 focused_color = "surface"
+
+# Suppress the warning that is displayed when the generated config file hasn't been sourced
+suppress_not_sourced_warning = false
 ```
