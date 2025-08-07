@@ -63,4 +63,4 @@ you _have to_ add them to the list, otherwise they won't be styled properly.
 Since waybar is, by its nature, highly customizable, this module is not going to
 fit many people's use cases. You can try to fiddle around with the `custom_style_file`
 configuration option, but if you already have a highly customized waybar theme,
-I recommend you check out [Creating Custom Modules](../custom-modules.md).
+I recommend you check out [Creating Custom Modules](../custom-modules/).

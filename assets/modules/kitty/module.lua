@@ -2,9 +2,18 @@ local M = {}
 
 local template = niji.Template:load("niji.conf.mustache")
 
+function srgb_to_linear(alpha)
+	if alpha <= 0.04045 then
+		return alpha / 12.92
+	else
+		return ((alpha + 0.055) / 1.055) ^ 2.4
+	end
+end
+
 function M.apply(config, theme)
 	local theme = template:render {
 		background = theme.ui.background,
+		background_opacity = config.background_opacity or srgb_to_linear(theme.ui.background.a / 256),
 		foreground = theme.ui.text_background,
 		url = theme.ui.secondary,
 		alert = theme.ui.warning,

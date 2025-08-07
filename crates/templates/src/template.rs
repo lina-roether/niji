@@ -20,19 +20,19 @@ impl fmt::Display for Name {
 pub(crate) struct Section {
 	pub name: Name,
 	pub inverted: bool,
-	pub content: Vec<Token>,
+	pub content: Vec<Token>
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Insert {
 	pub name: Name,
-	pub format: Option<String>,
+	pub format: Option<String>
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SetFmt {
 	pub type_name: String,
-	pub format: String,
+	pub format: String
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,7 +40,7 @@ pub(crate) enum Token {
 	String(String),
 	Insert(Insert),
 	Section(Section),
-	SetFmt(SetFmt),
+	SetFmt(SetFmt)
 }
 
 #[derive(Debug, Error)]
@@ -64,20 +64,20 @@ pub enum RenderError {
 	UnknownKey(String),
 
 	#[error(transparent)]
-	Fmt(#[from] FmtError),
+	Fmt(#[from] FmtError)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Template {
 	fmt: HashMap<String, String>,
-	tokens: Vec<Token>,
+	tokens: Vec<Token>
 }
 
 impl Template {
 	pub(crate) fn new(tokens: Vec<Token>) -> Self {
 		Self {
 			fmt: HashMap::new(),
-			tokens,
+			tokens
 		}
 	}
 
@@ -96,7 +96,7 @@ impl Template {
 		buf: &mut String,
 		tokens: &[Token],
 		context: &[&Value],
-		fmt: &mut HashMap<String, String>,
+		fmt: &mut HashMap<String, String>
 	) -> Result<(), RenderError> {
 		for token in tokens {
 			match token {
@@ -115,7 +115,7 @@ impl Template {
 		buf: &mut String,
 		section: &Section,
 		context: &[&Value],
-		fmt: &mut HashMap<String, String>,
+		fmt: &mut HashMap<String, String>
 	) -> Result<(), RenderError> {
 		let value = Self::get_named_value(&section.name.0, context)?;
 
@@ -129,7 +129,7 @@ impl Template {
 			(true, Value::Map(..)) => return Err(RenderError::CannotCreateInvertedSection("map")),
 			(true, Value::Fmt(fmt_val)) => {
 				return Err(RenderError::CannotCreateInvertedSection(
-					fmt_val.type_name(),
+					fmt_val.type_name()
 				))
 			}
 			(invert, Value::Bool(bool)) => {
@@ -161,7 +161,7 @@ impl Template {
 		buf: &mut String,
 		insert: &Insert,
 		context: &[&Value],
-		fmt: &HashMap<String, String>,
+		fmt: &HashMap<String, String>
 	) -> Result<(), RenderError> {
 		let value = Self::get_named_value(&insert.name.0, context)?;
 
@@ -172,12 +172,14 @@ impl Template {
 			Value::String(string) => buf.push_str(string),
 			Value::Fmt(fmt_val) => buf.push_str(
 				&fmt_val.format(
-					fmt.get(fmt_val.type_name())
-						.or(insert.format.as_ref())
-						.map(String::as_str),
-				)?,
+					insert
+						.format
+						.as_ref()
+						.or_else(|| fmt.get(fmt_val.type_name()))
+						.map(String::as_str)
+				)?
 			),
-			Value::Nil => (),
+			Value::Nil => ()
 		}
 
 		Ok(())
@@ -185,7 +187,7 @@ impl Template {
 
 	fn get_named_value<'a>(
 		name: &'a [String],
-		context: &[&'a Value],
+		context: &[&'a Value]
 	) -> Result<&'a Value, RenderError> {
 		let Some(&value) = context.first() else {
 			return Ok(&Value::Nil);
