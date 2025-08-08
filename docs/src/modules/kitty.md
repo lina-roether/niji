@@ -25,6 +25,7 @@ These module-specific configuration options can be added to `config.toml` (shown
 # The opacity of the terminal background
 background_opacity = 1.0
 
-# The foreground color. Can be any key from the [terminal] section of the theme, or a custom color, such as "#ff0000".
+# The foreground color. Can be any key from the [terminal] section of the theme,
+# or a custom color, such as "#ff0000".
 foreground = "bright_white"
 ```
