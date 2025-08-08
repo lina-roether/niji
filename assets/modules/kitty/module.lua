@@ -11,10 +11,15 @@ function srgb_to_linear(alpha)
 end
 
 function M.apply(config, theme)
+	local foreground_color = theme.terminal.bright_white;
+	if config.foreground then
+		foreground_color = theme.terminal[config.foreground] or config.foreground
+	end
+
 	local theme = template:render {
 		background = theme.ui.background,
 		background_opacity = config.background_opacity or srgb_to_linear(theme.ui.background.a / 256),
-		foreground = theme.ui.text_background,
+		foreground = foreground_color,
 		url = theme.ui.secondary,
 		alert = theme.ui.warning,
 		primary = theme.ui.primary,
