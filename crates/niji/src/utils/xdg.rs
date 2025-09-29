@@ -1,7 +1,7 @@
 use std::{
 	borrow::Cow,
 	env::{self, split_paths},
-	path::{Path, PathBuf}
+	path::{Path, PathBuf},
 };
 
 use niji_macros::IntoLua;
@@ -21,7 +21,7 @@ fn map_path_option(path_option: &Option<PathBuf>) -> Option<Cow<'_, str>> {
 #[derive(Debug, Error)]
 pub enum Error {
 	#[error("The HOME environment variable is not set")]
-	NoHome
+	NoHome,
 }
 
 #[derive(Debug, Clone, IntoLua)]
@@ -45,7 +45,7 @@ pub struct XdgDirs {
 	pub data_dirs: Vec<PathBuf>,
 
 	#[lua_with("map_path_vec")]
-	pub config_dirs: Vec<PathBuf>
+	pub config_dirs: Vec<PathBuf>,
 }
 
 impl XdgDirs {
@@ -69,11 +69,11 @@ impl XdgDirs {
 				.unwrap_or_else(|| home.join(".cache")),
 			runtime_dir: env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from),
 			data_dirs: env::var_os("XDG_DATA_DIRS")
-				.map(|a| split_paths(&a).map(PathBuf::from).collect::<Vec<_>>())
+				.map(|a| split_paths(&a).collect::<Vec<_>>())
 				.unwrap_or_else(|| vec!["/usr/local/share".into(), "/usr/share".into()]),
 			config_dirs: env::var_os("XDG_CONFIG_DIRS")
-				.map(|a| split_paths(&a).map(PathBuf::from).collect::<Vec<_>>())
-				.unwrap_or_else(|| vec!["/etc/xdg".into()])
+				.map(|a| split_paths(&a).collect::<Vec<_>>())
+				.unwrap_or_else(|| vec!["/etc/xdg".into()]),
 		})
 	}
 }

@@ -4,9 +4,9 @@ use std::{
 	collections::{hash_map::DefaultHasher, HashMap},
 	fs::{self, File},
 	hash::{Hash, Hasher},
-	io::{self, Read},
+	io::{self, BufReader, Read},
 	path::{Path, PathBuf},
-	rc::Rc
+	rc::Rc,
 };
 use thiserror::Error;
 
@@ -24,11 +24,11 @@ pub enum Error {
 	Io(io::Error),
 
 	#[error("Writing to {0} was cancelled by the user")]
-	CancelledByUser(String)
+	CancelledByUser(String),
 }
 
 pub struct FileManager {
-	files: Rc<Files>
+	files: Rc<Files>,
 }
 
 impl FileManager {
@@ -57,7 +57,7 @@ impl FileManager {
 		&self,
 		managed_files: &mut HashMap<PathBuf, u64>,
 		path: &Path,
-		string: &str
+		string: &str,
 	) -> Result<(), Error> {
 		fs::write(path, string)
 			.map_err(|e| Error::Write(path.to_string_lossy().into_owned(), e))?;
@@ -72,7 +72,7 @@ impl FileManager {
 		&self,
 		managed_files: &mut HashMap<PathBuf, u64>,
 		path: &Path,
-		string: &str
+		string: &str,
 	) -> Result<(), Error> {
 		let current_hash = Self::hash_contents(path)?;
 		debug!("{} has current hash {current_hash}", path.display());
@@ -98,7 +98,7 @@ impl FileManager {
 		managed_files: &mut HashMap<PathBuf, u64>,
 		path: &Path,
 		string: &str,
-		hash: u64
+		hash: u64,
 	) -> Result<(), Error> {
 		let backup_path = Self::get_backup_path(path, hash);
 
@@ -131,13 +131,13 @@ impl FileManager {
 			path.file_name().unwrap().to_string_lossy()
 		);
 
-		return path.parent().unwrap().join(file_name);
+		path.parent().unwrap().join(file_name)
 	}
 
 	fn set_managed(
 		&self,
 		managed_files: &mut HashMap<PathBuf, u64>,
-		path: PathBuf
+		path: PathBuf,
 	) -> Result<(), Error> {
 		let path = path.canonicalize().map_err(Error::Io)?;
 		let hash = Self::hash_contents(&path)?;
@@ -150,7 +150,7 @@ impl FileManager {
 	fn get_known_hash(
 		&self,
 		managed_files: &HashMap<PathBuf, u64>,
-		path: &Path
+		path: &Path,
 	) -> Result<Option<u64>, Error> {
 		let path = path.canonicalize().map_err(Error::Io)?;
 
@@ -158,7 +158,7 @@ impl FileManager {
 	}
 
 	fn hash_contents(path: &Path) -> Result<u64, Error> {
-		let file = File::open(path).map_err(Error::Io)?;
+		let file = BufReader::new(File::open(path).map_err(Error::Io)?);
 		let mut hasher = DefaultHasher::new();
 		for byte in file.bytes() {
 			byte.map_err(Error::Io)?.hash(&mut hasher);
