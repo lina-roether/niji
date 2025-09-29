@@ -9,9 +9,9 @@ clap = "4.5.27"
 csv = "1.3.1"
 log = "0.4.25"
 mlua = { version = "0.9.9", features = ["luajit"] }
-niji_console = { version = "0.1.0", path = "../console" }
-niji_macros = { version = "0.1.0", path = "../macros" }
-niji_templates = { version = "0.1.0", path = "../templates" }
+niji_console = { version = "0.1.0", path = "../niji_console" }
+niji_macros = { version = "0.1.0", path = "../niji_macros" }
+niji_templates = { version = "0.1.0", path = "../niji_templates" }
 oklab = "1.1.2"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_with = "3.12.0"
