@@ -4,7 +4,7 @@ use niji_console::ColorChoice;
 
 use crate::app::NijiApp;
 
-const AUTHOR: &str = "Nicholas Roether <nicholas.roether@t-online.de>";
+const AUTHOR: &str = "Lina Roether <lina.roether@proton.me>";
 
 macro_rules! handle {
 	($expr:expr, $cleanup:expr) => {

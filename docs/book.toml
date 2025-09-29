@@ -1,5 +1,5 @@
 [book]
-authors = ["Nicholas Roether"]
+authors = ["Lina Roether"]
 language = "en"
 multilingual = false
 src = "src"
@@ -9,4 +9,4 @@ description = "Bringing comfortable theming to the tinkerer's desktop"
 [output.html]
 default-theme = "ayu"
 site-url = "/niji/"
-git-repository-url = "https://github.com/nicholas-roether/niji"
+git-repository-url = "https://github.com/lina-roether/niji"
