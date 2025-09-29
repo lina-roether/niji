@@ -1,25 +1,32 @@
-use std::{fmt::Arguments, io};
+use std::{fmt::Arguments, io, sync::RwLock};
 
 use crate::console::Console;
 
-static mut CONSOLE: Option<Console> = None;
+static CONSOLE: RwLock<Option<Console>> = RwLock::new(None);
 
 pub(crate) fn set_console(console: Console) {
-	unsafe { CONSOLE = Some(console) }
+	match CONSOLE.write() {
+		Ok(mut global_console) => {
+			global_console.replace(console);
+		}
+		Err(err) => eprintln!("Failed to acquire global console lock: {err}"),
+	}
 }
 
-pub(crate) fn get_console() -> Option<&'static Console> {
-	unsafe { CONSOLE.as_ref() }
+pub(crate) fn use_console<T>(cb: impl FnOnce(&Console) -> T) -> Option<T> {
+	match CONSOLE.read() {
+		Ok(global_console) => global_console.as_ref().map(cb),
+		Err(err) => {
+			eprintln!("Failed to acquire global console lock: {err}");
+			None
+		}
+	}
 }
 
 macro_rules! api_fn {
 	($fn:ident($($arg:ident : $ty:ty),*) -> $out:ty : $default:expr) => {
         pub fn $fn($($arg: $ty),*) -> Result<$out, io::Error> {
-            if let Some(console) = get_console() {
-                console.$fn($($arg),*)
-            } else {
-                Ok($default)
-            }
+            use_console(|console| console.$fn($($arg),*)).unwrap_or(Ok($default))
         }
     };
 }
