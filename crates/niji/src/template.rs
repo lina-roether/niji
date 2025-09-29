@@ -1,22 +1,9 @@
-use std::{fs, io, path::Path};
+use std::{fs, path::Path};
 
+use anyhow::Context;
 use niji_templates::{FmtValue, Template};
-use thiserror::Error;
 
 use crate::types::color::Color;
-
-#[derive(Debug, Error)]
-pub enum LoadError {
-	#[error("Failed to load {0}: {1}")]
-	Load(String, io::Error),
-
-	#[error(transparent)]
-	Parse(#[from] niji_templates::ParseError)
-}
-
-#[derive(Debug, Error)]
-#[error(transparent)]
-pub struct RenderError(#[from] niji_templates::RenderError);
 
 impl niji_templates::Format for Color {
 	fn type_name(&self) -> &'static str {
@@ -41,17 +28,17 @@ impl niji_templates::Format for Color {
 			"gf" => Some((self.g as f32 / 255.0).into()),
 			"bf" => Some((self.b as f32 / 255.0).into()),
 			"af" => Some((self.a as f32 / 255.0).into()),
-			_ => None
+			_ => None,
 		}
 	}
 }
 
-pub fn load_template<P>(path: P) -> Result<Template, LoadError>
+pub fn load_template<P>(path: P) -> anyhow::Result<Template>
 where
-	P: AsRef<Path>
+	P: AsRef<Path>,
 {
 	let path_name = path.as_ref().display().to_string();
-	let source = fs::read_to_string(path).map_err(|e| LoadError::Load(path_name, e))?;
+	let source = fs::read_to_string(path).context(format!("Failed to load {}", path_name))?;
 
 	Ok(source.parse()?)
 }

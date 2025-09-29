@@ -1,48 +1,34 @@
+use anyhow::{anyhow, Context};
 use log::{debug, info, warn};
 use niji_console::prompt;
 use std::{
 	collections::{hash_map::DefaultHasher, HashMap},
 	fs::{self, File},
 	hash::{Hash, Hasher},
-	io::{self, BufReader, Read},
+	io::{BufReader, Read},
 	path::{Path, PathBuf},
 	rc::Rc,
 };
-use thiserror::Error;
 
 use crate::files::Files;
-
-#[derive(Debug, Error)]
-pub enum Error {
-	#[error("Error while accessing managed_files.csv: {0}")]
-	CsvAccess(#[from] csv::Error),
-
-	#[error("Failed to write to {0}: {1}")]
-	Write(String, io::Error),
-
-	#[error("An IO error occurred: {0}")]
-	Io(io::Error),
-
-	#[error("Writing to {0} was cancelled by the user")]
-	CancelledByUser(String),
-}
 
 pub struct FileManager {
 	files: Rc<Files>,
 }
 
 impl FileManager {
-	pub fn new(files: Rc<Files>) -> Result<Self, Error> {
+	pub fn new(files: Rc<Files>) -> anyhow::Result<Self> {
 		if !files.managed_files_file().exists() {
-			fs::write(files.managed_files_file(), "").map_err(|e| {
-				Error::Write(files.managed_files_file().to_string_lossy().into_owned(), e)
-			})?;
+			fs::write(files.managed_files_file(), "").context(format!(
+				"Failed to write to {}",
+				files.managed_files_file().display(),
+			))?;
 		}
 
 		Ok(Self { files })
 	}
 
-	pub fn write_managed(&self, path: &Path, string: &str) -> Result<(), Error> {
+	pub fn write_managed(&self, path: &Path, string: &str) -> anyhow::Result<()> {
 		let mut managed_files = self.managed_files()?;
 
 		if !path.exists() {
@@ -58,9 +44,8 @@ impl FileManager {
 		managed_files: &mut HashMap<PathBuf, u64>,
 		path: &Path,
 		string: &str,
-	) -> Result<(), Error> {
-		fs::write(path, string)
-			.map_err(|e| Error::Write(path.to_string_lossy().into_owned(), e))?;
+	) -> anyhow::Result<()> {
+		fs::write(path, string).context(format!("Failed to write to {}", path.display()))?;
 		self.set_managed(managed_files, path.to_path_buf())?;
 
 		info!("niji now manages {}", path.display());
@@ -73,14 +58,15 @@ impl FileManager {
 		managed_files: &mut HashMap<PathBuf, u64>,
 		path: &Path,
 		string: &str,
-	) -> Result<(), Error> {
+	) -> anyhow::Result<()> {
 		let current_hash = Self::hash_contents(path)?;
 		debug!("{} has current hash {current_hash}", path.display());
 
 		if let Some(known_hash) = self.get_known_hash(managed_files, path)? {
 			if current_hash == known_hash {
 				debug!("Writing to managed file at {}", path.display());
-				fs::write(path, string).map_err(|e| Error::Write(path.display().to_string(), e))?;
+				fs::write(path, string)
+					.context(format!("Failed to write to {}", path.display()))?;
 				self.set_managed(managed_files, path.to_path_buf())?;
 				return Ok(());
 			} else {
@@ -99,7 +85,7 @@ impl FileManager {
 		path: &Path,
 		string: &str,
 		hash: u64,
-	) -> Result<(), Error> {
+	) -> anyhow::Result<()> {
 		let backup_path = Self::get_backup_path(path, hash);
 
 		warn!(
@@ -111,11 +97,14 @@ impl FileManager {
 			backup_path.display()
 		);
 		if !prompt!(default: false, "Backup and overwrite {}?", path.display()) {
-			return Err(Error::CancelledByUser(path.to_string_lossy().into_owned()));
+			return Err(anyhow!(
+				"Writing to {} was cancelled by the user",
+				path.display()
+			));
 		}
 
 		fs::copy(path, &backup_path)
-			.map_err(|e| Error::Write(backup_path.to_string_lossy().into_owned(), e))?;
+			.context(format!("Failed to write to {}", backup_path.display()))?;
 
 		self.init_new_file(managed_files, path, string)?;
 
@@ -138,8 +127,8 @@ impl FileManager {
 		&self,
 		managed_files: &mut HashMap<PathBuf, u64>,
 		path: PathBuf,
-	) -> Result<(), Error> {
-		let path = path.canonicalize().map_err(Error::Io)?;
+	) -> anyhow::Result<()> {
+		let path = path.canonicalize()?;
 		let hash = Self::hash_contents(&path)?;
 
 		debug!("Hash for newly managed file {} is {hash}", path.display());
@@ -151,28 +140,28 @@ impl FileManager {
 		&self,
 		managed_files: &HashMap<PathBuf, u64>,
 		path: &Path,
-	) -> Result<Option<u64>, Error> {
-		let path = path.canonicalize().map_err(Error::Io)?;
+	) -> anyhow::Result<Option<u64>> {
+		let path = path.canonicalize()?;
 
 		Ok(managed_files.get(&path).copied())
 	}
 
-	fn hash_contents(path: &Path) -> Result<u64, Error> {
-		let file = BufReader::new(File::open(path).map_err(Error::Io)?);
+	fn hash_contents(path: &Path) -> anyhow::Result<u64> {
+		let file = BufReader::new(File::open(path)?);
 		let mut hasher = DefaultHasher::new();
 		for byte in file.bytes() {
-			byte.map_err(Error::Io)?.hash(&mut hasher);
+			byte?.hash(&mut hasher);
 		}
 		Ok(hasher.finish())
 	}
 
-	fn managed_files(&self) -> Result<HashMap<PathBuf, u64>, Error> {
+	fn managed_files(&self) -> anyhow::Result<HashMap<PathBuf, u64>> {
 		let mut managed_files = HashMap::new();
 
 		let mut reader = csv::ReaderBuilder::new()
 			.has_headers(false)
 			.from_path(self.files.managed_files_file())
-			.map_err(Error::CsvAccess)?;
+			.context("Error while reading from managed_files.csv")?;
 
 		for result in reader.deserialize::<(PathBuf, u64)>() {
 			let (path, hash) = result?;
@@ -181,9 +170,9 @@ impl FileManager {
 		Ok(managed_files)
 	}
 
-	fn write_managed_files(&self, managed_files: &HashMap<PathBuf, u64>) -> Result<(), Error> {
-		let mut writer =
-			csv::Writer::from_path(self.files.managed_files_file()).map_err(Error::CsvAccess)?;
+	fn write_managed_files(&self, managed_files: &HashMap<PathBuf, u64>) -> anyhow::Result<()> {
+		let mut writer = csv::Writer::from_path(self.files.managed_files_file())
+			.context("Error while writing to managed_files.csv")?;
 		for (path, hash) in managed_files.iter() {
 			writer.serialize((path, hash))?;
 		}

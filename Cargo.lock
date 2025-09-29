@@ -68,6 +68,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.100"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
+
+[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -439,6 +445,7 @@ dependencies = [
 name = "niji"
 version = "0.3.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "clap",
  "csv",
@@ -451,7 +458,6 @@ dependencies = [
  "serde",
  "serde_with",
  "shellexpand",
- "thiserror",
  "toml",
 ]
 
@@ -459,6 +465,7 @@ dependencies = [
 name = "niji_console"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "log",
  "termcolor",
 ]
@@ -477,6 +484,7 @@ dependencies = [
 name = "niji_templates"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "strfmt",
  "thiserror",
 ]

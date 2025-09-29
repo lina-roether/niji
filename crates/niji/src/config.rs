@@ -1,8 +1,8 @@
-use std::{collections::HashMap, fmt, fs, io, path::Path};
+use std::{collections::HashMap, fmt, fs, path::Path};
 
+use anyhow::Context;
 use niji_macros::IntoLua;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 use crate::types::color::Color;
 
@@ -11,14 +11,14 @@ use crate::types::color::Color;
 #[serde(rename_all = "lowercase")]
 pub enum ColorScheme {
 	Light,
-	Dark
+	Dark,
 }
 
 impl fmt::Display for ColorScheme {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Light => write!(f, "light"),
-			Self::Dark => write!(f, "dark")
+			Self::Dark => write!(f, "dark"),
 		}
 	}
 }
@@ -42,7 +42,7 @@ pub struct UiTheme {
 	pub text_success: Color,
 	pub text_info: Color,
 	pub text_warning: Color,
-	pub text_error: Color
+	pub text_error: Color,
 }
 
 fn color_display(text: &str, bg_col: Color, fg_col: Color) -> String {
@@ -104,7 +104,7 @@ pub struct Terminal {
 	pub bright_blue: Color,
 	pub bright_magenta: Color,
 	pub bright_cyan: Color,
-	pub bright_white: Color
+	pub bright_white: Color,
 }
 
 fn colored_square(color: Color) -> String {
@@ -143,7 +143,7 @@ pub struct Theme {
 	pub name: Option<String>,
 
 	pub ui: UiTheme,
-	pub terminal: Terminal
+	pub terminal: Terminal,
 }
 
 impl fmt::Display for Theme {
@@ -162,7 +162,7 @@ pub enum ModuleConfigValue {
 	Float(f64),
 	Bool(bool),
 	Vec(Vec<ModuleConfigValue>),
-	Map(HashMap<String, ModuleConfigValue>)
+	Map(HashMap<String, ModuleConfigValue>),
 }
 
 pub type ModuleConfig = HashMap<String, ModuleConfigValue>;
@@ -176,7 +176,7 @@ pub enum DisableReloads {
 	All,
 
 	#[serde(untagged)]
-	Blacklist(Vec<String>)
+	Blacklist(Vec<String>),
 }
 
 impl DisableReloads {
@@ -184,7 +184,7 @@ impl DisableReloads {
 		match self {
 			Self::None => false,
 			Self::All => true,
-			Self::Blacklist(blacklist) => blacklist.contains(&name.to_string())
+			Self::Blacklist(blacklist) => blacklist.contains(&name.to_string()),
 		}
 	}
 }
@@ -200,26 +200,17 @@ pub struct Config {
 	pub global: ModuleConfig,
 
 	#[serde(flatten)]
-	pub module_config: HashMap<String, ModuleConfig>
+	pub module_config: HashMap<String, ModuleConfig>,
 }
 
-#[derive(Debug, Error)]
-pub enum Error {
-	#[error("Failed to read {0}: {1}")]
-	Read(String, io::Error),
-
-	#[error("Invalid syntax in {0}: {1}")]
-	Parse(String, Box<toml::de::Error>)
-}
-
-pub fn read<C, P>(path: P) -> Result<C, Error>
+pub fn read<C, P>(path: P) -> anyhow::Result<C>
 where
 	C: for<'de> Deserialize<'de>,
-	P: AsRef<Path>
+	P: AsRef<Path>,
 {
-	let config_str = fs::read_to_string(&path)
-		.map_err(|e| Error::Read(path.as_ref().display().to_string(), e))?;
+	let config_str =
+		fs::read_to_string(&path).context(format!("Failed to read {}", path.as_ref().display()))?;
 	let config = toml::from_str(&config_str)
-		.map_err(|e| Error::Parse(path.as_ref().display().to_string(), Box::new(e)))?;
+		.context(format!("Invalid syntax in {}", path.as_ref().display()))?;
 	Ok(config)
 }

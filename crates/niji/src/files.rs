@@ -1,20 +1,14 @@
 use std::{
-	fs, io,
+	fs,
 	path::{Path, PathBuf},
 };
 
-use thiserror::Error;
+use anyhow::Context;
 
 use crate::utils::{
 	fs::{find_dirs, find_files},
 	xdg::XdgDirs,
 };
-
-#[derive(Debug, Error)]
-pub enum Error {
-	#[error("Failed to create {0}: {1}")]
-	CreationFailed(String, io::Error),
-}
 
 #[derive(Debug)]
 pub struct Files {
@@ -41,7 +35,7 @@ impl Files {
 	const THEME_MAIN_FILE_NAME: &'static str = "theme.toml";
 	const MODULES_DIR: &'static str = "modules";
 
-	pub fn new(xdg: &XdgDirs) -> Result<Self, Error> {
+	pub fn new(xdg: &XdgDirs) -> anyhow::Result<Self> {
 		let config_dir = xdg.config_home.join(Self::PREFIX);
 		let data_dir = xdg.data_home.join(Self::PREFIX);
 		let state_dir = xdg.state_home.join(Self::PREFIX);
@@ -138,6 +132,6 @@ impl Files {
 	}
 }
 
-fn init_dir(dir: &Path) -> Result<(), Error> {
-	fs::create_dir_all(dir).map_err(|err| Error::CreationFailed(dir.display().to_string(), err))
+fn init_dir(dir: &Path) -> anyhow::Result<()> {
+	fs::create_dir_all(dir).context(format!("Failed to create {}", dir.display()))
 }

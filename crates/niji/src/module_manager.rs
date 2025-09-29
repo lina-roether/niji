@@ -1,8 +1,8 @@
 use std::{collections::HashSet, path::PathBuf, rc::Rc, sync::Mutex};
 
+use anyhow::{anyhow, Context};
 use log::{debug, error, info};
 use niji_console::heading;
-use thiserror::Error;
 
 use crate::{
 	config::{Config, Theme},
@@ -12,15 +12,6 @@ use crate::{
 	module::Module,
 	utils::xdg::XdgDirs,
 };
-
-#[derive(Debug, Error)]
-pub enum Error {
-	#[error("Module \"{0}\" doesn't exist!")]
-	UnknownModule(String),
-
-	#[error("Failed to initialize lua runtime: {0}")]
-	RuntimeInit(mlua::Error),
-}
 
 pub struct ModuleManagerInit {
 	pub xdg: Rc<XdgDirs>,
@@ -49,7 +40,7 @@ impl ModuleManager {
 			config,
 			file_manager,
 		}: ModuleManagerInit,
-	) -> Result<Self, Error> {
+	) -> anyhow::Result<Self> {
 		let mut active_modules = Vec::<ModuleDescriptor>::with_capacity(config.modules.len());
 		for mod_name in &config.modules {
 			Self::activate(&files, &mut active_modules, mod_name)?;
@@ -60,7 +51,7 @@ impl ModuleManager {
 			files: Rc::clone(&files),
 			file_manager: Rc::clone(&file_manager),
 		})
-		.map_err(Error::RuntimeInit)?;
+		.context("Failed to initialize lua runtime")?;
 
 		Ok(Self {
 			files: Rc::clone(&files),
@@ -75,7 +66,7 @@ impl ModuleManager {
 		theme: &Theme,
 		reload: bool,
 		modules: Option<&[String]>,
-	) -> Result<(), Error> {
+	) -> anyhow::Result<()> {
 		let mut remaining = HashSet::<String>::new();
 		if let Some(modules) = modules {
 			remaining.extend(modules.iter().cloned())
@@ -107,9 +98,9 @@ impl ModuleManager {
 		files: &Files,
 		active_modules: &mut Vec<ModuleDescriptor>,
 		mod_name: &str,
-	) -> Result<ModuleDescriptor, Error> {
+	) -> anyhow::Result<ModuleDescriptor> {
 		let module_dir = Self::find_module_dir(files, mod_name)
-			.ok_or_else(|| Error::UnknownModule(mod_name.to_string()))?;
+			.ok_or_else(|| anyhow!("Module \"{}\" does not exist", mod_name))?;
 
 		debug!(
 			"Activating module \"{mod_name}\" at path {}",

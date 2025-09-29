@@ -1,33 +1,15 @@
-use std::{collections::HashSet, fs, io, path::PathBuf, rc::Rc};
+use std::{collections::HashSet, fs, path::PathBuf, rc::Rc};
 
+use anyhow::{anyhow, Context};
 use log::debug;
-use thiserror::Error;
 
 use crate::{
 	config::{self, Theme},
-	files::Files
+	files::Files,
 };
 
-#[derive(Debug, Error)]
-pub enum Error {
-	#[error("Failed to access theme state: {0}")]
-	AccessThemeState(io::Error),
-
-	#[error("Couldn't read theme {0}; {1}")]
-	ThemeRead(String, config::Error),
-
-	#[error("Theme \"{0}\" doesn't exist!")]
-	UnknownTheme(String),
-
-	#[error("Current theme is \"{0}\", but that theme doesn't exist!")]
-	UnknownCurrentTheme(String),
-
-	#[error("No theme is selected")]
-	NoThemeSelected
-}
-
 pub struct ThemeManager {
-	files: Rc<Files>
+	files: Rc<Files>,
 }
 
 impl ThemeManager {
@@ -49,21 +31,24 @@ impl ThemeManager {
 		themes.into_iter().collect()
 	}
 
-	pub fn current_theme(&self) -> Result<Theme, Error> {
+	pub fn current_theme(&self) -> anyhow::Result<Theme> {
 		if !self.files.current_theme_file().exists() {
 			self.unset_theme()?;
 		}
 
-		let current_theme =
-			fs::read_to_string(self.files.current_theme_file()).map_err(Error::AccessThemeState)?;
+		let current_theme = fs::read_to_string(self.files.current_theme_file())
+			.context("Failed to access theme state")?;
 
 		if current_theme.is_empty() {
-			return Err(Error::NoThemeSelected);
+			return Err(anyhow!("No theme is selected"));
 		}
 
 		let theme: Option<Theme> = self.read_theme(&current_theme)?;
 		let Some(mut theme) = theme else {
-			return Err(Error::UnknownCurrentTheme(current_theme));
+			return Err(anyhow!(
+				"Current theme is \"{}\", but that theme doesn't exist!",
+				current_theme
+			));
 		};
 
 		theme.name = Some(current_theme);
@@ -71,21 +56,21 @@ impl ThemeManager {
 		Ok(theme)
 	}
 
-	pub fn get_theme(&self, name: &str) -> Result<Theme, Error> {
+	pub fn get_theme(&self, name: &str) -> anyhow::Result<Theme> {
 		self.read_theme(name)?
-			.ok_or_else(|| Error::UnknownTheme(name.to_string()))
+			.ok_or_else(|| anyhow!("Theme \"{name}\" doesn't exist!"))
 	}
 
-	pub fn set_theme(&self, name: String) -> Result<(), Error> {
+	pub fn set_theme(&self, name: String) -> anyhow::Result<()> {
 		if self.find_theme_path(&name).is_none() {
-			return Err(Error::UnknownTheme(name));
+			return Err(anyhow!("Theme \"{name}\" doesn't exist!"));
 		}
-		fs::write(self.files.current_theme_file(), name).map_err(Error::AccessThemeState)?;
+		fs::write(self.files.current_theme_file(), name).context("Failed to access theme state")?;
 		Ok(())
 	}
 
-	pub fn unset_theme(&self) -> Result<(), Error> {
-		fs::write(self.files.current_theme_file(), "").map_err(Error::AccessThemeState)?;
+	pub fn unset_theme(&self) -> anyhow::Result<()> {
+		fs::write(self.files.current_theme_file(), "").context("Failed to access theme state")?;
 		Ok(())
 	}
 
@@ -99,15 +84,14 @@ impl ThemeManager {
 		Some(path)
 	}
 
-	fn read_theme(&self, name: &str) -> Result<Option<Theme>, Error> {
+	fn read_theme(&self, name: &str) -> anyhow::Result<Option<Theme>> {
 		let Some(path) = self.find_theme_path(name) else {
 			return Ok(None);
 		};
 
 		debug!("Reading theme \"{name}\" from {}", path.display());
 
-		let mut theme: Theme =
-			config::read(path).map_err(|e| Error::ThemeRead(name.to_string(), e))?;
+		let mut theme: Theme = config::read(path).context(format!("Couldn't read theme {name}"))?;
 
 		theme.name = Some(name.to_string());
 

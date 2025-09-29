@@ -4,8 +4,8 @@ use std::{
 	path::{Path, PathBuf},
 };
 
+use anyhow::anyhow;
 use niji_macros::IntoLua;
-use thiserror::Error;
 
 fn map_path_vec(path_vec: &[PathBuf]) -> Vec<Cow<'_, str>> {
 	path_vec
@@ -16,12 +16,6 @@ fn map_path_vec(path_vec: &[PathBuf]) -> Vec<Cow<'_, str>> {
 
 fn map_path_option(path_option: &Option<PathBuf>) -> Option<Cow<'_, str>> {
 	path_option.as_ref().map(|p| p.to_string_lossy())
-}
-
-#[derive(Debug, Error)]
-pub enum Error {
-	#[error("The HOME environment variable is not set")]
-	NoHome,
 }
 
 #[derive(Debug, Clone, IntoLua)]
@@ -49,9 +43,9 @@ pub struct XdgDirs {
 }
 
 impl XdgDirs {
-	pub fn new() -> Result<Self, Error> {
+	pub fn new() -> anyhow::Result<Self> {
 		let Some(home) = env::var_os("HOME").map(PathBuf::from) else {
-			return Err(Error::NoHome);
+			return Err(anyhow!("The HOME environment variable is not set"));
 		};
 
 		Ok(Self {

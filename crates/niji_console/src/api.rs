@@ -1,4 +1,4 @@
-use std::{fmt::Arguments, io, sync::RwLock};
+use std::{fmt::Arguments, sync::RwLock};
 
 use crate::console::Console;
 
@@ -25,8 +25,9 @@ pub(crate) fn use_console<T>(cb: impl FnOnce(&Console) -> T) -> Option<T> {
 
 macro_rules! api_fn {
 	($fn:ident($($arg:ident : $ty:ty),*) -> $out:ty : $default:expr) => {
-        pub fn $fn($($arg: $ty),*) -> Result<$out, io::Error> {
-            use_console(|console| console.$fn($($arg),*)).unwrap_or(Ok($default))
+        pub fn $fn($($arg: $ty),*) -> ::anyhow::Result<$out> {
+            let result = use_console(|console| console.$fn($($arg),*)).unwrap_or(Ok($default))?;
+            Ok(result)
         }
     };
 }

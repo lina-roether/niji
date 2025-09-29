@@ -1,45 +1,24 @@
 use std::{
 	fs::File,
-	io::{self, BufRead, BufReader},
+	io::{BufRead, BufReader},
 	path::Path,
-	process::{Command, Stdio}
+	process::{Command, Stdio},
 };
 
+use anyhow::anyhow;
 use log::debug;
-use thiserror::Error;
 
 use crate::{
 	config::{ModuleConfig, Theme},
-	lua::runtime::{LuaModule, LuaRuntime}
+	lua::runtime::{LuaModule, LuaRuntime},
 };
-
-#[derive(Debug, Error)]
-pub enum LoadError {
-	#[error("Failed to read module files: {0}")]
-	FileReadErr(#[from] io::Error),
-
-	#[error("Missing dependency: {0}")]
-	MissingDependency(String),
-
-	#[error("{0}")]
-	LuaErr(#[from] mlua::Error)
-}
-
-#[derive(Debug, Error)]
-pub enum ExecError {
-	#[error("Module is missing an apply function")]
-	NoApply,
-
-	#[error(transparent)]
-	LuaErr(#[from] mlua::Error)
-}
 
 pub struct Module<'lua>(LuaModule<'lua>);
 
 impl<'lua> Module<'lua> {
 	const DEPS_FILE: &'static str = "deps.txt";
 
-	pub fn load(runtime: &'lua LuaRuntime, path: &Path) -> Result<Self, LoadError> {
+	pub fn load(runtime: &'lua LuaRuntime, path: &Path) -> anyhow::Result<Self> {
 		Self::check_dependencies(path)?;
 		let module = runtime.load_lua_module(path)?;
 		Ok(Self(module))
@@ -49,19 +28,19 @@ impl<'lua> Module<'lua> {
 		self.0.has_function("reload").unwrap_or(false)
 	}
 
-	pub fn apply(&self, config: ModuleConfig, theme: Theme) -> Result<(), ExecError> {
+	pub fn apply(&self, config: ModuleConfig, theme: Theme) -> anyhow::Result<()> {
 		if !self.0.has_function("apply")? {
-			return Err(ExecError::NoApply);
+			return Err(anyhow!("Module is missing an apply function"));
 		}
 
 		Ok(self.0.call("apply", (config, theme))?)
 	}
 
-	pub fn reload(&self, config: ModuleConfig) -> Result<(), ExecError> {
+	pub fn reload(&self, config: ModuleConfig) -> anyhow::Result<()> {
 		Ok(self.0.call("reload", config)?)
 	}
 
-	fn check_dependencies(path: &Path) -> Result<(), LoadError> {
+	fn check_dependencies(path: &Path) -> anyhow::Result<()> {
 		let deps_file = path.join(Self::DEPS_FILE);
 		if !deps_file.exists() {
 			return Ok(());
@@ -75,7 +54,7 @@ impl<'lua> Module<'lua> {
 		Ok(())
 	}
 
-	fn check_dependency(program: &str) -> Result<(), LoadError> {
+	fn check_dependency(program: &str) -> anyhow::Result<()> {
 		debug!("Checking for module dependency {program}...");
 
 		let output = Command::new("/bin/which")
@@ -85,7 +64,7 @@ impl<'lua> Module<'lua> {
 			.expect("Failed to run /bin/which");
 
 		if !output.status.success() {
-			return Err(LoadError::MissingDependency(program.to_string()));
+			return Err(anyhow!("Missing dependency: {program}"));
 		}
 
 		debug!(

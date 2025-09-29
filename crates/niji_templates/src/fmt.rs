@@ -6,7 +6,7 @@ use thiserror::Error;
 pub enum FmtValue {
 	String(String),
 	Int(i64),
-	Float(f64)
+	Float(f64),
 }
 
 macro_rules! fmt_value_from_int {
@@ -47,7 +47,7 @@ impl DisplayStr for FmtValue {
 		match self {
 			Self::String(string) => string.display_str(f),
 			Self::Int(int) => int.display_str(f),
-			Self::Float(float) => float.display_str(f)
+			Self::Float(float) => float.display_str(f),
 		}
 	}
 }
@@ -56,7 +56,7 @@ impl DisplayStr for FmtValue {
 #[error("Failed to format {type_name}: {inner}")]
 pub struct FmtError {
 	type_name: &'static str,
-	inner: strfmt::FmtError
+	inner: strfmt::FmtError,
 }
 
 impl FmtError {
