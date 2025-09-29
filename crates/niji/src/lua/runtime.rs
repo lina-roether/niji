@@ -1,7 +1,7 @@
 use std::{
 	env,
 	path::{Path, PathBuf},
-	rc::Rc
+	rc::Rc,
 };
 
 use log::debug;
@@ -14,11 +14,11 @@ use super::api::{self, ModuleContext};
 pub struct LuaRuntimeInit {
 	pub xdg: Rc<XdgDirs>,
 	pub files: Rc<Files>,
-	pub file_manager: Rc<FileManager>
+	pub file_manager: Rc<FileManager>,
 }
 
 pub struct LuaRuntime {
-	lua: Lua
+	lua: Lua,
 }
 
 #[derive(Debug)]
@@ -26,7 +26,7 @@ pub struct LuaModule<'lua> {
 	lua: &'lua Lua,
 	name: String,
 	directory: PathBuf,
-	table: Option<mlua::Table<'lua>>
+	table: Option<mlua::Table<'lua>>,
 }
 
 impl<'lua> LuaModule<'lua> {
@@ -41,7 +41,7 @@ impl<'lua> LuaModule<'lua> {
 				.to_string_lossy()
 				.into_owned(),
 			directory,
-			table: None
+			table: None,
 		}
 	}
 
@@ -67,7 +67,7 @@ impl<'lua> LuaModule<'lua> {
 	pub fn call<A, R>(&'lua self, key: &str, args: A) -> mlua::Result<R>
 	where
 		A: IntoLuaMulti<'lua>,
-		R: FromLuaMulti<'lua>
+		R: FromLuaMulti<'lua>,
 	{
 		let table = self.get_table()?;
 
@@ -88,7 +88,7 @@ impl<'lua> LuaModule<'lua> {
 	fn in_context<R>(
 		&self,
 		lua: &'lua Lua,
-		cb: impl FnOnce() -> mlua::Result<R>
+		cb: impl FnOnce() -> mlua::Result<R>,
 	) -> mlua::Result<R> {
 		let prev_dir = env::current_dir().unwrap();
 		env::set_current_dir(&self.directory).unwrap();
@@ -96,8 +96,8 @@ impl<'lua> LuaModule<'lua> {
 			lua,
 			ModuleContext {
 				name: self.name.clone(),
-				path: self.directory.clone()
-			}
+				path: self.directory.clone(),
+			},
 		);
 
 		let result: R = cb()?;
@@ -118,8 +118,8 @@ impl LuaRuntime {
 			api::Init {
 				xdg: init.xdg,
 				files: init.files,
-				file_manager: init.file_manager
-			}
+				file_manager: init.file_manager,
+			},
 		)?;
 
 		Ok(Self { lua })
