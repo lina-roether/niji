@@ -75,7 +75,7 @@ impl<'lua> LuaModule<'lua> {
 		self.in_context(self.lua, move || function.call(args))
 	}
 
-	fn get_table(&'lua self) -> mlua::Result<&mlua::Table> {
+	fn get_table(&'lua self) -> mlua::Result<&'lua mlua::Table<'lua>> {
 		let Some(table) = &self.table else {
 			return Err(mlua::Error::runtime(format!(
 				"Module {} is not loaded yet!",
