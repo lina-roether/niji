@@ -1,0 +1,24 @@
+name: Test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup rust environment
+        run: |
+          rustup update stable
+          rustup default stable
+      - name: Install niji dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libluajit-5.1-dev
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Test
+        run: |
+          cargo test
