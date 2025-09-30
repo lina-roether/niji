@@ -92,7 +92,7 @@ pub fn run() {
 				.subcommand_required(true)
 				.subcommand(Command::new("get").about("Get the name of the current theme"))
 				.subcommand(
-					Command::new("show")
+					Command::new("preview")
 						.about("Display a preview of a theme in the console")
 						.arg(Arg::new("name").help(
 							"The theme to preview. Defaults to the current theme if not set.",
@@ -175,7 +175,7 @@ fn cmd_apply(app: &NijiApp, args: &ArgMatches) {
 fn cmd_theme(app: &NijiApp, args: &ArgMatches) {
 	match args.subcommand() {
 		Some(("get", _)) => cmd_theme_get(app),
-		Some(("show", args)) => cmd_theme_show(app, args),
+		Some(("show", args)) => cmd_theme_preview(app, args),
 		Some(("set", args)) => cmd_theme_set(app, args),
 		Some(("list", _)) => cmd_theme_list(app),
 		Some(("unset", _)) => cmd_theme_unset(app),
@@ -188,7 +188,7 @@ fn cmd_theme_get(app: &NijiApp) {
 	niji_console::println!("{}", theme.name.unwrap());
 }
 
-fn cmd_theme_show(app: &NijiApp, args: &ArgMatches) {
+fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) {
 	let name = args.get_one::<String>("name");
 	let no_color = args.get_one::<bool>("no_color").unwrap();
 
