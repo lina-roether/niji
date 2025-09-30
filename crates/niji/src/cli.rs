@@ -11,7 +11,7 @@ macro_rules! handle {
 		match $expr {
 			Ok(val) => val,
 			Err(err) => {
-				log::error!("{err}");
+				log::error!("{err:?}");
 
 				#[allow(clippy::redundant_closure_call)]
 				$cleanup();

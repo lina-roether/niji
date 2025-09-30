@@ -129,7 +129,7 @@ impl ModuleManager {
 		let module = match Module::load(&self.lua_runtime, &module_descr.path) {
 			Ok(module) => module,
 			Err(error) => {
-				error!("{error}");
+				error!("{error:?}");
 				niji_console::println!();
 				return;
 			}
@@ -141,7 +141,7 @@ impl ModuleManager {
 		}
 
 		if let Err(err) = module.apply(module_config.clone(), theme.clone()) {
-			error!("{err}");
+			error!("{err:?}");
 			error!("Aborting module execution");
 			niji_console::println!();
 			return;
@@ -156,7 +156,7 @@ impl ModuleManager {
 			} else if module.can_reload() {
 				info!("Reloading...");
 				if let Err(err) = module.reload(module_config) {
-					error!("{err}");
+					error!("{err:?}");
 					error!("Reloading of {} failed", module_descr.name);
 					niji_console::println!();
 				}
