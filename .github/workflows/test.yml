@@ -13,6 +13,9 @@ jobs:
         run: |
           rustup update stable
           rustup default stable
+      - name: Install niji dependencies
+        run: |
+          sudo apt install luajit
       - name: Checkout
         uses: actions/checkout@v5
       - name: Test
