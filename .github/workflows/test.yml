@@ -16,7 +16,6 @@ jobs:
       - name: Install niji dependencies
         run: |
           sudo apt update
-          sudo apt install -y pkg-config
           sudo apt install -y luajit
       - name: Checkout
         uses: actions/checkout@v5
