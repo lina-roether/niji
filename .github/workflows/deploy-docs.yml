@@ -15,7 +15,7 @@ jobs:
           rustup default stable
           cargo install mdbook
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Build Docs
         run: |
           cd docs
