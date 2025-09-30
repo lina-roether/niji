@@ -9,8 +9,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
       - name: Setup rust environment
         run: |
           rustup update stable
@@ -18,7 +16,10 @@ jobs:
       - name: Install niji dependencies
         run: |
           sudo apt update
+          sudo apt install -y pkgconf
           sudo apt install -y luajit
+      - name: Checkout
+        uses: actions/checkout@v5
       - name: Test
         run: |
           cargo test
