@@ -15,7 +15,8 @@ jobs:
           rustup default stable
       - name: Install niji dependencies
         run: |
-          sudo apt install libluajit-5.1-2
+          sudo apt update
+          sudo apt install -y libluajit-5.1-2
       - name: Checkout
         uses: actions/checkout@v5
       - name: Test
