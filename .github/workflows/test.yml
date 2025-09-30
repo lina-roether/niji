@@ -16,7 +16,7 @@ jobs:
       - name: Install niji dependencies
         run: |
           sudo apt update
-          sudo apt install -y libluajit-5.1-2
+          sudo apt install -y luajit
       - name: Checkout
         uses: actions/checkout@v5
       - name: Test
