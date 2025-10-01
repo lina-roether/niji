@@ -5,5 +5,5 @@ mod value;
 
 pub use fmt::{FmtError, FmtValue, Format};
 pub use parse::{ParseError, ParseErrorKind};
-pub use template::{RenderError, Template};
+pub use template::Template;
 pub use value::Value;

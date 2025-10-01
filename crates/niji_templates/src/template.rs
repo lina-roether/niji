@@ -1,8 +1,8 @@
-use std::{collections::HashMap, fmt, num::ParseIntError};
+use std::{collections::HashMap, fmt};
 
-use thiserror::Error;
+use anyhow::{anyhow, Context};
 
-use crate::{fmt::FmtError, value::Value};
+use crate::value::Value;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Name(pub Vec<String>);
@@ -43,30 +43,6 @@ pub(crate) enum Token {
 	SetFmt(SetFmt),
 }
 
-#[derive(Debug, Error)]
-pub enum RenderError {
-	#[error("Couldn't resolve name {0}")]
-	NameNotFound(String),
-
-	#[error("Cannot directly insert type {0}")]
-	CannotInsert(&'static str),
-
-	#[error("Cannot create inverted sections from type {0}")]
-	CannotCreateInvertedSection(&'static str),
-
-	#[error("\"{0}\" is not a valid array index: {1}")]
-	InvalidVecIndex(String, ParseIntError),
-
-	#[error("Index {0} is out of bounds for array of length {0}")]
-	IndexOutOfBounds(usize, usize),
-
-	#[error("Key \"{0}\" doesn't exist on this map")]
-	UnknownKey(String),
-
-	#[error(transparent)]
-	Fmt(#[from] FmtError),
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Template {
 	fmt: HashMap<String, String>,
@@ -86,7 +62,7 @@ impl Template {
 		self.fmt.insert(type_name, format);
 	}
 
-	pub fn render(&mut self, value: &Value) -> Result<String, RenderError> {
+	pub fn render(&mut self, value: &Value) -> anyhow::Result<String> {
 		let mut buf = String::new();
 		Self::render_tokens(&mut buf, &self.tokens, &[value], &mut self.fmt)?;
 		Ok(buf)
@@ -97,7 +73,7 @@ impl Template {
 		tokens: &[Token],
 		context: &[&Value],
 		fmt: &mut HashMap<String, String>,
-	) -> Result<(), RenderError> {
+	) -> anyhow::Result<()> {
 		for token in tokens {
 			match token {
 				Token::String(string) => buf.push_str(string),
@@ -116,7 +92,7 @@ impl Template {
 		section: &Section,
 		context: &[&Value],
 		fmt: &mut HashMap<String, String>,
-	) -> Result<(), RenderError> {
+	) -> anyhow::Result<()> {
 		let value = Self::get_named_value(&section.name.0, context)?;
 
 		match (section.inverted, value) {
@@ -124,13 +100,20 @@ impl Template {
 				Self::render_tokens(buf, &section.content, &[&[value], context].concat(), fmt)?
 			}
 			(true, Value::String(..)) => {
-				return Err(RenderError::CannotCreateInvertedSection("string"))
-			}
-			(true, Value::Map(..)) => return Err(RenderError::CannotCreateInvertedSection("map")),
-			(true, Value::Fmt(fmt_val)) => {
-				return Err(RenderError::CannotCreateInvertedSection(
-					fmt_val.type_name(),
+				return Err(anyhow!(
+					"Cannot create inverted sections from string value {value}"
 				))
+			}
+			(true, Value::Map(..)) => {
+				return Err(anyhow!(
+					"Cannot create inverted sections from map value {value}"
+				))
+			}
+			(true, Value::Fmt(fmt_val)) => {
+				let type_name = fmt_val.type_name();
+				return Err(anyhow!(
+					"Cannot create inverted sections from {type_name} value {value}"
+				));
 			}
 			(invert, Value::Bool(bool)) => {
 				if bool ^ invert {
@@ -162,12 +145,12 @@ impl Template {
 		insert: &Insert,
 		context: &[&Value],
 		fmt: &HashMap<String, String>,
-	) -> Result<(), RenderError> {
+	) -> anyhow::Result<()> {
 		let value = Self::get_named_value(&insert.name.0, context)?;
 
 		match value {
-			Value::Vec(..) => return Err(RenderError::CannotInsert("array")),
-			Value::Map(..) => return Err(RenderError::CannotInsert("map")),
+			Value::Vec(..) => return Err(anyhow!("Cannot directly insert array value {value}")),
+			Value::Map(..) => return Err(anyhow!("Cannot directly insert map value {value}")),
 			Value::Bool(bool) => buf.push_str(&bool.to_string()),
 			Value::String(string) => buf.push_str(string),
 			Value::Fmt(fmt_val) => buf.push_str(
@@ -185,10 +168,7 @@ impl Template {
 		Ok(())
 	}
 
-	fn get_named_value<'a>(
-		name: &'a [String],
-		context: &[&'a Value],
-	) -> Result<&'a Value, RenderError> {
+	fn get_named_value<'a>(name: &'a [String], context: &[&'a Value]) -> anyhow::Result<&'a Value> {
 		let Some(&value) = context.first() else {
 			return Ok(&Value::Nil);
 		};
@@ -202,11 +182,15 @@ impl Template {
 				Self::get_named_value(name, &context[1..])
 			}
 			Value::Vec(vec) => {
-				let index: usize = name[0]
-					.parse()
-					.map_err(|e| RenderError::InvalidVecIndex(name[0].clone(), e))?;
+				let index: usize = name[0].parse().context(format!(
+					"\"{}\" is not a valid array index",
+					name[0].clone()
+				))?;
 				if index >= vec.len() {
-					return Err(RenderError::IndexOutOfBounds(index, vec.len()));
+					return Err(anyhow!(
+						"Index {index} is out of bounds for array of length {}",
+						vec.len()
+					));
 				}
 
 				Self::get_named_value(&name[1..], &[&[&vec[index]], &context[1..]].concat())
