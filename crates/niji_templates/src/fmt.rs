@@ -85,4 +85,9 @@ pub trait Format: Debug {
 
 		Ok(result)
 	}
+
+	fn display(&self) -> anyhow::Result<String> {
+		self.format(Some(self.default_fmtstr()))
+	}
 }
+
