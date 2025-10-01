@@ -91,3 +91,35 @@ pub trait Format: Debug {
 	}
 }
 
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[derive(Debug)]
+	struct TestFormat;
+
+	impl Format for TestFormat {
+		fn type_name(&self) -> &'static str {
+			"test"
+		}
+
+		fn default_fmtstr(&self) -> &'static str {
+			"default: {string}"
+		}
+
+		fn get_placeholder(&self, name: &str) -> Option<FmtValue> {
+			match name {
+				"string" => Some(FmtValue::from("STRING VALUE :)".to_string())),
+				"int" => Some(FmtValue::from(69)),
+				"float" => Some(FmtValue::from(12.3)),
+				_ => None,
+			}
+		}
+	}
+
+	#[test]
+	fn format_string() {
+		let result = TestFormat.format(Some("## {string} ##")).unwrap();
+		assert_eq!(result, "## STRING VALUE :) ##");
+	}
+}
