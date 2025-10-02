@@ -7,7 +7,7 @@ pub struct ModuleMetaApi;
 impl ApiModule for ModuleMetaApi {
 	const NAMESPACE: &'static str = "mod";
 
-	fn build(lua: &Lua) -> mlua::Result<mlua::Value> {
+	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value<'_>> {
 		let meta = lua.create_table()?;
 		meta.raw_set(
 			"__index",

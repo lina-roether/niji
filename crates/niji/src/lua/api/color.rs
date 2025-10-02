@@ -54,7 +54,7 @@ impl<'lua> FromLua<'lua> for Color {
 impl ApiModule for Color {
 	const NAMESPACE: &'static str = "Color";
 
-	fn build(lua: &Lua) -> mlua::Result<mlua::Value> {
+	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value<'_>> {
 		Color::new_rgba(0, 0, 0, 0).into_lua(lua)
 	}
 }

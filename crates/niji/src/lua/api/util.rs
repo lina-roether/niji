@@ -42,7 +42,7 @@ impl UtilApi {
 impl ApiModule for UtilApi {
 	const NAMESPACE: &'static str = "util";
 
-	fn build(lua: &Lua) -> mlua::Result<mlua::Value> {
+	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value<'_>> {
 		let module = lua.create_table()?;
 
 		module.raw_set("by_theme", lua.create_function(Self::by_theme)?)?;

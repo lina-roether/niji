@@ -26,7 +26,7 @@ pub struct ModuleContext {
 trait ApiModule: Sized {
 	const NAMESPACE: &'static str;
 
-	fn build(lua: &Lua) -> mlua::Result<mlua::Value>;
+	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value<'_>>;
 }
 
 fn insert_module<M: ApiModule>(lua: &Lua, api: &mlua::Table) -> mlua::Result<()> {

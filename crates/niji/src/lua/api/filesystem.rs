@@ -4,7 +4,7 @@ use log::info;
 use mlua::{IntoLua, Lua};
 
 use crate::{
-	file_manager::FileManager, files::Files, lua::api::ModuleContext, utils::xdg::XdgDirs,
+	file_manager::FileManager, files::Files, lua::api::ModuleContext, utils::xdg::XdgDirs
 };
 
 use super::ApiModule;
@@ -36,8 +36,8 @@ impl FilesystemApi {
 			lua,
 			(
 				xdg.config_home.join(path).to_string_lossy().into_owned(),
-				content,
-			),
+				content
+			)
 		)
 	}
 
@@ -47,8 +47,8 @@ impl FilesystemApi {
 			lua,
 			(
 				xdg.state_home.join(path).to_string_lossy().into_owned(),
-				content,
-			),
+				content
+			)
 		)
 	}
 
@@ -58,26 +58,26 @@ impl FilesystemApi {
 			lua,
 			(
 				xdg.data_home.join(path).to_string_lossy().into_owned(),
-				content,
-			),
+				content
+			)
 		)
 	}
 
-	fn read_config(lua: &Lua, path: String) -> mlua::Result<mlua::Value> {
+	fn read_config(lua: &'_ Lua, path: String) -> mlua::Result<mlua::Value<'_>> {
 		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
 		fs::read_to_string(xdg.config_home.join(expand_path(&path)))
 			.map_err(mlua::Error::runtime)?
 			.into_lua(lua)
 	}
 
-	fn read_state(lua: &Lua, path: String) -> mlua::Result<mlua::Value> {
+	fn read_state(lua: &'_ Lua, path: String) -> mlua::Result<mlua::Value<'_>> {
 		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
 		fs::read_to_string(xdg.state_home.join(expand_path(&path)))
 			.map_err(mlua::Error::runtime)?
 			.into_lua(lua)
 	}
 
-	fn read_data(lua: &Lua, path: String) -> mlua::Result<mlua::Value> {
+	fn read_data(lua: &'_ Lua, path: String) -> mlua::Result<mlua::Value<'_>> {
 		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
 		fs::read_to_string(xdg.data_home.join(path))
 			.map_err(mlua::Error::runtime)?
@@ -105,7 +105,7 @@ impl FilesystemApi {
 		Ok(path.to_string_lossy().into_owned())
 	}
 
-	fn read_config_asset(lua: &Lua, path: String) -> mlua::Result<mlua::Value> {
+	fn read_config_asset(lua: &'_ Lua, path: String) -> mlua::Result<mlua::Value<'_>> {
 		let files = lua.app_data_ref::<Rc<Files>>().unwrap();
 		let path = files
 			.config_file()
@@ -122,7 +122,7 @@ impl FilesystemApi {
 impl ApiModule for FilesystemApi {
 	const NAMESPACE: &'static str = "fs";
 
-	fn build(lua: &Lua) -> mlua::Result<mlua::Value> {
+	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value<'_>> {
 		let module = lua.create_table()?;
 
 		module.raw_set("write", lua.create_function(Self::write)?)?;
@@ -136,7 +136,7 @@ impl ApiModule for FilesystemApi {
 		module.raw_set("read_data", lua.create_function(Self::read_data)?)?;
 		module.raw_set(
 			"read_config_asset",
-			lua.create_function(Self::read_config_asset)?,
+			lua.create_function(Self::read_config_asset)?
 		)?;
 
 		module.into_lua(lua)

@@ -125,7 +125,7 @@ impl UserData for LuaTemplate {
 impl ApiModule for LuaTemplate {
 	const NAMESPACE: &'static str = "Template";
 
-	fn build(lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+	fn build(lua: &'_ mlua::Lua) -> mlua::Result<mlua::Value<'_>> {
 		LuaTemplate(Template::from_str("").unwrap()).into_lua(lua)
 	}
 }

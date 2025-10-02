@@ -20,7 +20,7 @@ impl OsApi {
 impl ApiModule for OsApi {
 	const NAMESPACE: &'static str = "os";
 
-	fn build(lua: &Lua) -> mlua::Result<mlua::Value> {
+	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value<'_>> {
 		let table = lua.create_table()?;
 
 		table.raw_set("exec_detached", lua.create_function(Self::exec_detached)?)?;
