@@ -16,7 +16,7 @@ use crate::template::{Insert, Name, Section, SetFmt, Template, Token};
 // Insert := "{{", Name, [":", String], "}}"
 // SetFmt := "{{%", String, ":", String, "%}}"
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, PartialEq)]
 pub enum ParseErrorKind {
 	#[error("Expected an identifier")]
 	ExpectedIdent,
@@ -52,7 +52,7 @@ pub enum ParseErrorKind {
 	ExpectedOp(char)
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, PartialEq)]
 #[error("{kind} ({position})")]
 pub struct ParseError {
 	position: Position,
@@ -573,6 +573,30 @@ mod tests {
 	use crate::template::Insert;
 
 	use super::*;
+
+	#[test]
+	fn parse_error() {
+		let error = "{{".parse::<Template>().unwrap_err();
+		assert_eq!(
+			error,
+			ParseError::new(
+				ParseErrorKind::ExpectedIdent,
+				Position { line: 1, column: 2 }
+			)
+		);
+	}
+
+	#[test]
+	fn parse_error_multiline() {
+		let error = "stuff\n{{".parse::<Template>().unwrap_err();
+		assert_eq!(
+			error,
+			ParseError::new(
+				ParseErrorKind::ExpectedIdent,
+				Position { line: 2, column: 2 }
+			)
+		);
+	}
 
 	#[test]
 	fn basic_template() {
