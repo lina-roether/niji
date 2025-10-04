@@ -109,4 +109,28 @@ mod tests {
 		let result = TestFormat.format(Some("## {string} ##")).unwrap();
 		assert_eq!(result, "## STRING VALUE :) ##");
 	}
+
+	#[test]
+	fn format_int() {
+		let result = TestFormat.format(Some("## {int} ##")).unwrap();
+		assert_eq!(result, "## 69 ##");
+	}
+
+	#[test]
+	fn format_float() {
+		let result = TestFormat.format(Some("## {float} ##")).unwrap();
+		assert_eq!(result, "## 12.3 ##");
+	}
+
+	#[test]
+	fn format_default() {
+		let result = TestFormat.format(None).unwrap();
+		assert_eq!(result, "default: STRING VALUE :)");
+	}
+
+	#[test]
+	fn display() {
+		let result = TestFormat.display().unwrap();
+		assert_eq!(result, "default: STRING VALUE :)");
+	}
 }
