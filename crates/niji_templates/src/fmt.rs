@@ -1,12 +1,12 @@
 use std::fmt::Debug;
 
+use anyhow::Context;
 use strfmt::{strfmt_map, DisplayStr, Formatter};
-use thiserror::Error;
 
 pub enum FmtValue {
 	String(String),
 	Int(i64),
-	Float(f64),
+	Float(f64)
 }
 
 macro_rules! fmt_value_from_int {
@@ -47,21 +47,8 @@ impl DisplayStr for FmtValue {
 		match self {
 			Self::String(string) => string.display_str(f),
 			Self::Int(int) => int.display_str(f),
-			Self::Float(float) => float.display_str(f),
+			Self::Float(float) => float.display_str(f)
 		}
-	}
-}
-
-#[derive(Debug, Error)]
-#[error("Failed to format {type_name}: {inner}")]
-pub struct FmtError {
-	type_name: &'static str,
-	inner: strfmt::FmtError,
-}
-
-impl FmtError {
-	fn new(type_name: &'static str, inner: strfmt::FmtError) -> Self {
-		Self { type_name, inner }
 	}
 }
 
@@ -81,7 +68,7 @@ pub trait Format: Debug {
 			value.display_str(&mut fmt)?;
 			Ok(())
 		})
-		.map_err(|inner| FmtError::new(self.type_name(), inner))?;
+		.context(format!("Failed to format {}", self.type_name()))?;
 
 		Ok(result)
 	}
@@ -112,7 +99,7 @@ mod tests {
 				"string" => Some(FmtValue::from("STRING VALUE :)".to_string())),
 				"int" => Some(FmtValue::from(69)),
 				"float" => Some(FmtValue::from(12.3)),
-				_ => None,
+				_ => None
 			}
 		}
 	}
