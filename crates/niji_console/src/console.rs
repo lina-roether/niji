@@ -1,18 +1,19 @@
 use std::{
 	fmt::Arguments,
-	io::{self, IsTerminal, Write},
+	io::{self, BufRead, BufReader, IsTerminal}
 };
 
 use parking_lot::Mutex;
 use termcolor::{BufferedStandardStream, Color, ColorChoice, ColorSpec, WriteColor};
 
-pub struct Console {
-	stdout: Mutex<BufferedStandardStream>,
-	stderr: Mutex<BufferedStandardStream>,
+pub struct Console<I = BufReader<io::Stdin>, O = BufferedStandardStream> {
+	input: Mutex<I>,
+	output: Mutex<O>,
+	err_output: Mutex<O>
 }
 
 impl Console {
-	pub fn new(color_choice: ColorChoice) -> Self {
+	pub fn new_std(color_choice: ColorChoice) -> Self {
 		let mut stdout_color = color_choice;
 		let mut stderr_color = color_choice;
 
@@ -25,12 +26,28 @@ impl Console {
 			}
 		}
 
-		let stdout = Mutex::new(BufferedStandardStream::stdout(stdout_color));
-		let stderr = Mutex::new(BufferedStandardStream::stderr(stderr_color));
-
-		Self { stdout, stderr }
+		Self::new(
+			BufReader::new(io::stdin()),
+			BufferedStandardStream::stdout(stdout_color),
+			BufferedStandardStream::stderr(stderr_color)
+		)
 	}
+}
 
+impl<I, O> Console<I, O> {
+	pub fn new(input: I, output: O, err_output: O) -> Self {
+		Self {
+			input: Mutex::new(input),
+			output: Mutex::new(output),
+			err_output: Mutex::new(err_output)
+		}
+	}
+}
+
+impl<I, O> Console<I, O>
+where
+	O: WriteColor
+{
 	pub fn log_error(&self, args: &Arguments) -> anyhow::Result<()> {
 		Self::log(
 			&mut self.err_output.lock(),
@@ -93,7 +110,7 @@ impl Console {
 	}
 
 	fn log(
-		out: &mut BufferedStandardStream,
+		out: &mut O,
 		tag: &str,
 		tag_color: &ColorSpec,
 		message: &Arguments,
@@ -125,6 +142,64 @@ impl Console {
 		Ok(())
 	}
 
+	pub fn heading(&self, args: &Arguments) -> anyhow::Result<()> {
+		let stdout = &mut self.output.lock();
+
+		let mut decoration_color = ColorSpec::new();
+		decoration_color
+			.set_fg(Some(Color::Black))
+			.set_intense(true);
+
+		stdout.set_color(&decoration_color).unwrap();
+
+		write!(stdout, " ==== [ ")?;
+
+		stdout
+			.set_color(
+				ColorSpec::new()
+					.set_fg(Some(Color::White))
+					.set_intense(true)
+					.set_bold(true)
+			)
+			.unwrap();
+
+		write!(stdout, "{args}")?;
+
+		stdout.set_color(&decoration_color).unwrap();
+
+		writeln!(stdout, " ] ====")?;
+
+		stdout.reset().unwrap();
+		Ok(())
+	}
+
+	pub fn println(&self, args: Option<&Arguments>) -> anyhow::Result<()> {
+		let stdout = &mut self.output.lock();
+
+		match args {
+			Some(args) => writeln!(stdout, "{args}")?,
+			None => writeln!(stdout)?
+		}
+
+		stdout.flush()?;
+		Ok(())
+	}
+
+	pub fn flush(&self) -> anyhow::Result<()> {
+		let stdout = &mut self.output.lock();
+		let stderr = &mut self.err_output.lock();
+
+		stdout.flush()?;
+		stderr.flush()?;
+		Ok(())
+	}
+}
+
+impl<I, O> Console<I, O>
+where
+	I: BufRead,
+	O: WriteColor
+{
 	pub fn prompt(&self, args: &Arguments, default: Option<bool>) -> anyhow::Result<bool> {
 		let stdout = &mut self.output.lock();
 
@@ -166,7 +241,7 @@ impl Console {
 			stdout.flush()?;
 
 			let mut response = String::new();
-			io::stdin().read_line(&mut response)?;
+			self.input.lock().read_line(&mut response)?;
 
 			response = response.trim().to_string().to_lowercase();
 
@@ -186,17 +261,19 @@ impl Console {
 	}
 }
 
-	pub fn heading(&self, args: &Arguments) -> anyhow::Result<()> {
-		let stdout = &mut self.stdout.lock().unwrap();
+#[cfg(test)]
+mod tests {
+	use std::io::Cursor;
 
-		let mut decoration_color = ColorSpec::new();
-		decoration_color
-			.set_fg(Some(Color::Black))
-			.set_intense(true);
+	use super::*;
 
-		stdout.set_color(&decoration_color).unwrap();
+	#[test]
+	fn log_message() {
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new((), &mut out, &mut err);
 
-		write!(stdout, " ==== [ ")?;
+		console.log_info(&format_args!("Test")).unwrap();
 
 		stdout
 			.set_color(

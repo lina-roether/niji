@@ -11,7 +11,7 @@ mod logger;
 mod macros;
 
 pub fn init(level: LevelFilter, color_choice: ColorChoice) {
-	let console = Console::new(color_choice);
+	let console = Console::new_std(color_choice);
 	if level != LevelFilter::Off {
 		api::set_console(console);
 	}
