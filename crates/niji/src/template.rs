@@ -42,3 +42,26 @@ where
 
 	Ok(source.parse()?)
 }
+
+#[cfg(test)]
+mod tests {
+	use niji_templates::Format;
+
+	use super::*;
+
+	#[test]
+	fn format_color() {
+		let color = Color::new_rgba(17, 51, 85, 255);
+		let result = color
+			.format(Some(
+				"r={r}; g={g}; b={b}; a={a}; rx={rx}; gx={gx}; bx={bx}; ax={ax}; rf={rf}; \
+				 gf={gf}; bf={bf}; af={af}",
+			))
+			.unwrap();
+		assert_eq!(
+			result,
+			"r=17; g=51; b=85; a=255; rx=11; gx=33; bx=55; ax=ff; rf=0.06666667014360428; \
+			 gf=0.20000000298023224; bf=0.3333333432674408; af=1"
+		)
+	}
+}
