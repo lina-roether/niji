@@ -18,9 +18,9 @@ impl ThemeManager {
 	}
 
 	pub fn list_themes(&self) -> Vec<String> {
-		let mut themes = HashSet::new();
+		let mut themes_set = HashSet::new();
 		for location in self.files.iter_themes() {
-			if themes.insert(location.name.clone()) {
+			if themes_set.insert(location.name.clone()) {
 				debug!(
 					"Found theme {} at {}",
 					location.name,
@@ -28,7 +28,9 @@ impl ThemeManager {
 				);
 			}
 		}
-		themes.into_iter().collect()
+		let mut themes: Vec<String> = themes_set.into_iter().collect();
+		themes.sort();
+		themes
 	}
 
 	pub fn get_current_theme(&self) -> anyhow::Result<Theme> {
