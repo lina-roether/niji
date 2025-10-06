@@ -79,11 +79,11 @@ pub trait Format: Debug {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod test_utils {
 	use super::*;
 
 	#[derive(Debug)]
-	struct TestFormat;
+	pub struct TestFormat;
 
 	impl Format for TestFormat {
 		fn type_name(&self) -> &'static str {
@@ -103,6 +103,12 @@ mod tests {
 			}
 		}
 	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use test_utils::*;
 
 	#[test]
 	fn format_string() {

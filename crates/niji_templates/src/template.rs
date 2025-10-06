@@ -20,19 +20,19 @@ impl fmt::Display for Name {
 pub(crate) struct Section {
 	pub name: Name,
 	pub inverted: bool,
-	pub content: Vec<Token>,
+	pub content: Vec<Token>
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Insert {
 	pub name: Name,
-	pub format: Option<String>,
+	pub format: Option<String>
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SetFmt {
 	pub type_name: String,
-	pub format: String,
+	pub format: String
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,20 +40,20 @@ pub(crate) enum Token {
 	String(String),
 	Insert(Insert),
 	Section(Section),
-	SetFmt(SetFmt),
+	SetFmt(SetFmt)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Template {
 	fmt: HashMap<String, String>,
-	tokens: Vec<Token>,
+	tokens: Vec<Token>
 }
 
 impl Template {
 	pub(crate) fn new(tokens: Vec<Token>) -> Self {
 		Self {
 			fmt: HashMap::new(),
-			tokens,
+			tokens
 		}
 	}
 
@@ -72,7 +72,7 @@ impl Template {
 		buf: &mut String,
 		tokens: &[Token],
 		context: &[&Value],
-		fmt: &mut HashMap<String, String>,
+		fmt: &mut HashMap<String, String>
 	) -> anyhow::Result<()> {
 		for token in tokens {
 			match token {
@@ -91,7 +91,7 @@ impl Template {
 		buf: &mut String,
 		section: &Section,
 		context: &[&Value],
-		fmt: &mut HashMap<String, String>,
+		fmt: &mut HashMap<String, String>
 	) -> anyhow::Result<()> {
 		let value = Self::get_named_value(&section.name.0, context)?;
 
@@ -144,7 +144,7 @@ impl Template {
 		buf: &mut String,
 		insert: &Insert,
 		context: &[&Value],
-		fmt: &HashMap<String, String>,
+		fmt: &HashMap<String, String>
 	) -> anyhow::Result<()> {
 		let value = Self::get_named_value(&insert.name.0, context)?;
 
@@ -159,10 +159,10 @@ impl Template {
 						.format
 						.as_ref()
 						.or_else(|| fmt.get(fmt_val.type_name()))
-						.map(String::as_str),
-				)?,
+						.map(String::as_str)
+				)?
 			),
-			Value::Nil => (),
+			Value::Nil => ()
 		}
 
 		Ok(())
@@ -202,5 +202,148 @@ impl Template {
 				Self::get_named_value(&name[1..], &[&[value], &context[1..]].concat())
 			}
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use crate::{fmt::test_utils::*, Format};
+
+	#[test]
+	fn render_static() {
+		let mut template = Template::new(vec![
+			Token::String("AAA".to_string()),
+			Token::String("BBB".to_string()),
+			Token::String("CCC".to_string()),
+		]);
+
+		let result = template.render(&Value::Nil).unwrap();
+		assert_eq!(result, "AAABBBCCC");
+	}
+
+	#[test]
+	fn render_whole_value() {
+		let mut template = Template::new(vec![
+			Token::String("Value: ".to_string()),
+			Token::Insert(Insert {
+				name: Name(vec![]),
+				format: None
+			}),
+		]);
+		let result = template.render(&Value::String(":3c".to_string())).unwrap();
+		assert_eq!(result, "Value: :3c");
+	}
+
+	#[test]
+	fn render_named_value() {
+		let mut template = Template::new(vec![
+			Token::String("Value: ".to_string()),
+			Token::Insert(Insert {
+				name: Name(vec!["foo".to_string()]),
+				format: None
+			}),
+		]);
+		let result = template
+			.render(&Value::Map(
+				[("foo".to_string(), Value::String(">:3".to_string()))].into()
+			))
+			.unwrap();
+		assert_eq!(result, "Value: >:3");
+	}
+
+	#[test]
+	fn render_index_value() {
+		let mut template = Template::new(vec![
+			Token::String("Value: ".to_string()),
+			Token::Insert(Insert {
+				name: Name(vec!["1".to_string()]),
+				format: None
+			}),
+		]);
+		let result = template
+			.render(&Value::Vec(vec![
+				Value::Nil,
+				Value::String("^-^".to_string()),
+			]))
+			.unwrap();
+		assert_eq!(result, "Value: ^-^");
+	}
+
+	#[test]
+	fn render_deep_value() {
+		let mut template = Template::new(vec![
+			Token::String("Value: ".to_string()),
+			Token::Insert(Insert {
+				name: Name(vec!["foo".to_string(), "0".to_string(), "bar".to_string()]),
+				format: None
+			}),
+		]);
+		let result = template
+			.render(&Value::Map(
+				[(
+					"foo".to_string(),
+					Value::Vec(vec![Value::Map(
+						[("bar".to_string(), Value::String("c:".to_string()))].into()
+					)])
+				)]
+				.into()
+			))
+			.unwrap();
+		assert_eq!(result, "Value: c:");
+	}
+
+	#[test]
+	fn render_unformatted_insert() {
+		let mut template = Template::new(vec![
+			Token::String("Value: ".to_string()),
+			Token::Insert(Insert {
+				name: Name(vec![]),
+				format: None
+			}),
+		]);
+		let result = template.render(&Value::Fmt(Box::new(TestFormat))).unwrap();
+		assert_eq!(result, "Value: default: STRING VALUE :)");
+	}
+
+	#[test]
+	fn render_formatted_insert() {
+		let mut template = Template::new(vec![
+			Token::String("Value: ".to_string()),
+			Token::Insert(Insert {
+				name: Name(vec![]),
+				format: Some("«{string}»".to_string())
+			}),
+		]);
+		let result = template.render(&Value::Fmt(Box::new(TestFormat))).unwrap();
+		assert_eq!(result, "Value: «STRING VALUE :)»");
+	}
+
+	#[test]
+	fn render_global_formatted_insert() {
+		let mut template = Template::new(vec![
+			Token::String("Value: ".to_string()),
+			Token::Insert(Insert {
+				name: Name(vec![]),
+				format: None
+			}),
+		]);
+		template.set_format(TestFormat.type_name().to_string(), "“{string}”".to_string());
+		let result = template.render(&Value::Fmt(Box::new(TestFormat))).unwrap();
+		assert_eq!(result, "Value: “STRING VALUE :)”");
+	}
+
+	#[test]
+	fn override_global_formatting() {
+		let mut template = Template::new(vec![
+			Token::String("Value: ".to_string()),
+			Token::Insert(Insert {
+				name: Name(vec![]),
+				format: Some("«{string}»".to_string())
+			}),
+		]);
+		template.set_format(TestFormat.type_name().to_string(), "“{string}”".to_string());
+		let result = template.render(&Value::Fmt(Box::new(TestFormat))).unwrap();
+		assert_eq!(result, "Value: «STRING VALUE :)»");
 	}
 }
