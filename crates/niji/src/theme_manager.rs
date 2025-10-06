@@ -5,11 +5,11 @@ use log::debug;
 
 use crate::{
 	config::{self, Theme},
-	files::Files,
+	files::Files
 };
 
 pub struct ThemeManager {
-	files: Rc<Files>,
+	files: Rc<Files>
 }
 
 impl ThemeManager {

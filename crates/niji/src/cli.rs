@@ -39,7 +39,7 @@ pub fn run() {
 				.action(ArgAction::SetTrue)
 				.conflicts_with("verbose")
 				.global(true)
-				.help("Disables all log messages"),
+				.help("Disables all log messages")
 		)
 		.arg(
 			Arg::new("verbose")
@@ -48,7 +48,7 @@ pub fn run() {
 				.action(ArgAction::SetTrue)
 				.conflicts_with("quiet")
 				.global(true)
-				.help("Prints additional debug output"),
+				.help("Prints additional debug output")
 		)
 		.arg(
 			Arg::new("no_color")
@@ -56,7 +56,7 @@ pub fn run() {
 				.short('b')
 				.action(ArgAction::SetTrue)
 				.global(true)
-				.help("Disable color output"),
+				.help("Disable color output")
 		)
 		.subcommand(
 			Command::new("apply")
@@ -69,8 +69,8 @@ pub fn run() {
 						.help(
 							"The module to apply the config to. Can be set multiple times to \
 							 apply to multiple modules. If not set, all active modules will be \
-							 applied.",
-						),
+							 applied."
+						)
 				)
 				.arg(
 					Arg::new("no_reload")
@@ -79,15 +79,15 @@ pub fn run() {
 						.action(ArgAction::SetTrue)
 						.help(
 							"Do not reload the module targets to apply the changes immediately. \
-							 Changes will only take effect after a restart.",
-						),
-				),
+							 Changes will only take effect after a restart."
+						)
+				)
 		)
 		.subcommand(
 			Command::new("theme")
 				.about(
 					"Perform actions related to themes, such as changing the theme or listing \
-					 available themes",
+					 available themes"
 				)
 				.subcommand_required(true)
 				.subcommand(Command::new("get").about("Get the name of the current theme"))
@@ -95,8 +95,8 @@ pub fn run() {
 					Command::new("preview")
 						.about("Display a preview of a theme in the console")
 						.arg(Arg::new("name").help(
-							"The theme to preview. Defaults to the current theme if not set.",
-						)),
+							"The theme to preview. Defaults to the current theme if not set."
+						))
 				)
 				.subcommand(
 					Command::new("set")
@@ -109,7 +109,7 @@ pub fn run() {
 								.short('n')
 								.action(ArgAction::SetTrue)
 								.help("Don't apply the theme after setting it")
-								.conflicts_with("no_reload"),
+								.conflicts_with("no_reload")
 						)
 						.arg(
 							Arg::new("no_reload")
@@ -118,15 +118,15 @@ pub fn run() {
 								.action(ArgAction::SetTrue)
 								.help(
 									"Do not reload the module targets to apply the changes \
-									 immediately. Changes will only take effect after a restart.",
-								),
-						),
+									 immediately. Changes will only take effect after a restart."
+								)
+						)
 				)
 				.subcommand(Command::new("list").about("List the names of available themes"))
 				.subcommand(Command::new("unset").about(
 					"Unset the current theme. Note that this will not make any changes to the \
-					 emitted files!",
-				)),
+					 emitted files!"
+				))
 		)
 		.get_matches();
 
@@ -159,7 +159,7 @@ fn cmd(args: &ArgMatches) {
 	match args.subcommand() {
 		Some(("apply", args)) => cmd_apply(&app, args),
 		Some(("theme", args)) => cmd_theme(&app, args),
-		_ => unreachable!(),
+		_ => unreachable!()
 	}
 }
 
@@ -179,7 +179,7 @@ fn cmd_theme(app: &NijiApp, args: &ArgMatches) {
 		Some(("set", args)) => cmd_theme_set(app, args),
 		Some(("list", _)) => cmd_theme_list(app),
 		Some(("unset", _)) => cmd_theme_unset(app),
-		_ => unreachable!(),
+		_ => unreachable!()
 	}
 }
 
