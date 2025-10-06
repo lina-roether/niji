@@ -6,7 +6,7 @@ use crate::utils::lerp;
 pub struct OklchColor {
 	l: f32,
 	c: f32,
-	h: f32
+	h: f32,
 }
 
 impl OklchColor {
@@ -68,7 +68,7 @@ impl OklchColor {
 		Self::new(
 			lerp(col1.lightness(), col2.lightness(), t),
 			lerp(col1.chroma(), col2.chroma(), t),
-			lerp(col1.hue(), col2.hue(), t)
+			lerp(col1.hue(), col2.hue(), t),
 		)
 	}
 }

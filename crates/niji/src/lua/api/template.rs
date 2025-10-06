@@ -108,7 +108,7 @@ impl UserData for LuaTemplate {
 			|_, this, (ty, fmtstr): (String, String)| -> mlua::Result<()> {
 				this.0.set_format(ty, fmtstr);
 				Ok(())
-			}
+			},
 		);
 
 		methods.add_method_mut(
@@ -117,7 +117,7 @@ impl UserData for LuaTemplate {
 				this.0
 					.render(&get_template_value(value)?)
 					.map_err(mlua::Error::runtime)
-			}
+			},
 		)
 	}
 }

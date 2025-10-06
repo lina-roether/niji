@@ -5,11 +5,11 @@ use log::debug;
 
 use crate::{
 	config::{self, Theme},
-	files::Files
+	files::Files,
 };
 
 pub struct ThemeManager {
-	files: Rc<Files>
+	files: Rc<Files>,
 }
 
 impl ThemeManager {
@@ -130,7 +130,7 @@ mod tests {
 				text_success: Color::new_rgba(1, 2, 3, 4),
 				text_info: Color::new_rgba(1, 2, 3, 4),
 				text_warning: Color::new_rgba(1, 2, 3, 4),
-				text_error: Color::new_rgba(1, 2, 3, 4)
+				text_error: Color::new_rgba(1, 2, 3, 4),
 			},
 			terminal: config::Terminal {
 				black: Color::new_rgba(1, 2, 3, 4),
@@ -148,8 +148,8 @@ mod tests {
 				bright_blue: Color::new_rgba(1, 2, 3, 4),
 				bright_magenta: Color::new_rgba(1, 2, 3, 4),
 				bright_cyan: Color::new_rgba(1, 2, 3, 4),
-				bright_white: Color::new_rgba(1, 2, 3, 4)
-			}
+				bright_white: Color::new_rgba(1, 2, 3, 4),
+			},
 		}
 	}
 
@@ -177,7 +177,7 @@ mod tests {
 
 		fs::write(
 			xdg.config_home.join("niji/themes/theme1.toml"),
-			toml::to_string(&test_theme()).unwrap()
+			toml::to_string(&test_theme()).unwrap(),
 		)
 		.unwrap();
 
@@ -202,7 +202,7 @@ mod tests {
 		fs::write(xdg.state_home.join("niji/current_theme.txt"), "theme1").unwrap();
 		fs::write(
 			xdg.config_home.join("niji/themes/theme1.toml"),
-			toml::to_string(&test_theme()).unwrap()
+			toml::to_string(&test_theme()).unwrap(),
 		)
 		.unwrap();
 
@@ -229,7 +229,7 @@ mod tests {
 		fs::write(xdg.state_home.join("niji/current_theme.txt"), "").unwrap();
 		fs::write(
 			xdg.config_home.join("niji/themes/theme1.toml"),
-			toml::to_string(&test_theme()).unwrap()
+			toml::to_string(&test_theme()).unwrap(),
 		)
 		.unwrap();
 
@@ -244,7 +244,7 @@ mod tests {
 
 		fs::write(
 			xdg.config_home.join("niji/themes/theme1.toml"),
-			toml::to_string(&test_theme()).unwrap()
+			toml::to_string(&test_theme()).unwrap(),
 		)
 		.unwrap();
 

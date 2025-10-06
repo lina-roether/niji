@@ -6,7 +6,7 @@ use crate::{file_manager::FileManager, files::Files, types::color::Color, utils:
 
 use self::{
 	console::ConsoleApi, filesystem::FilesystemApi, module_meta::ModuleMetaApi, os::OsApi,
-	template::LuaTemplate, util::UtilApi, xdg::XdgApi
+	template::LuaTemplate, util::UtilApi, xdg::XdgApi,
 };
 
 mod color;
@@ -20,7 +20,7 @@ mod xdg;
 
 pub struct ModuleContext {
 	pub name: String,
-	pub path: PathBuf
+	pub path: PathBuf,
 }
 
 trait ApiModule: Sized {
@@ -38,7 +38,7 @@ const API_GLOBAL: &str = "niji";
 pub struct Init {
 	pub xdg: Rc<XdgDirs>,
 	pub files: Rc<Files>,
-	pub file_manager: Rc<FileManager>
+	pub file_manager: Rc<FileManager>,
 }
 
 pub fn init(lua: &Lua, init: Init) -> mlua::Result<()> {

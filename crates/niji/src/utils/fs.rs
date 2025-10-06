@@ -1,7 +1,7 @@
 use std::{
 	fs::{read_dir, ReadDir},
 	io,
-	path::{Path, PathBuf}
+	path::{Path, PathBuf},
 };
 
 pub struct SubPathIter(ReadDir);
@@ -22,18 +22,18 @@ impl Iterator for SubPathIter {
 
 pub struct FindSubPathsIter<I> {
 	search_path_iter: I,
-	sub_path_iter: Option<SubPathIter>
+	sub_path_iter: Option<SubPathIter>,
 }
 
 impl<P, I> FindSubPathsIter<I>
 where
 	P: AsRef<Path>,
-	I: Iterator<Item = P>
+	I: Iterator<Item = P>,
 {
 	pub fn new(search_path_iter: I) -> Self {
 		Self {
 			search_path_iter,
-			sub_path_iter: None
+			sub_path_iter: None,
 		}
 	}
 }
@@ -41,7 +41,7 @@ where
 impl<P, I> Iterator for FindSubPathsIter<I>
 where
 	P: AsRef<Path>,
-	I: Iterator<Item = P>
+	I: Iterator<Item = P>,
 {
 	type Item = PathBuf;
 
@@ -50,7 +50,7 @@ where
 			if self.sub_path_iter.is_none() {
 				self.sub_path_iter = Some(
 					self.search_path_iter
-						.find_map(|search_path| SubPathIter::new(search_path).ok())?
+						.find_map(|search_path| SubPathIter::new(search_path).ok())?,
 				);
 			}
 
@@ -74,7 +74,7 @@ pub struct FileIter<I>(I);
 impl<P, I> FileIter<I>
 where
 	P: AsRef<Path>,
-	I: Iterator<Item = P>
+	I: Iterator<Item = P>,
 {
 	#[inline]
 	pub fn new(inner: I) -> Self {
@@ -85,7 +85,7 @@ where
 impl<P, I> Iterator for FileIter<I>
 where
 	P: AsRef<Path>,
-	I: Iterator<Item = P>
+	I: Iterator<Item = P>,
 {
 	type Item = P;
 
@@ -99,7 +99,7 @@ pub struct DirIter<I>(I);
 impl<P, I> DirIter<I>
 where
 	P: AsRef<Path>,
-	I: Iterator<Item = P>
+	I: Iterator<Item = P>,
 {
 	#[inline]
 	pub fn new(inner: I) -> Self {
@@ -110,7 +110,7 @@ where
 impl<P, I> Iterator for DirIter<I>
 where
 	P: AsRef<Path>,
-	I: Iterator<Item = P>
+	I: Iterator<Item = P>,
 {
 	type Item = P;
 
@@ -124,7 +124,7 @@ pub type FindFilesIter<I> = FileIter<FindSubPathsIter<I>>;
 pub fn find_files<P, S>(search_paths: S) -> FindFilesIter<S::IntoIter>
 where
 	P: AsRef<Path>,
-	S: IntoIterator<Item = P>
+	S: IntoIterator<Item = P>,
 {
 	FileIter::new(FindSubPathsIter::new(search_paths.into_iter()))
 }
@@ -134,7 +134,7 @@ pub type FindDirsIter<I> = DirIter<FindSubPathsIter<I>>;
 pub fn find_dirs<P, S>(search_paths: S) -> FindDirsIter<S::IntoIter>
 where
 	P: AsRef<Path>,
-	S: IntoIterator<Item = P>
+	S: IntoIterator<Item = P>,
 {
 	DirIter::new(FindSubPathsIter::new(search_paths.into_iter()))
 }

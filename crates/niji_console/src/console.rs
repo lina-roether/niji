@@ -1,6 +1,6 @@
 use std::{
 	fmt::Arguments,
-	io::{self, BufRead, BufReader, IsTerminal}
+	io::{self, BufRead, BufReader, IsTerminal},
 };
 
 use parking_lot::Mutex;
@@ -9,7 +9,7 @@ use termcolor::{BufferedStandardStream, Color, ColorChoice, ColorSpec, WriteColo
 pub struct Console<I = BufReader<io::Stdin>, O = BufferedStandardStream> {
 	input: Mutex<I>,
 	output: Mutex<O>,
-	err_output: Mutex<O>
+	err_output: Mutex<O>,
 }
 
 impl Console {
@@ -29,7 +29,7 @@ impl Console {
 		Self::new(
 			BufReader::new(io::stdin()),
 			BufferedStandardStream::stdout(stdout_color),
-			BufferedStandardStream::stderr(stderr_color)
+			BufferedStandardStream::stderr(stderr_color),
 		)
 	}
 }
@@ -39,14 +39,14 @@ impl<I, O> Console<I, O> {
 		Self {
 			input: Mutex::new(input),
 			output: Mutex::new(output),
-			err_output: Mutex::new(err_output)
+			err_output: Mutex::new(err_output),
 		}
 	}
 }
 
 impl<I, O> Console<I, O>
 where
-	O: WriteColor
+	O: WriteColor,
 {
 	pub fn log_error(&self, args: &Arguments) -> anyhow::Result<()> {
 		Self::log(
@@ -57,7 +57,7 @@ where
 				.set_intense(true)
 				.set_bold(true),
 			args,
-			ColorSpec::new().set_fg(Some(Color::Red))
+			ColorSpec::new().set_fg(Some(Color::Red)),
 		)
 	}
 
@@ -70,7 +70,7 @@ where
 				.set_intense(true)
 				.set_bold(true),
 			args,
-			ColorSpec::new().set_fg(Some(Color::Yellow))
+			ColorSpec::new().set_fg(Some(Color::Yellow)),
 		)
 	}
 
@@ -85,7 +85,7 @@ where
 			args,
 			ColorSpec::new()
 				.set_fg(Some(Color::White))
-				.set_intense(true)
+				.set_intense(true),
 		)
 	}
 
@@ -95,7 +95,7 @@ where
 			"DEBUG",
 			ColorSpec::new().set_fg(Some(Color::White)),
 			args,
-			ColorSpec::new().set_fg(Some(Color::White))
+			ColorSpec::new().set_fg(Some(Color::White)),
 		)
 	}
 
@@ -105,7 +105,7 @@ where
 			"TRACE",
 			ColorSpec::new().set_fg(Some(Color::White)),
 			args,
-			ColorSpec::new().set_fg(Some(Color::White))
+			ColorSpec::new().set_fg(Some(Color::White)),
 		)
 	}
 
@@ -114,7 +114,7 @@ where
 		tag: &str,
 		tag_color: &ColorSpec,
 		message: &Arguments,
-		message_color: &ColorSpec
+		message_color: &ColorSpec,
 	) -> anyhow::Result<()> {
 		out.set_color(tag_color).unwrap();
 
@@ -123,7 +123,7 @@ where
 		out.set_color(
 			ColorSpec::new()
 				.set_fg(Some(Color::Black))
-				.set_intense(true)
+				.set_intense(true),
 		)
 		.unwrap();
 
@@ -159,7 +159,7 @@ where
 				ColorSpec::new()
 					.set_fg(Some(Color::White))
 					.set_intense(true)
-					.set_bold(true)
+					.set_bold(true),
 			)
 			.unwrap();
 
@@ -178,7 +178,7 @@ where
 
 		match args {
 			Some(args) => writeln!(stdout, "{args}")?,
-			None => writeln!(stdout)?
+			None => writeln!(stdout)?,
 		}
 
 		stdout.flush()?;
@@ -198,7 +198,7 @@ where
 impl<I, O> Console<I, O>
 where
 	I: BufRead,
-	O: WriteColor
+	O: WriteColor,
 {
 	pub fn prompt(&self, args: &Arguments, default: Option<bool>) -> anyhow::Result<bool> {
 		let stdout = &mut self.output.lock();
@@ -208,7 +208,7 @@ where
 				.set_color(
 					ColorSpec::new()
 						.set_fg(Some(Color::White))
-						.set_intense(true)
+						.set_intense(true),
 				)
 				.unwrap();
 
@@ -219,21 +219,21 @@ where
 					ColorSpec::new()
 						.set_fg(Some(Color::Blue))
 						.set_intense(true)
-						.set_bold(true)
+						.set_bold(true),
 				)
 				.unwrap();
 
 			match default {
 				Some(true) => write!(stdout, "[Y/n]")?,
 				Some(false) => write!(stdout, "[y/N]")?,
-				None => write!(stdout, "[y/n]")?
+				None => write!(stdout, "[y/n]")?,
 			};
 
 			stdout
 				.set_color(
 					ColorSpec::new()
 						.set_fg(Some(Color::White))
-						.set_intense(true)
+						.set_intense(true),
 				)
 				.unwrap();
 
@@ -253,7 +253,7 @@ where
 						return Ok(default);
 					}
 				}
-				_ => ()
+				_ => (),
 			}
 
 			stdout.reset().unwrap();
@@ -361,7 +361,7 @@ mod tests {
 	#[test]
 	fn prompt_garbage() {
 		let input = BufReader::new(Cursor::new(
-			"\nnsdfksdf\nysydfds\nn\n".to_string().into_bytes()
+			"\nnsdfksdf\nysydfds\nn\n".to_string().into_bytes(),
 		));
 		let mut out = termcolor::Buffer::no_color();
 		let mut err = termcolor::Buffer::no_color();
@@ -528,7 +528,7 @@ mod tests {
 	#[test]
 	fn prompt_default_garbage() {
 		let input = BufReader::new(Cursor::new(
-			"nsdfnfsdf\nyfsddfgfgsdfgdf\n\n".to_string().into_bytes()
+			"nsdfnfsdf\nyfsddfgfgsdfgdf\n\n".to_string().into_bytes(),
 		));
 		let mut out = termcolor::Buffer::no_color();
 		let mut err = termcolor::Buffer::no_color();

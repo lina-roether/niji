@@ -1,7 +1,7 @@
 use std::{
 	borrow::Cow,
 	env::{self, split_paths},
-	path::{Path, PathBuf}
+	path::{Path, PathBuf},
 };
 
 use anyhow::anyhow;
@@ -41,7 +41,7 @@ pub struct XdgDirs {
 	pub data_dirs: Vec<PathBuf>,
 
 	#[lua_with("map_path_vec")]
-	pub config_dirs: Vec<PathBuf>
+	pub config_dirs: Vec<PathBuf>,
 }
 
 impl XdgDirs {
@@ -69,7 +69,7 @@ impl XdgDirs {
 				.unwrap_or_else(|| vec!["/usr/local/share".into(), "/usr/share".into()]),
 			config_dirs: env::var_os("XDG_CONFIG_DIRS")
 				.map(|a| split_paths(&a).collect::<Vec<_>>())
-				.unwrap_or_else(|| vec!["/etc/xdg".into()])
+				.unwrap_or_else(|| vec!["/etc/xdg".into()]),
 		})
 	}
 }
@@ -84,7 +84,7 @@ impl XdgDirs {
 			cache_home: tempdir.path().join(".cache"),
 			runtime_dir: None,
 			data_dirs: vec![tempdir.path().join("usr/share")],
-			config_dirs: vec![tempdir.path().join("etc/xdg")]
+			config_dirs: vec![tempdir.path().join("etc/xdg")],
 		}
 	}
 }

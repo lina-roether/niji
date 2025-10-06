@@ -6,7 +6,7 @@ use strfmt::{strfmt_map, DisplayStr, Formatter};
 pub enum FmtValue {
 	String(String),
 	Int(i64),
-	Float(f64)
+	Float(f64),
 }
 
 macro_rules! fmt_value_from_int {
@@ -47,7 +47,7 @@ impl DisplayStr for FmtValue {
 		match self {
 			Self::String(string) => string.display_str(f),
 			Self::Int(int) => int.display_str(f),
-			Self::Float(float) => float.display_str(f)
+			Self::Float(float) => float.display_str(f),
 		}
 	}
 }
@@ -99,7 +99,7 @@ pub(crate) mod test_utils {
 				"string" => Some(FmtValue::from("STRING VALUE :)".to_string())),
 				"int" => Some(FmtValue::from(69)),
 				"float" => Some(FmtValue::from(12.3)),
-				_ => None
+				_ => None,
 			}
 		}
 	}

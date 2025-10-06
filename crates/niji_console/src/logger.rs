@@ -3,7 +3,7 @@ use log::{Level, LevelFilter};
 use crate::api;
 
 pub(crate) struct Logger {
-	level: LevelFilter
+	level: LevelFilter,
 }
 
 impl Logger {
@@ -23,7 +23,7 @@ impl log::Log for Logger {
 			Level::Warn => api::log_warn(record.args()).unwrap(),
 			Level::Info => api::log_info(record.args()).unwrap(),
 			Level::Debug => api::log_debug(record.args()).unwrap(),
-			Level::Trace => api::log_trace(record.args()).unwrap()
+			Level::Trace => api::log_trace(record.args()).unwrap(),
 		}
 		self.flush();
 	}

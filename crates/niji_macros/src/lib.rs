@@ -7,7 +7,7 @@ use syn::*;
 extern crate proc_macro;
 
 enum LuaAttr {
-	With(Path)
+	With(Path),
 }
 
 impl LuaAttr {
@@ -28,7 +28,7 @@ impl LuaAttr {
 					None
 				}
 			}
-			_ => None
+			_ => None,
 		}
 	}
 }
@@ -56,7 +56,7 @@ fn derive_into_lua_direct(ast: DeriveInput) -> TokenStream {
 	match ast.data {
 		Data::Struct(data) => derive_into_lua_struct(name, data),
 		Data::Enum(data) => derive_into_lua_enum(name, data),
-		Data::Union(..) => abort_call_site!("Deriving IntoLua for unions is not supported")
+		Data::Union(..) => abort_call_site!("Deriving IntoLua for unions is not supported"),
 	}
 }
 
@@ -84,7 +84,7 @@ fn derive_into_lua_enum(name: Ident, data: DataEnum) -> TokenStream {
 					},
 					None => quote! {
 						Self::#name(value) => mlua::IntoLua::into_lua(value, lua)
-					}
+					},
 				}
 			}
 		})
@@ -127,7 +127,7 @@ fn derive_into_lua_struct(name: Ident, data: DataStruct) -> TokenStream {
 				},
 				_ => quote! {
 					mlua::IntoLua::into_lua(self.#name, lua)
-				}
+				},
 			}
 		})
 		.collect();
@@ -155,6 +155,6 @@ pub fn derive_into_lua(input: TokenStream) -> TokenStream {
 
 	match lua_attr {
 		Some(LuaAttr::With(path)) => derive_into_lua_with(ast, path),
-		_ => derive_into_lua_direct(ast)
+		_ => derive_into_lua_direct(ast),
 	}
 }

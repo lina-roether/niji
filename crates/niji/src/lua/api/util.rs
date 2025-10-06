@@ -7,11 +7,11 @@ pub struct UtilApi;
 impl UtilApi {
 	fn by_theme<'lua>(
 		_: &'lua Lua,
-		(theme, value): (mlua::Table<'lua>, mlua::Value<'lua>)
+		(theme, value): (mlua::Table<'lua>, mlua::Value<'lua>),
 	) -> mlua::Result<mlua::Value<'lua>> {
 		let table = match value {
 			mlua::Value::Table(table) => table,
-			_ => return Ok(value)
+			_ => return Ok(value),
 		};
 
 		let default: mlua::Value = table.get("default")?;
@@ -27,7 +27,7 @@ impl UtilApi {
 
 	fn font_size<'lua>(
 		_: &'lua Lua,
-		(config, default): (mlua::Table<'lua>, u32)
+		(config, default): (mlua::Table<'lua>, u32),
 	) -> mlua::Result<u32> {
 		let font_size = config
 			.get::<_, Option<u32>>("font_size")?

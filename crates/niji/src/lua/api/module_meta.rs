@@ -16,9 +16,9 @@ impl ApiModule for ModuleMetaApi {
 				match index.as_str() {
 					"name" => Ok(module_ctx.name.clone().into_lua(lua)?),
 					"path" => Ok(module_ctx.path.to_string_lossy().into_lua(lua)?),
-					_ => Ok(mlua::Value::Nil)
+					_ => Ok(mlua::Value::Nil),
 				}
-			})?
+			})?,
 		)?;
 
 		let module = lua.create_table()?;

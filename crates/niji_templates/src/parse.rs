@@ -1,7 +1,7 @@
 use std::{
 	fmt,
 	iter::Peekable,
-	str::{Chars, FromStr}
+	str::{Chars, FromStr},
 };
 
 use thiserror::Error;
@@ -49,14 +49,14 @@ pub enum ParseErrorKind {
 	ForbiddenDelimiterChar(char),
 
 	#[error("Expected '{0}'")]
-	ExpectedOp(char)
+	ExpectedOp(char),
 }
 
 #[derive(Debug, Error, PartialEq)]
 #[error("{kind} ({position})")]
 pub struct ParseError {
 	position: Position,
-	kind: ParseErrorKind
+	kind: ParseErrorKind,
 }
 
 impl ParseError {
@@ -80,7 +80,7 @@ impl FromStr for Template {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Position {
 	line: usize,
-	column: usize
+	column: usize,
 }
 
 impl Position {
@@ -109,14 +109,14 @@ impl fmt::Display for Position {
 #[derive(Debug, Clone)]
 struct Source<'a> {
 	chars: Peekable<Chars<'a>>,
-	position: Position
+	position: Position,
 }
 
 impl<'a> Source<'a> {
 	fn new(chars: Chars<'a>) -> Self {
 		Self {
 			chars: chars.peekable(),
-			position: Position::default()
+			position: Position::default(),
 		}
 	}
 
@@ -138,14 +138,14 @@ impl<'a> Iterator for Source<'a> {
 
 struct State {
 	start_delimiter: String,
-	end_delimiter: String
+	end_delimiter: String,
 }
 
 impl Default for State {
 	fn default() -> Self {
 		Self {
 			start_delimiter: "{{".to_string(),
-			end_delimiter: "}}".to_string()
+			end_delimiter: "}}".to_string(),
 		}
 	}
 }
@@ -246,7 +246,7 @@ fn parse_tag(source: &mut Source, state: &State, operator: Option<char>) -> Pars
 	if !has_delimiter(&mut src, &state.end_delimiter) {
 		return Err(ParseError::new(
 			ParseErrorKind::ExpectedClosingDelim(state.end_delimiter.to_string()),
-			src.position
+			src.position,
 		));
 	}
 
@@ -284,7 +284,7 @@ fn parse_str_lit(source: &mut Source) -> ParseResult<String> {
 	if !complete {
 		return Err(ParseError::new(
 			ParseErrorKind::UnterminatedStrLit,
-			src.position
+			src.position,
 		));
 	}
 
@@ -315,7 +315,7 @@ fn parse_insert(source: &mut Source, state: &State) -> ParseResult<Insert> {
 		let Some(format_str) = parse_str_lit(&mut src)? else {
 			return Err(ParseError::new(
 				ParseErrorKind::ExpectedStrLit,
-				src.position
+				src.position,
 			));
 		};
 
@@ -327,7 +327,7 @@ fn parse_insert(source: &mut Source, state: &State) -> ParseResult<Insert> {
 	if !has_delimiter(&mut src, &state.end_delimiter) {
 		return Err(ParseError::new(
 			ParseErrorKind::ExpectedClosingDelim(state.end_delimiter.clone()),
-			src.position
+			src.position,
 		));
 	}
 
@@ -357,7 +357,7 @@ fn parse_section(source: &mut Source, state: &mut State) -> ParseResult<Section>
 			if end_name != name {
 				return Err(ParseError::new(
 					ParseErrorKind::MismatchedSectionEnd(end_name.to_string(), name.to_string()),
-					src.position
+					src.position,
 				));
 			}
 			break;
@@ -370,7 +370,7 @@ fn parse_section(source: &mut Source, state: &mut State) -> ParseResult<Section>
 		} else {
 			return Err(ParseError::new(
 				ParseErrorKind::MissingSectionEnd(name.to_string()),
-				src.position
+				src.position,
 			));
 		}
 	}
@@ -379,13 +379,13 @@ fn parse_section(source: &mut Source, state: &mut State) -> ParseResult<Section>
 	Ok(Some(Section {
 		name,
 		inverted,
-		content
+		content,
 	}))
 }
 
 fn parse_token_or_instruction(
 	source: &mut Source,
-	state: &mut State
+	state: &mut State,
 ) -> ParseResult<Option<Token>> {
 	if parse_instruction(source, state)?.is_some() {
 		return Ok(Some(None));
@@ -414,7 +414,7 @@ fn parse_delimiter_definition(source: &mut Source) -> ParseResult<String> {
 	if delimiter.contains(':') {
 		return Err(ParseError::new(
 			ParseErrorKind::ForbiddenDelimiterChar(':'),
-			source.position
+			source.position,
 		));
 	}
 
@@ -436,7 +436,7 @@ fn parse_set_fmt(source: &mut Source, state: &State) -> ParseResult<SetFmt> {
 	let Some(type_name) = parse_str_lit(&mut src)? else {
 		return Err(ParseError::new(
 			ParseErrorKind::ExpectedStrLit,
-			src.position
+			src.position,
 		));
 	};
 
@@ -447,7 +447,7 @@ fn parse_set_fmt(source: &mut Source, state: &State) -> ParseResult<SetFmt> {
 	} else {
 		return Err(ParseError::new(
 			ParseErrorKind::ExpectedOp(':'),
-			src.position
+			src.position,
 		));
 	}
 
@@ -456,7 +456,7 @@ fn parse_set_fmt(source: &mut Source, state: &State) -> ParseResult<SetFmt> {
 	let Some(format) = parse_str_lit(&mut src)? else {
 		return Err(ParseError::new(
 			ParseErrorKind::ExpectedStrLit,
-			src.position
+			src.position,
 		));
 	};
 
@@ -465,7 +465,7 @@ fn parse_set_fmt(source: &mut Source, state: &State) -> ParseResult<SetFmt> {
 	if !has_delimiter(&mut src, &setfmt_end) {
 		return Err(ParseError::new(
 			ParseErrorKind::ExpectedClosingDelim(setfmt_end.clone()),
-			src.position
+			src.position,
 		));
 	}
 
@@ -487,7 +487,7 @@ fn parse_instruction(source: &mut Source, state: &mut State) -> ParseResult<()> 
 	let Some(start) = parse_delimiter_definition(&mut src)? else {
 		return Err(ParseError::new(
 			ParseErrorKind::MissingStartDelimiterDef,
-			src.position
+			src.position,
 		));
 	};
 
@@ -496,7 +496,7 @@ fn parse_instruction(source: &mut Source, state: &mut State) -> ParseResult<()> 
 	let Some(end) = parse_delimiter_definition(&mut src)? else {
 		return Err(ParseError::new(
 			ParseErrorKind::MissingEndDelimiterDef,
-			src.position
+			src.position,
 		));
 	};
 
@@ -505,7 +505,7 @@ fn parse_instruction(source: &mut Source, state: &mut State) -> ParseResult<()> 
 	if !has_delimiter(&mut src, &instr_end) {
 		return Err(ParseError::new(
 			ParseErrorKind::ExpectedClosingDelim(instr_end),
-			src.position
+			src.position,
 		));
 	}
 

@@ -1,13 +1,13 @@
 use std::{
 	fs,
-	path::{Path, PathBuf}
+	path::{Path, PathBuf},
 };
 
 use anyhow::Context;
 
 use crate::utils::{
 	fs::{find_dirs, find_files},
-	xdg::XdgDirs
+	xdg::XdgDirs,
 };
 
 #[derive(Debug)]
@@ -17,13 +17,13 @@ pub struct Files {
 	managed_files_file: PathBuf,
 	output_dir: PathBuf,
 	themes_dirs: Vec<PathBuf>,
-	modules_dirs: Vec<PathBuf>
+	modules_dirs: Vec<PathBuf>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Location {
 	pub name: String,
-	pub path: PathBuf
+	pub path: PathBuf,
 }
 
 impl Files {
@@ -74,7 +74,7 @@ impl Files {
 			current_theme_file,
 			managed_files_file,
 			themes_dirs,
-			modules_dirs
+			modules_dirs,
 		})
 	}
 
@@ -105,7 +105,7 @@ impl Files {
 				.unwrap_or_default()
 				.to_string_lossy()
 				.to_string(),
-			path: f
+			path: f,
 		});
 		let nested_themes = find_dirs(&self.themes_dirs)
 			.map(|d| Location {
@@ -114,7 +114,7 @@ impl Files {
 					.unwrap_or_default()
 					.to_string_lossy()
 					.to_string(),
-				path: d.join(Self::THEME_MAIN_FILE_NAME)
+				path: d.join(Self::THEME_MAIN_FILE_NAME),
 			})
 			.filter(|l| l.path.exists());
 		toplevel_themes.chain(nested_themes)
@@ -127,7 +127,7 @@ impl Files {
 				.unwrap_or_default()
 				.to_string_lossy()
 				.to_string(),
-			path: d
+			path: d,
 		})
 	}
 }
@@ -205,13 +205,13 @@ mod tests {
 		fs::create_dir_all(xdg_dirs.data_dirs[0].join("niji/themes/test")).unwrap();
 		fs::write(
 			xdg_dirs.data_dirs[0].join("niji/themes/test/theme.toml"),
-			""
+			"",
 		)
 		.unwrap();
 		fs::create_dir(xdg_dirs.config_home.join("niji/themes/test2")).unwrap();
 		fs::write(
 			xdg_dirs.config_home.join("niji/themes/test2/theme.toml"),
-			""
+			"",
 		)
 		.unwrap();
 

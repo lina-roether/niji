@@ -46,7 +46,7 @@ impl<'lua> FromLua<'lua> for Color {
 				let color_ref = data.borrow::<Color>()?;
 				Ok(*color_ref)
 			}
-			_ => Err(mlua::Error::runtime("Cannot cast this value to a color!"))
+			_ => Err(mlua::Error::runtime("Cannot cast this value to a color!")),
 		}
 	}
 }

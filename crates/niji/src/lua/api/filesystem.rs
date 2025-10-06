@@ -4,7 +4,7 @@ use log::info;
 use mlua::{IntoLua, Lua};
 
 use crate::{
-	file_manager::FileManager, files::Files, lua::api::ModuleContext, utils::xdg::XdgDirs
+	file_manager::FileManager, files::Files, lua::api::ModuleContext, utils::xdg::XdgDirs,
 };
 
 use super::ApiModule;
@@ -36,8 +36,8 @@ impl FilesystemApi {
 			lua,
 			(
 				xdg.config_home.join(path).to_string_lossy().into_owned(),
-				content
-			)
+				content,
+			),
 		)
 	}
 
@@ -47,8 +47,8 @@ impl FilesystemApi {
 			lua,
 			(
 				xdg.state_home.join(path).to_string_lossy().into_owned(),
-				content
-			)
+				content,
+			),
 		)
 	}
 
@@ -58,8 +58,8 @@ impl FilesystemApi {
 			lua,
 			(
 				xdg.data_home.join(path).to_string_lossy().into_owned(),
-				content
-			)
+				content,
+			),
 		)
 	}
 
@@ -136,7 +136,7 @@ impl ApiModule for FilesystemApi {
 		module.raw_set("read_data", lua.create_function(Self::read_data)?)?;
 		module.raw_set(
 			"read_config_asset",
-			lua.create_function(Self::read_config_asset)?
+			lua.create_function(Self::read_config_asset)?,
 		)?;
 
 		module.into_lua(lua)

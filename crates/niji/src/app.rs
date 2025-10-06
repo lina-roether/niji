@@ -6,7 +6,7 @@ use crate::{
 	files::Files,
 	module_manager::{ModuleManager, ModuleManagerInit},
 	theme_manager::ThemeManager,
-	utils::xdg::XdgDirs
+	utils::xdg::XdgDirs,
 };
 
 pub struct NijiApp {
@@ -15,7 +15,7 @@ pub struct NijiApp {
 	config: Rc<Config>,
 	_file_manager: Rc<FileManager>,
 	theme_manager: Rc<ThemeManager>,
-	module_manager: Rc<ModuleManager>
+	module_manager: Rc<ModuleManager>,
 }
 
 impl NijiApp {
@@ -29,7 +29,7 @@ impl NijiApp {
 			xdg: Rc::clone(&xdg),
 			files: Rc::clone(&files),
 			config: Rc::clone(&config),
-			file_manager: Rc::clone(&file_manager)
+			file_manager: Rc::clone(&file_manager),
 		})?);
 
 		Ok(Self {
@@ -38,7 +38,7 @@ impl NijiApp {
 			config,
 			_file_manager: file_manager,
 			theme_manager,
-			module_manager
+			module_manager,
 		})
 	}
 
