@@ -31,9 +31,9 @@ impl ThemeManager {
 		themes.into_iter().collect()
 	}
 
-	pub fn current_theme(&self) -> anyhow::Result<Theme> {
+	pub fn get_current_theme(&self) -> anyhow::Result<Theme> {
 		if !self.files.current_theme_file().exists() {
-			self.unset_theme()?;
+			self.unset_current_theme()?;
 		}
 
 		let current_theme = fs::read_to_string(self.files.current_theme_file())
@@ -61,7 +61,7 @@ impl ThemeManager {
 			.ok_or_else(|| anyhow!("Theme \"{name}\" doesn't exist!"))
 	}
 
-	pub fn set_theme(&self, name: String) -> anyhow::Result<()> {
+	pub fn set_current_theme(&self, name: String) -> anyhow::Result<()> {
 		if self.find_theme_path(&name).is_none() {
 			return Err(anyhow!("Theme \"{name}\" doesn't exist!"));
 		}
@@ -69,7 +69,7 @@ impl ThemeManager {
 		Ok(())
 	}
 
-	pub fn unset_theme(&self) -> anyhow::Result<()> {
+	pub fn unset_current_theme(&self) -> anyhow::Result<()> {
 		fs::write(self.files.current_theme_file(), "").context("Failed to access theme state")?;
 		Ok(())
 	}

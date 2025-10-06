@@ -42,8 +42,8 @@ impl NijiApp {
 		})
 	}
 
-	pub fn current_theme(&self) -> anyhow::Result<Theme> {
-		self.theme_manager.current_theme()
+	pub fn get_current_theme(&self) -> anyhow::Result<Theme> {
+		self.theme_manager.get_current_theme()
 	}
 
 	pub fn get_theme(&self, name: &str) -> anyhow::Result<Theme> {
@@ -55,18 +55,18 @@ impl NijiApp {
 	}
 
 	pub fn apply(&self, reload: bool, modules: Option<&[String]>) -> anyhow::Result<()> {
-		let theme = self.current_theme()?;
+		let theme = self.get_current_theme()?;
 		self.module_manager
 			.apply(&self.config, &theme, reload, modules)?;
 		Ok(())
 	}
 
-	pub fn unset_theme(&self) -> anyhow::Result<()> {
-		self.theme_manager.unset_theme()
+	pub fn unset_current_theme(&self) -> anyhow::Result<()> {
+		self.theme_manager.unset_current_theme()
 	}
 
-	pub fn set_theme(&self, name: &str) -> anyhow::Result<()> {
-		self.theme_manager.set_theme(name.to_string())?;
+	pub fn set_current_theme(&self, name: &str) -> anyhow::Result<()> {
+		self.theme_manager.set_current_theme(name.to_string())?;
 		Ok(())
 	}
 }

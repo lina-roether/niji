@@ -184,7 +184,7 @@ fn cmd_theme(app: &NijiApp, args: &ArgMatches) {
 }
 
 fn cmd_theme_get(app: &NijiApp) {
-	let theme = handle!(app.current_theme());
+	let theme = handle!(app.get_current_theme());
 	niji_console::println!("{}", theme.name.unwrap());
 }
 
@@ -203,7 +203,7 @@ fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) {
 	let theme = match name {
 		Some(name) => handle!(app.get_theme(name)),
 
-		None => handle!(app.current_theme()),
+		None => handle!(app.get_current_theme())
 	};
 
 	niji_console::println!("Theme \"{}\":", theme.name.as_ref().unwrap());
@@ -216,7 +216,7 @@ fn cmd_theme_set(app: &NijiApp, args: &ArgMatches) {
 	let no_apply = *args.get_one::<bool>("no_apply").unwrap();
 	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
 
-	handle!(app.set_theme(name));
+	handle!(app.set_current_theme(name));
 	if !no_apply {
 		handle!(app.apply(!no_reload, None));
 	}
@@ -236,5 +236,5 @@ fn cmd_theme_list(app: &NijiApp) {
 }
 
 fn cmd_theme_unset(app: &NijiApp) {
-	handle!(app.unset_theme())
+	handle!(app.unset_current_theme())
 }
