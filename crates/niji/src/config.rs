@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::color::Color;
 
-#[derive(Debug, Clone, IntoLua, Serialize, Deserialize)]
+#[derive(Debug, Clone, IntoLua, Serialize, Deserialize, PartialEq)]
 #[lua_with("ToString::to_string")]
 #[serde(rename_all = "lowercase")]
 pub enum ColorScheme {
@@ -23,7 +23,7 @@ impl fmt::Display for ColorScheme {
 	}
 }
 
-#[derive(Debug, Clone, IntoLua, Serialize, Deserialize)]
+#[derive(Debug, Clone, IntoLua, Serialize, Deserialize, PartialEq)]
 pub struct UiTheme {
 	pub color_scheme: ColorScheme,
 	pub background: Color,
@@ -87,7 +87,7 @@ impl fmt::Display for UiTheme {
 	}
 }
 
-#[derive(Debug, Clone, IntoLua, Serialize, Deserialize)]
+#[derive(Debug, Clone, IntoLua, Serialize, Deserialize, PartialEq)]
 pub struct Terminal {
 	pub black: Color,
 	pub red: Color,
@@ -137,7 +137,7 @@ impl fmt::Display for Terminal {
 	}
 }
 
-#[derive(Debug, Clone, IntoLua, Serialize, Deserialize)]
+#[derive(Debug, Clone, IntoLua, Serialize, Deserialize, PartialEq)]
 pub struct Theme {
 	#[serde(skip)]
 	pub name: Option<String>,
