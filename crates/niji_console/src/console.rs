@@ -1,9 +1,9 @@
 use std::{
 	fmt::Arguments,
 	io::{self, IsTerminal, Write},
-	sync::Mutex,
 };
 
+use parking_lot::Mutex;
 use termcolor::{BufferedStandardStream, Color, ColorChoice, ColorSpec, WriteColor};
 
 pub struct Console {
@@ -33,33 +33,33 @@ impl Console {
 
 	pub fn log_error(&self, args: &Arguments) -> anyhow::Result<()> {
 		Self::log(
-			&mut self.stderr.lock().unwrap(),
+			&mut self.err_output.lock(),
 			"ERROR",
 			ColorSpec::new()
 				.set_fg(Some(Color::Red))
 				.set_intense(true)
 				.set_bold(true),
 			args,
-			ColorSpec::new().set_fg(Some(Color::Red)),
+			ColorSpec::new().set_fg(Some(Color::Red))
 		)
 	}
 
 	pub fn log_warn(&self, args: &Arguments) -> anyhow::Result<()> {
 		Self::log(
-			&mut self.stdout.lock().unwrap(),
+			&mut self.err_output.lock(),
 			" WARN",
 			ColorSpec::new()
 				.set_fg(Some(Color::Yellow))
 				.set_intense(true)
 				.set_bold(true),
 			args,
-			ColorSpec::new().set_fg(Some(Color::Yellow)),
+			ColorSpec::new().set_fg(Some(Color::Yellow))
 		)
 	}
 
 	pub fn log_info(&self, args: &Arguments) -> anyhow::Result<()> {
 		Self::log(
-			&mut self.stdout.lock().unwrap(),
+			&mut self.output.lock(),
 			" INFO",
 			ColorSpec::new()
 				.set_fg(Some(Color::Blue))
@@ -68,27 +68,27 @@ impl Console {
 			args,
 			ColorSpec::new()
 				.set_fg(Some(Color::White))
-				.set_intense(true),
+				.set_intense(true)
 		)
 	}
 
 	pub fn log_debug(&self, args: &Arguments) -> anyhow::Result<()> {
 		Self::log(
-			&mut self.stdout.lock().unwrap(),
+			&mut self.err_output.lock(),
 			"DEBUG",
 			ColorSpec::new().set_fg(Some(Color::White)),
 			args,
-			ColorSpec::new().set_fg(Some(Color::White)),
+			ColorSpec::new().set_fg(Some(Color::White))
 		)
 	}
 
 	pub fn log_trace(&self, args: &Arguments) -> anyhow::Result<()> {
 		Self::log(
-			&mut self.stdout.lock().unwrap(),
+			&mut self.err_output.lock(),
 			"TRACE",
 			ColorSpec::new().set_fg(Some(Color::White)),
 			args,
-			ColorSpec::new().set_fg(Some(Color::White)),
+			ColorSpec::new().set_fg(Some(Color::White))
 		)
 	}
 
@@ -97,7 +97,7 @@ impl Console {
 		tag: &str,
 		tag_color: &ColorSpec,
 		message: &Arguments,
-		message_color: &ColorSpec,
+		message_color: &ColorSpec
 	) -> anyhow::Result<()> {
 		out.set_color(tag_color).unwrap();
 
@@ -106,7 +106,7 @@ impl Console {
 		out.set_color(
 			ColorSpec::new()
 				.set_fg(Some(Color::Black))
-				.set_intense(true),
+				.set_intense(true)
 		)
 		.unwrap();
 
@@ -126,14 +126,14 @@ impl Console {
 	}
 
 	pub fn prompt(&self, args: &Arguments, default: Option<bool>) -> anyhow::Result<bool> {
-		let stdout = &mut self.stdout.lock().unwrap();
+		let stdout = &mut self.output.lock();
 
 		loop {
 			stdout
 				.set_color(
 					ColorSpec::new()
 						.set_fg(Some(Color::White))
-						.set_intense(true),
+						.set_intense(true)
 				)
 				.unwrap();
 
@@ -144,21 +144,21 @@ impl Console {
 					ColorSpec::new()
 						.set_fg(Some(Color::Blue))
 						.set_intense(true)
-						.set_bold(true),
+						.set_bold(true)
 				)
 				.unwrap();
 
 			match default {
 				Some(true) => write!(stdout, "[Y/n]")?,
 				Some(false) => write!(stdout, "[y/N]")?,
-				None => write!(stdout, "[y/n]")?,
+				None => write!(stdout, "[y/n]")?
 			};
 
 			stdout
 				.set_color(
 					ColorSpec::new()
 						.set_fg(Some(Color::White))
-						.set_intense(true),
+						.set_intense(true)
 				)
 				.unwrap();
 
@@ -178,12 +178,13 @@ impl Console {
 						return Ok(default);
 					}
 				}
-				_ => (),
+				_ => ()
 			}
 
 			stdout.reset().unwrap();
 		}
 	}
+}
 
 	pub fn heading(&self, args: &Arguments) -> anyhow::Result<()> {
 		let stdout = &mut self.stdout.lock().unwrap();

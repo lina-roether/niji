@@ -1,26 +1,17 @@
-use std::{fmt::Arguments, sync::RwLock};
+use std::fmt::Arguments;
+
+use parking_lot::RwLock;
 
 use crate::console::Console;
 
 static CONSOLE: RwLock<Option<Console>> = RwLock::new(None);
 
 pub(crate) fn set_console(console: Console) {
-	match CONSOLE.write() {
-		Ok(mut global_console) => {
-			global_console.replace(console);
-		}
-		Err(err) => eprintln!("Failed to acquire global console lock: {err}"),
-	}
+	CONSOLE.write().replace(console);
 }
 
 pub(crate) fn use_console<T>(cb: impl FnOnce(&Console) -> T) -> Option<T> {
-	match CONSOLE.read() {
-		Ok(global_console) => global_console.as_ref().map(cb),
-		Err(err) => {
-			eprintln!("Failed to acquire global console lock: {err}");
-			None
-		}
-	}
+	CONSOLE.read().as_ref().map(cb)
 }
 
 macro_rules! api_fn {
