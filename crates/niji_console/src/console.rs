@@ -275,43 +275,274 @@ mod tests {
 
 		console.log_info(&format_args!("Test")).unwrap();
 
-		stdout
-			.set_color(
-				ColorSpec::new()
-					.set_fg(Some(Color::White))
-					.set_intense(true)
-					.set_bold(true),
-			)
+		assert_eq!(String::from_utf8_lossy(&out.into_inner()), " INFO - Test\n");
+		assert_eq!(&err.into_inner(), b"");
+	}
+
+	#[test]
+	fn log_diagnostics() {
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new((), &mut out, &mut err);
+
+		console.log_trace(&format_args!("Test #1")).unwrap();
+		console.log_debug(&format_args!("Test #2")).unwrap();
+		console.log_warn(&format_args!("Test #3")).unwrap();
+		console.log_error(&format_args!("Test #4")).unwrap();
+
+		assert_eq!(&out.into_inner(), b"");
+		assert_eq!(
+			String::from_utf8_lossy(&err.into_inner()),
+			"TRACE - Test #1\nDEBUG - Test #2\n WARN - Test #3\nERROR - Test #4\n"
+		);
+	}
+
+	#[test]
+	fn print_heading() {
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new((), &mut out, &mut err);
+
+		console.heading(&format_args!("TEST :)")).unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			" ==== [ TEST :) ] ====\n"
+		);
+		assert_eq!(&err.into_inner(), b"");
+	}
+
+	#[test]
+	fn print_raw_line() {
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new((), &mut out, &mut err);
+
+		console.println(Some(&format_args!("Test"))).unwrap();
+
+		assert_eq!(String::from_utf8_lossy(&out.into_inner()), "Test\n");
+		assert_eq!(&err.into_inner(), b"");
+	}
+
+	#[test]
+	fn prompt_yes() {
+		let input = BufReader::new(Cursor::new("y\n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console.prompt(&format_args!("Test Prompt"), None).unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [y/n]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, true);
+	}
+
+	#[test]
+	fn prompt_no() {
+		let input = BufReader::new(Cursor::new("n\n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console.prompt(&format_args!("Test Prompt"), None).unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [y/n]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, false);
+	}
+
+	#[test]
+	fn prompt_garbage() {
+		let input = BufReader::new(Cursor::new(
+			"\nnsdfksdf\nysydfds\nn\n".to_string().into_bytes()
+		));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console.prompt(&format_args!("Test Prompt"), None).unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [y/n]: Test Prompt [y/n]: Test Prompt [y/n]: Test Prompt [y/n]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, false);
+	}
+
+	#[test]
+	fn prompt_lenient_yes() {
+		let input = BufReader::new(Cursor::new("  Y    \n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console.prompt(&format_args!("Test Prompt"), None).unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [y/n]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, true);
+	}
+
+	#[test]
+	fn prompt_lenient_no() {
+		let input = BufReader::new(Cursor::new("  N    \n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console.prompt(&format_args!("Test Prompt"), None).unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [y/n]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, false);
+	}
+
+	#[test]
+	fn prompt_default_yes() {
+		let input = BufReader::new(Cursor::new("\n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console
+			.prompt(&format_args!("Test Prompt"), Some(true))
 			.unwrap();
 
-		write!(stdout, "{args}")?;
-
-		stdout.set_color(&decoration_color).unwrap();
-
-		writeln!(stdout, " ] ====")?;
-
-		stdout.reset().unwrap();
-		Ok(())
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [Y/n]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, true);
 	}
 
-	pub fn println(&self, args: Option<&Arguments>) -> anyhow::Result<()> {
-		let stdout = &mut self.stdout.lock().unwrap();
+	#[test]
+	fn prompt_default_no() {
+		let input = BufReader::new(Cursor::new("\n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
 
-		match args {
-			Some(args) => writeln!(stdout, "{args}")?,
-			None => writeln!(stdout)?,
-		}
+		let result = console
+			.prompt(&format_args!("Test Prompt"), Some(false))
+			.unwrap();
 
-		stdout.flush()?;
-		Ok(())
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [y/N]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, false);
 	}
 
-	pub fn flush(&self) -> anyhow::Result<()> {
-		let stdout = &mut self.stdout.lock().unwrap();
-		let stderr = &mut self.stderr.lock().unwrap();
+	#[test]
+	fn prompt_default_yes_redundant() {
+		let input = BufReader::new(Cursor::new("y\n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
 
-		stdout.flush()?;
-		stderr.flush()?;
-		Ok(())
+		let result = console
+			.prompt(&format_args!("Test Prompt"), Some(true))
+			.unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [Y/n]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, true);
+	}
+
+	#[test]
+	fn prompt_default_no_redundant() {
+		let input = BufReader::new(Cursor::new("n\n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console
+			.prompt(&format_args!("Test Prompt"), Some(false))
+			.unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [y/N]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, false);
+	}
+
+	#[test]
+	fn prompt_default_yes_override() {
+		let input = BufReader::new(Cursor::new("n\n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console
+			.prompt(&format_args!("Test Prompt"), Some(true))
+			.unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [Y/n]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, false);
+	}
+
+	#[test]
+	fn prompt_default_no_override() {
+		let input = BufReader::new(Cursor::new("y\n".to_string().into_bytes()));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console
+			.prompt(&format_args!("Test Prompt"), Some(false))
+			.unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [y/N]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, true);
+	}
+
+	#[test]
+	fn prompt_default_garbage() {
+		let input = BufReader::new(Cursor::new(
+			"nsdfnfsdf\nyfsddfgfgsdfgdf\n\n".to_string().into_bytes()
+		));
+		let mut out = termcolor::Buffer::no_color();
+		let mut err = termcolor::Buffer::no_color();
+		let console = Console::new(input, &mut out, &mut err);
+
+		let result = console
+			.prompt(&format_args!("Test Prompt"), Some(false))
+			.unwrap();
+
+		assert_eq!(
+			String::from_utf8_lossy(&out.into_inner()),
+			"Test Prompt [y/N]: Test Prompt [y/N]: Test Prompt [y/N]: "
+		);
+		assert_eq!(&err.into_inner(), b"");
+		assert_eq!(result, false);
 	}
 }
