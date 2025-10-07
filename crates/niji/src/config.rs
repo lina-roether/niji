@@ -214,3 +214,52 @@ where
 		.context(format!("Invalid syntax in {}", path.as_ref().display()))?;
 	Ok(config)
 }
+
+#[cfg(test)]
+pub(crate) mod test_utils {
+	use super::*;
+
+	pub(crate) fn test_theme() -> Theme {
+		Theme {
+			name: Some("test_theme".to_string()),
+			ui: UiTheme {
+				color_scheme: ColorScheme::Dark,
+				background: Color::new_rgba(1, 2, 3, 4),
+				surface: Color::new_rgba(1, 2, 3, 4),
+				primary: Color::new_rgba(1, 2, 3, 4),
+				secondary: Color::new_rgba(1, 2, 3, 4),
+				border: Color::new_rgba(1, 2, 3, 4),
+				shadow: Color::new_rgba(1, 2, 3, 4),
+				text_background: Color::new_rgba(1, 2, 3, 4),
+				text_surface: Color::new_rgba(1, 2, 3, 4),
+				text_primary: Color::new_rgba(1, 2, 3, 4),
+				success: Color::new_rgba(1, 2, 3, 4),
+				info: Color::new_rgba(1, 2, 3, 4),
+				warning: Color::new_rgba(1, 2, 3, 4),
+				error: Color::new_rgba(1, 2, 3, 4),
+				text_success: Color::new_rgba(1, 2, 3, 4),
+				text_info: Color::new_rgba(1, 2, 3, 4),
+				text_warning: Color::new_rgba(1, 2, 3, 4),
+				text_error: Color::new_rgba(1, 2, 3, 4),
+			},
+			terminal: Terminal {
+				black: Color::new_rgba(1, 2, 3, 4),
+				red: Color::new_rgba(1, 2, 3, 4),
+				green: Color::new_rgba(1, 2, 3, 4),
+				yellow: Color::new_rgba(1, 2, 3, 4),
+				blue: Color::new_rgba(1, 2, 3, 4),
+				magenta: Color::new_rgba(1, 2, 3, 4),
+				cyan: Color::new_rgba(1, 2, 3, 4),
+				white: Color::new_rgba(1, 2, 3, 4),
+				bright_black: Color::new_rgba(1, 2, 3, 4),
+				bright_red: Color::new_rgba(1, 2, 3, 4),
+				bright_green: Color::new_rgba(1, 2, 3, 4),
+				bright_yellow: Color::new_rgba(1, 2, 3, 4),
+				bright_blue: Color::new_rgba(1, 2, 3, 4),
+				bright_magenta: Color::new_rgba(1, 2, 3, 4),
+				bright_cyan: Color::new_rgba(1, 2, 3, 4),
+				bright_white: Color::new_rgba(1, 2, 3, 4),
+			},
+		}
+	}
+}

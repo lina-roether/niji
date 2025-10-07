@@ -105,53 +105,9 @@ impl ThemeManager {
 mod tests {
 	use tempfile::tempdir;
 
-	use crate::{types::color::Color, utils::xdg::XdgDirs};
+	use crate::{config::test_utils::test_theme, utils::xdg::XdgDirs};
 
 	use super::*;
-
-	fn test_theme() -> Theme {
-		Theme {
-			name: Some("theme1".to_string()),
-			ui: config::UiTheme {
-				color_scheme: config::ColorScheme::Dark,
-				background: Color::new_rgba(1, 2, 3, 4),
-				surface: Color::new_rgba(1, 2, 3, 4),
-				primary: Color::new_rgba(1, 2, 3, 4),
-				secondary: Color::new_rgba(1, 2, 3, 4),
-				border: Color::new_rgba(1, 2, 3, 4),
-				shadow: Color::new_rgba(1, 2, 3, 4),
-				text_background: Color::new_rgba(1, 2, 3, 4),
-				text_surface: Color::new_rgba(1, 2, 3, 4),
-				text_primary: Color::new_rgba(1, 2, 3, 4),
-				success: Color::new_rgba(1, 2, 3, 4),
-				info: Color::new_rgba(1, 2, 3, 4),
-				warning: Color::new_rgba(1, 2, 3, 4),
-				error: Color::new_rgba(1, 2, 3, 4),
-				text_success: Color::new_rgba(1, 2, 3, 4),
-				text_info: Color::new_rgba(1, 2, 3, 4),
-				text_warning: Color::new_rgba(1, 2, 3, 4),
-				text_error: Color::new_rgba(1, 2, 3, 4),
-			},
-			terminal: config::Terminal {
-				black: Color::new_rgba(1, 2, 3, 4),
-				red: Color::new_rgba(1, 2, 3, 4),
-				green: Color::new_rgba(1, 2, 3, 4),
-				yellow: Color::new_rgba(1, 2, 3, 4),
-				blue: Color::new_rgba(1, 2, 3, 4),
-				magenta: Color::new_rgba(1, 2, 3, 4),
-				cyan: Color::new_rgba(1, 2, 3, 4),
-				white: Color::new_rgba(1, 2, 3, 4),
-				bright_black: Color::new_rgba(1, 2, 3, 4),
-				bright_red: Color::new_rgba(1, 2, 3, 4),
-				bright_green: Color::new_rgba(1, 2, 3, 4),
-				bright_yellow: Color::new_rgba(1, 2, 3, 4),
-				bright_blue: Color::new_rgba(1, 2, 3, 4),
-				bright_magenta: Color::new_rgba(1, 2, 3, 4),
-				bright_cyan: Color::new_rgba(1, 2, 3, 4),
-				bright_white: Color::new_rgba(1, 2, 3, 4),
-			},
-		}
-	}
 
 	#[test]
 	fn list_themes() {
@@ -176,12 +132,12 @@ mod tests {
 		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
 
 		fs::write(
-			xdg.config_home.join("niji/themes/theme1.toml"),
+			xdg.config_home.join("niji/themes/test_theme.toml"),
 			toml::to_string(&test_theme()).unwrap(),
 		)
 		.unwrap();
 
-		assert_eq!(theme_manager.get_theme("theme1").unwrap(), test_theme());
+		assert_eq!(theme_manager.get_theme("test_theme").unwrap(), test_theme());
 	}
 
 	#[test]
@@ -199,9 +155,9 @@ mod tests {
 		let xdg = XdgDirs::in_tempdir(&tempdir);
 		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
 
-		fs::write(xdg.state_home.join("niji/current_theme.txt"), "theme1").unwrap();
+		fs::write(xdg.state_home.join("niji/current_theme.txt"), "test_theme").unwrap();
 		fs::write(
-			xdg.config_home.join("niji/themes/theme1.toml"),
+			xdg.config_home.join("niji/themes/test_theme.toml"),
 			toml::to_string(&test_theme()).unwrap(),
 		)
 		.unwrap();
@@ -215,7 +171,7 @@ mod tests {
 		let xdg = XdgDirs::in_tempdir(&tempdir);
 		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
 
-		fs::write(xdg.state_home.join("niji/current_theme.txt"), "theme1").unwrap();
+		fs::write(xdg.state_home.join("niji/current_theme.txt"), "test_theme").unwrap();
 
 		theme_manager.get_current_theme().unwrap_err();
 	}
@@ -243,18 +199,18 @@ mod tests {
 		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
 
 		fs::write(
-			xdg.config_home.join("niji/themes/theme1.toml"),
+			xdg.config_home.join("niji/themes/test_theme.toml"),
 			toml::to_string(&test_theme()).unwrap(),
 		)
 		.unwrap();
 
 		theme_manager
-			.set_current_theme("theme1".to_string())
+			.set_current_theme("test_theme".to_string())
 			.unwrap();
 
 		assert_eq!(
 			fs::read_to_string(xdg.state_home.join("niji/current_theme.txt")).unwrap(),
-			"theme1"
+			"test_theme"
 		);
 	}
 
