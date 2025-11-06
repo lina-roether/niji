@@ -146,3 +146,160 @@ impl LuaRuntime {
 		Ok(module)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use std::fs;
+
+	use tempfile::tempdir;
+
+	use super::*;
+
+	#[test]
+	fn init() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+	}
+
+	#[test]
+	fn load_module() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return {}",
+		)
+		.unwrap();
+
+		runtime
+			.load_lua_module(&xdg.config_home.join("niji/modules/test"))
+			.unwrap();
+	}
+
+	#[test]
+	fn load_module_error_not_a_table() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return 69",
+		)
+		.unwrap();
+
+		runtime
+			.load_lua_module(&xdg.config_home.join("niji/modules/test"))
+			.unwrap_err();
+	}
+
+	#[test]
+	fn load_module_syntax_error() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"oh look, a sytnax error!",
+		)
+		.unwrap();
+
+		runtime
+			.load_lua_module(&xdg.config_home.join("niji/modules/test"))
+			.unwrap_err();
+	}
+
+	#[test]
+	fn has_function() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return { foo = function() end, bar = 3 }",
+		)
+		.unwrap();
+
+		let module = runtime
+			.load_lua_module(&xdg.config_home.join("niji/modules/test"))
+			.unwrap();
+
+		assert!(module.has_function("foo").unwrap());
+		assert!(!module.has_function("bar").unwrap());
+		assert!(!module.has_function("baz").unwrap());
+	}
+
+	#[test]
+	fn call_function() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return { foo = function(arg) return 'Argument was `' .. arg .. '`' end }",
+		)
+		.unwrap();
+
+		let module = runtime
+			.load_lua_module(&xdg.config_home.join("niji/modules/test"))
+			.unwrap();
+
+		assert_eq!(
+			module.call::<_, String>("foo", ":3").unwrap(),
+			"Argument was `:3`".to_string()
+		);
+	}
+}
