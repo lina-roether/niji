@@ -121,6 +121,7 @@ where
 
 pub type FindFilesIter<I> = FileIter<FindSubPathsIter<I>>;
 
+
 pub fn find_files<P, S>(search_paths: S) -> FindFilesIter<S::IntoIter>
 where
 	P: AsRef<Path>,
@@ -128,6 +129,7 @@ where
 {
 	FileIter::new(FindSubPathsIter::new(search_paths.into_iter()))
 }
+
 
 pub type FindDirsIter<I> = DirIter<FindSubPathsIter<I>>;
 
