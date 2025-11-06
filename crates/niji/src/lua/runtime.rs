@@ -4,7 +4,7 @@ use std::{
 	rc::Rc,
 };
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use log::debug;
 use mlua::{FromLuaMulti, IntoLuaMulti, Lua};
 
@@ -115,7 +115,10 @@ impl<'lua> LuaModule<'lua> {
 		let result: R = cb()?;
 
 		api::reset_module_context(lua);
-		env::set_current_dir(prev_dir).unwrap();
+		if let Err(err) = env::set_current_dir(prev_dir) {
+			log::error!("Cannot reset working directory: {err}\n defaulting to home directory");
+			env::set_current_dir(env::home_dir().unwrap()).unwrap();
+		}
 		Ok(result)
 	}
 }
