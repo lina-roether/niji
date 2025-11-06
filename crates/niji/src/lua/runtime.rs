@@ -99,7 +99,10 @@ impl<'lua> LuaModule<'lua> {
 		lua: &'lua Lua,
 		cb: impl FnOnce() -> mlua::Result<R>,
 	) -> mlua::Result<R> {
-		let prev_dir = env::current_dir().unwrap();
+		let prev_dir = env::current_dir().unwrap_or_else(|_| {
+			log::error!("Current working directory is inaccessible! defaulting to home directory");
+			env::home_dir().unwrap()
+		});
 		env::set_current_dir(&self.directory).unwrap();
 		api::set_module_context(
 			lua,
