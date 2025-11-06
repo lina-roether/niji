@@ -232,12 +232,45 @@ mod tests {
 		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
 		fs::write(
 			xdg.config_home.join("niji/modules/test/module.lua"),
-			"fn apply(config, theme) end",
+			"function apply(config, theme) end",
 		)
 		.unwrap();
 
 		module_manager
-			.apply(&config, &test_theme(), false, None)
+			.apply(&config, &test_theme(), false, Some(&["test".to_string()]))
+			.unwrap();
+	}
+
+	#[test]
+	fn apply_module_error() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let config = Rc::new(Config {
+			modules: vec![],
+			disable_reloads: DisableReloads::None,
+			global: HashMap::new(),
+			module_config: HashMap::new(),
+		});
+		let module_manager = ModuleManager::new(ModuleManagerInit {
+			xdg: xdg.clone(),
+			files,
+			config: config.clone(),
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"this is a syntax error! yay :3",
+		)
+		.unwrap();
+
+		// This should not error, instead there should be a log message
+		module_manager
+			.apply(&config, &test_theme(), false, Some(&["test".to_string()]))
 			.unwrap();
 	}
 }
