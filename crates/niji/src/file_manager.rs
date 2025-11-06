@@ -180,3 +180,84 @@ impl FileManager {
 		Ok(())
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use tempfile::tempdir;
+
+	use crate::utils::xdg::XdgDirs;
+
+	use super::*;
+
+	#[test]
+	fn init() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		FileManager::new(files.clone()).unwrap();
+	}
+
+	#[test]
+	fn write_new() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = FileManager::new(files.clone()).unwrap();
+
+		file_manager
+			.write_managed(&tempdir.path().join("test.txt"), "Test")
+			.unwrap();
+
+		assert_eq!(
+			fs::read_to_string(tempdir.path().join("test.txt")).unwrap(),
+			"Test"
+		);
+
+		assert!(
+			fs::read_to_string(xdg.state_home.join("niji/managed_files.csv"))
+				.unwrap()
+				.contains("test.txt")
+		);
+	}
+
+	#[test]
+	fn write_existing_managed() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = FileManager::new(files.clone()).unwrap();
+
+		file_manager
+			.write_managed(&tempdir.path().join("test.txt"), "AAA")
+			.unwrap();
+
+		file_manager
+			.write_managed(&tempdir.path().join("test.txt"), "Test")
+			.unwrap();
+
+		assert_eq!(
+			fs::read_to_string(tempdir.path().join("test.txt")).unwrap(),
+			"Test"
+		);
+	}
+
+	#[test]
+	fn write_existing_unmanaged() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = FileManager::new(files.clone()).unwrap();
+
+		fs::write(tempdir.path().join("test.txt"), "AAA").unwrap();
+
+		// This will fail because the prompt can't complete in a test environment
+		file_manager
+			.write_managed(&tempdir.path().join("test.txt"), "Test")
+			.unwrap_err();
+
+		assert_eq!(
+			fs::read_to_string(tempdir.path().join("test.txt")).unwrap(),
+			"AAA"
+		);
+	}
+}
