@@ -13,6 +13,7 @@ use crate::{
 	lua::runtime::{LuaModule, LuaRuntime},
 };
 
+#[derive(Debug)]
 pub struct Module<'lua>(LuaModule<'lua>);
 
 impl<'lua> Module<'lua> {
@@ -73,5 +74,232 @@ impl<'lua> Module<'lua> {
 		);
 
 		Ok(())
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use std::{collections::HashMap, fs, rc::Rc};
+
+	use tempfile::tempdir;
+
+	use crate::{
+		config::test_utils::test_theme, file_manager::FileManager, files::Files,
+		lua::runtime::LuaRuntimeInit, utils::xdg::XdgDirs,
+	};
+
+	use super::*;
+
+	#[test]
+	fn load() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return { apply = function(config, theme) end }",
+		)
+		.unwrap();
+
+		Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+	}
+
+	#[test]
+	fn load_syntax_error() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"this is a syntax error! yay :3",
+		)
+		.unwrap();
+
+		Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap_err();
+	}
+
+	#[test]
+	fn load_not_a_module_error() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"function apply(config, theme) end",
+		)
+		.unwrap();
+
+		Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap_err();
+	}
+
+	#[test]
+	fn check_can_reload_false() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return { apply = function(config, theme) end }",
+		)
+		.unwrap();
+
+		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		assert!(!module.can_reload());
+	}
+
+	#[test]
+	fn check_can_reload_true() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return { apply = function(config, theme) end, reload = function() end }",
+		)
+		.unwrap();
+
+		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		assert!(module.can_reload());
+	}
+
+	#[test]
+	fn apply() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return { apply = function(config, theme) end }",
+		)
+		.unwrap();
+
+		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		module.apply(HashMap::new(), test_theme()).unwrap();
+	}
+
+	#[test]
+	fn apply_error() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return { apply = function(config, theme) error('oops') end }",
+		)
+		.unwrap();
+
+		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		module.apply(HashMap::new(), test_theme()).unwrap_err();
+	}
+
+	#[test]
+	fn reload() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return { reload = function() end }",
+		)
+		.unwrap();
+
+		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		module.reload(ModuleConfig::new()).unwrap()
+	}
+
+	#[test]
+	fn reload_error() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg: xdg.clone(),
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::create_dir_all(xdg.config_home.join("niji/modules/test")).unwrap();
+		fs::write(
+			xdg.config_home.join("niji/modules/test/module.lua"),
+			"return { reload = function() error('oops') end }",
+		)
+		.unwrap();
+
+		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		module.reload(ModuleConfig::new()).unwrap_err();
 	}
 }
