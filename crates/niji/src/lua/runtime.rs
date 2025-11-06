@@ -4,6 +4,7 @@ use std::{
 	rc::Rc,
 };
 
+use anyhow::anyhow;
 use log::debug;
 use mlua::{FromLuaMulti, IntoLuaMulti, Lua};
 
@@ -45,9 +46,17 @@ impl<'lua> LuaModule<'lua> {
 		}
 	}
 
-	fn load(&mut self) -> mlua::Result<()> {
+	fn load(&mut self) -> anyhow::Result<()> {
 		let chunk = self.lua.load(self.directory.join(Self::ENTRY_POINT));
-		let table: mlua::Table = self.in_context(self.lua, || chunk.call(()))?;
+		let value: mlua::Value = self.in_context(self.lua, || chunk.call(()))?;
+		let mlua::Value::Table(table) = value else {
+			return Err(anyhow!(
+				"Expected lua module `{}` to return a table, but received {} instead",
+				self.name,
+				value.type_name()
+			));
+		};
+
 		self.table = Some(table);
 
 		debug!("Loaded lua module {}", self.directory.display());
@@ -125,7 +134,7 @@ impl LuaRuntime {
 		Ok(Self { lua })
 	}
 
-	pub fn load_lua_module<'lua>(&'lua self, path: &Path) -> mlua::Result<LuaModule<'lua>> {
+	pub fn load_lua_module<'lua>(&'lua self, path: &Path) -> anyhow::Result<LuaModule<'lua>> {
 		let mut module = LuaModule::new(&self.lua, path.to_path_buf());
 		module.load()?;
 		Ok(module)
