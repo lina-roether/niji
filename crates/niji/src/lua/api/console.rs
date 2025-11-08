@@ -35,7 +35,7 @@ impl ConsoleApi {
 impl ApiModule for ConsoleApi {
 	const NAMESPACE: &'static str = "console";
 
-	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value<'_>> {
+	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value> {
 		let module = lua.create_table()?;
 
 		module.raw_set("debug", lua.create_function(Self::debug)?)?;

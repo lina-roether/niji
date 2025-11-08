@@ -41,9 +41,9 @@ fn derive_into_lua_with(ast: DeriveInput, path: Path) -> TokenStream {
 	let name = ast.ident;
 
 	quote! {
-		impl<'lua> mlua::IntoLua<'lua> for #name {
-			fn into_lua(self, lua: &'lua mlua::Lua) -> mlua::Result<mlua::Value<'lua>> {
-				mlua::IntoLua::into_lua(#path(&self), lua)
+		impl ::mlua::IntoLua for #name {
+			fn into_lua(self, lua: &::mlua::Lua) -> ::mlua::Result<mlua::Value> {
+				::mlua::IntoLua::into_lua(#path(&self), lua)
 			}
 		}
 	}
@@ -74,16 +74,16 @@ fn derive_into_lua_enum(name: Ident, data: DataEnum) -> TokenStream {
 			let name = &v.ident;
 
 			if v.fields.is_empty() {
-				quote! { Self::#name => Ok(mlua::Value::Nil) }
+				quote! { Self::#name => Ok(::mlua::Value::Nil) }
 			} else {
 				let lua_attr = get_lua_attr(&v.attrs);
 
 				match lua_attr {
 					Some(LuaAttr::With(path)) => quote! {
-						Self::#name(value) => mlua::IntoLua::into_lua(#path(&value), lua)
+						Self::#name(value) => ::mlua::IntoLua::into_lua(#path(&value), lua)
 					},
 					None => quote! {
-						Self::#name(value) => mlua::IntoLua::into_lua(value, lua)
+						Self::#name(value) => ::mlua::IntoLua::into_lua(value, lua)
 					},
 				}
 			}
@@ -91,8 +91,8 @@ fn derive_into_lua_enum(name: Ident, data: DataEnum) -> TokenStream {
 		.collect();
 
 	quote! {
-		impl<'lua> mlua::IntoLua<'lua> for #name {
-			fn into_lua(self, lua: &'lua mlua::Lua) -> mlua::Result<mlua::Value<'lua>> {
+		impl ::mlua::IntoLua for #name {
+			fn into_lua(self, lua: &::mlua::Lua) -> ::mlua::Result<::mlua::Value> {
 				match self {
 					#(#variant_mappings),*
 				}
@@ -123,18 +123,18 @@ fn derive_into_lua_struct(name: Ident, data: DataStruct) -> TokenStream {
 
 			match lua_attr {
 				Some(LuaAttr::With(path)) => quote! {
-					mlua::IntoLua::into_lua(#path(&self.#name), lua)
+					::mlua::IntoLua::into_lua(#path(&self.#name), lua)
 				},
 				_ => quote! {
-					mlua::IntoLua::into_lua(self.#name, lua)
+					::mlua::IntoLua::into_lua(self.#name, lua)
 				},
 			}
 		})
 		.collect();
 
 	quote! {
-		impl<'lua> mlua::IntoLua<'lua> for #name {
-			fn into_lua(self, lua: &'lua mlua::Lua) -> mlua::Result<mlua::Value<'lua>> {
+		impl mlua::IntoLua for #name {
+			fn into_lua(self, lua: &::mlua::Lua) -> ::mlua::Result<::mlua::Value> {
 				let table = lua.create_table()?;
 
 				#(table.raw_set(stringify!(#field_names), #fields_into_lua?)?;)*

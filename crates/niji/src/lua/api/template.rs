@@ -8,7 +8,7 @@ use super::ApiModule;
 
 fn is_array(table: &mlua::Table) -> bool {
 	for i in 1..=table.clone().pairs::<mlua::Value, mlua::Value>().count() {
-		let Ok(value) = table.raw_get::<_, mlua::Value>(i) else {
+		let Ok(value) = table.raw_get::<mlua::Value>(i) else {
 			return false;
 		};
 		if value == mlua::Value::Nil {
@@ -52,7 +52,7 @@ fn get_template_value(value: mlua::Value) -> mlua::Result<niji_templates::Value>
 		mlua::Value::Number(num) => num.into(),
 		mlua::Value::Integer(int) => int.into(),
 		mlua::Value::Boolean(bool) => bool.into(),
-		mlua::Value::String(string) => string.to_string_lossy().into_owned().into(),
+		mlua::Value::String(string) => string.to_string_lossy().to_owned().into(),
 		mlua::Value::UserData(user_data) => {
 			if let Ok(color) = user_data.borrow::<Color>() {
 				(*color).into()
@@ -89,7 +89,7 @@ impl From<Template> for LuaTemplate {
 }
 
 impl UserData for LuaTemplate {
-	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("load", |lua, _, path: String| {
 			let template = load_template(&path).map_err(|e| {
 				mlua::Error::runtime(format!("Failed to load template {path}: {e}"))
@@ -125,7 +125,7 @@ impl UserData for LuaTemplate {
 impl ApiModule for LuaTemplate {
 	const NAMESPACE: &'static str = "Template";
 
-	fn build(lua: &'_ mlua::Lua) -> mlua::Result<mlua::Value<'_>> {
+	fn build(lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
 		LuaTemplate(Template::from_str("").unwrap()).into_lua(lua)
 	}
 }

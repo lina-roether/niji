@@ -4,7 +4,7 @@ use std::{
 	rc::Rc,
 };
 
-use anyhow::{anyhow, Context};
+use anyhow::anyhow;
 use log::debug;
 use mlua::{FromLuaMulti, IntoLuaMulti, Lua};
 
@@ -23,17 +23,17 @@ pub struct LuaRuntime {
 }
 
 #[derive(Debug)]
-pub struct LuaModule<'lua> {
-	lua: &'lua Lua,
+pub struct LuaModule<'a> {
+	lua: &'a Lua,
 	name: String,
 	directory: PathBuf,
-	table: Option<mlua::Table<'lua>>,
+	table: Option<mlua::Table>,
 }
 
-impl<'lua> LuaModule<'lua> {
+impl<'a> LuaModule<'a> {
 	const ENTRY_POINT: &'static str = "module.lua";
 
-	fn new(lua: &'lua Lua, directory: PathBuf) -> Self {
+	fn new(lua: &'a Lua, directory: PathBuf) -> Self {
 		Self {
 			lua,
 			name: directory
@@ -63,20 +63,20 @@ impl<'lua> LuaModule<'lua> {
 		Ok(())
 	}
 
-	pub fn has_function(&'lua self, key: &str) -> mlua::Result<bool> {
+	pub fn has_function(&'a self, key: &str) -> mlua::Result<bool> {
 		let table = self.get_table()?;
 
-		let Some(value) = table.get::<_, Option<mlua::Value>>(key)? else {
+		let Some(value) = table.get::<Option<mlua::Value>>(key)? else {
 			return Ok(false);
 		};
 
 		Ok(matches!(value, mlua::Value::Function(..)))
 	}
 
-	pub fn call<A, R>(&'lua self, key: &str, args: A) -> mlua::Result<R>
+	pub fn call<A, R>(&self, key: &str, args: A) -> mlua::Result<R>
 	where
-		A: IntoLuaMulti<'lua>,
-		R: FromLuaMulti<'lua>,
+		A: IntoLuaMulti,
+		R: FromLuaMulti,
 	{
 		let table = self.get_table()?;
 
@@ -84,7 +84,7 @@ impl<'lua> LuaModule<'lua> {
 		self.in_context(self.lua, move || function.call(args))
 	}
 
-	fn get_table(&'lua self) -> mlua::Result<&'lua mlua::Table<'lua>> {
+	fn get_table(&self) -> mlua::Result<&mlua::Table> {
 		let Some(table) = &self.table else {
 			return Err(mlua::Error::runtime(format!(
 				"Module {} is not loaded yet!",
@@ -94,11 +94,7 @@ impl<'lua> LuaModule<'lua> {
 		Ok(table)
 	}
 
-	fn in_context<R>(
-		&self,
-		lua: &'lua Lua,
-		cb: impl FnOnce() -> mlua::Result<R>,
-	) -> mlua::Result<R> {
+	fn in_context<R>(&self, lua: &'a Lua, cb: impl FnOnce() -> mlua::Result<R>) -> mlua::Result<R> {
 		let prev_dir = env::current_dir().unwrap_or_else(|_| {
 			log::error!("Current working directory is inaccessible! defaulting to home directory");
 			env::home_dir().unwrap()
@@ -127,7 +123,7 @@ impl LuaRuntime {
 	pub fn new(init: LuaRuntimeInit) -> mlua::Result<Self> {
 		let lua = Lua::new();
 
-		lua.load_from_std_lib(mlua::StdLib::ALL_SAFE)?;
+		lua.load_std_libs(mlua::StdLib::ALL_SAFE)?;
 		api::init(
 			&lua,
 			api::Init {
@@ -140,7 +136,7 @@ impl LuaRuntime {
 		Ok(Self { lua })
 	}
 
-	pub fn load_lua_module<'lua>(&'lua self, path: &Path) -> anyhow::Result<LuaModule<'lua>> {
+	pub fn load_lua_module(&self, path: &Path) -> anyhow::Result<LuaModule<'_>> {
 		let mut module = LuaModule::new(&self.lua, path.to_path_buf());
 		module.load()?;
 		Ok(module)

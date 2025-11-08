@@ -7,7 +7,7 @@ pub struct ModuleMetaApi;
 impl ApiModule for ModuleMetaApi {
 	const NAMESPACE: &'static str = "mod";
 
-	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value<'_>> {
+	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value> {
 		let meta = lua.create_table()?;
 		meta.raw_set(
 			"__index",
@@ -22,7 +22,7 @@ impl ApiModule for ModuleMetaApi {
 		)?;
 
 		let module = lua.create_table()?;
-		module.set_metatable(Some(meta));
+		module.set_metatable(Some(meta))?;
 		module.into_lua(lua)
 	}
 }
@@ -31,7 +31,6 @@ impl ApiModule for ModuleMetaApi {
 mod tests {
 	use std::{fs, rc::Rc};
 
-	use mlua::AsChunk;
 	use tempfile::tempdir;
 
 	use crate::{

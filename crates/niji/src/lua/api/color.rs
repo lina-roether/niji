@@ -7,14 +7,14 @@ use crate::types::color::Color;
 use super::ApiModule;
 
 impl UserData for Color {
-	fn add_fields<'lua, F: UserDataFields<'lua, Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("r", |_, this| Ok(this.r));
 		fields.add_field_method_get("g", |_, this| Ok(this.g));
 		fields.add_field_method_get("b", |_, this| Ok(this.b));
 		fields.add_field_method_get("a", |_, this| Ok(this.a));
 	}
 
-	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("new", |_, _, color_str: String| {
 			Color::from_str(&color_str).map_err(mlua::Error::runtime)
 		});
@@ -36,11 +36,11 @@ impl UserData for Color {
 	}
 }
 
-impl<'lua> FromLua<'lua> for Color {
-	fn from_lua(value: mlua::Value<'lua>, _: &'lua mlua::Lua) -> mlua::Result<Self> {
+impl FromLua for Color {
+	fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
 		match value {
 			mlua::Value::String(str) => {
-				Color::from_str(str.to_str()?).map_err(mlua::Error::runtime)
+				Color::from_str(&str.to_str()?).map_err(mlua::Error::runtime)
 			}
 			mlua::Value::UserData(data) => {
 				let color_ref = data.borrow::<Color>()?;
@@ -54,7 +54,7 @@ impl<'lua> FromLua<'lua> for Color {
 impl ApiModule for Color {
 	const NAMESPACE: &'static str = "Color";
 
-	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value<'_>> {
+	fn build(lua: &'_ Lua) -> mlua::Result<mlua::Value> {
 		Color::new_rgba(0, 0, 0, 0).into_lua(lua)
 	}
 }

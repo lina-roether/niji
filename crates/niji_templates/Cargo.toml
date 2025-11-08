@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.100"
-strfmt = "0.2.4"
-thiserror = "1.0.69"
+strfmt = "0.2.5"
+thiserror = "2.0.17"
