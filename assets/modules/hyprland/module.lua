@@ -1,26 +1,6 @@
 local M = {}
 
 local template = niji.Template:load("theme.conf.mustache")
-
-local function warn_if_not_sourced(config)
-	if config.suppress_not_sourced_warning then
-		return
-	end
-
-	local hyprland_config = niji.fs.read_config("hypr/hyprland.conf");
-
-	if not string.match(hyprland_config, "[\\^\n]%s*source%s+=.*niji/hyprland/theme%.conf") then
-		niji.console.warn(
-			"You don't seem to have sourced niji's generated config for hyprland!\n" ..
-			"\n" ..
-			"To do this, add the following line to your hyprland.conf:\n" ..
-			"source = " .. niji.fs.get_output_dir() .. "/theme.conf\n" ..
-			"\n" ..
-			"To suppress this warning instead, set suppress_not_sourced_warning in the module options."
-		)
-	end
-end
-
 function M.apply(config, theme)
 	local configure_cursor = config.cursor_theme ~= nil and config.cursor_size ~= nil
 	if configure_cursor then
@@ -36,9 +16,13 @@ function M.apply(config, theme)
 		shadow_color = theme.ui.shadow
 	}
 
-	niji.fs.output("theme.conf", theme_conf)
-
-	warn_if_not_sourced(config)
+	niji.fs.output_source(config, {
+		out = "theme.conf",
+		content = theme_conf,
+		sourced_from_config = "hypr/hyprland.conf",
+		pattern = "[\\^\n]%s*source%s+=.*niji/hyprland/theme%.conf",
+		hint = "source = ~/.local/share/niji/hyprland/theme.conf"
+	})
 end
 
 function M.reload()

@@ -1,7 +1,8 @@
 use std::{fs, path::PathBuf, rc::Rc};
 
 use log::info;
-use mlua::{IntoLua, Lua};
+use mlua::{FromLua, IntoLua, Lua};
+use regex::Regex;
 
 use crate::{
 	file_manager::FileManager, files::Files, lua::api::ModuleContext, utils::xdg::XdgDirs,
@@ -14,6 +15,26 @@ pub struct FilesystemApi;
 fn expand_path(path: &str) -> PathBuf {
 	let expanded = shellexpand::tilde(path);
 	PathBuf::from(&*expanded)
+}
+
+fn parse_lua_pattern(pattern: String) -> mlua::Result<Regex> {
+	let pattern_ast = lua_pattern::parse(pattern).map_err(mlua::Error::runtime)?;
+	let regex_str =
+		lua_pattern::try_to_regex(&pattern_ast, false, false).map_err(mlua::Error::runtime)?;
+	Regex::new(&regex_str).map_err(mlua::Error::runtime)
+}
+
+fn get_value_or_list<V: FromLua>(lua: &Lua, value: mlua::Value) -> mlua::Result<Vec<V>> {
+	match value {
+		mlua::Value::Table(table) => {
+			let mut values = Vec::with_capacity(table.len()? as usize);
+			for i in 0..table.len()? {
+				values.push(table.get(i)?);
+			}
+			Ok(values)
+		}
+		_ => Ok(vec![V::from_lua(value, lua)?]),
+	}
 }
 
 impl FilesystemApi {
@@ -63,11 +84,9 @@ impl FilesystemApi {
 		)
 	}
 
-	fn read_config(lua: &'_ Lua, path: String) -> mlua::Result<mlua::Value> {
+	fn read_config(lua: &'_ Lua, path: String) -> mlua::Result<String> {
 		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
-		fs::read_to_string(xdg.config_home.join(expand_path(&path)))
-			.map_err(mlua::Error::runtime)?
-			.into_lua(lua)
+		fs::read_to_string(xdg.config_home.join(expand_path(&path))).map_err(mlua::Error::runtime)
 	}
 
 	fn read_state(lua: &'_ Lua, path: String) -> mlua::Result<mlua::Value> {
@@ -84,7 +103,7 @@ impl FilesystemApi {
 			.into_lua(lua)
 	}
 
-	fn output(lua: &Lua, (path, content): (String, String)) -> mlua::Result<String> {
+	fn output_unchecked(lua: &Lua, (path, content): (String, String)) -> mlua::Result<String> {
 		let mod_ctx = lua.app_data_ref::<ModuleContext>().unwrap();
 		let files = lua.app_data_ref::<Rc<Files>>().unwrap();
 		let path = files
@@ -96,6 +115,68 @@ impl FilesystemApi {
 		fs::create_dir_all(path.parent().unwrap()).map_err(mlua::Error::runtime)?;
 		fs::write(&path, content).map_err(mlua::Error::runtime)?;
 		Ok(path.to_string_lossy().into_owned())
+	}
+
+	fn output_source(
+		lua: &Lua,
+		(config, options): (mlua::Table, mlua::Table),
+	) -> mlua::Result<String> {
+		let mod_ctx = lua.app_data_ref::<ModuleContext>().unwrap();
+		let path = Self::output_unchecked(lua, (options.get("out")?, options.get("content")?))?;
+
+		if config
+			.get::<Option<bool>>("suppress_not_sourced_warning")?
+			.unwrap_or(false)
+		{
+			return Ok(path);
+		}
+
+		let mut check_files: Vec<String> = Vec::new();
+		let mut config_paths: Vec<String> = Vec::new();
+
+		if let Some(cfg_paths) = options.get::<Option<mlua::Value>>("sourced_from_config")? {
+			for cfg_path in get_value_or_list::<String>(lua, cfg_paths)? {
+				check_files.push(Self::read_config(lua, cfg_path.clone())?);
+				config_paths.push(cfg_path);
+			}
+		} else {
+			let paths = options.get::<mlua::Value>("sourced_from_path")?;
+			for path in get_value_or_list(lua, paths)? {
+				check_files.push(fs::read_to_string(&path).map_err(mlua::Error::runtime)?);
+				config_paths.push(path);
+			}
+		};
+
+		let hint_text = if let Some(hint) = options.get::<Option<String>>("hint")?
+			&& !config_paths.is_empty()
+		{
+			if config_paths.len() == 1 {
+				format!(
+					"\nTo do this, add the following line to {}:\n{hint}\n",
+					config_paths[0]
+				)
+			} else {
+				format!(
+					"\nTo do this, add the following line to one of {}:\n{hint}\n",
+					config_paths.join(", ")
+				)
+			}
+		} else {
+			String::new()
+		};
+
+		let pattern: String = options.get("pattern")?;
+		let regex = parse_lua_pattern(pattern)?;
+		if check_files.iter().all(|file| !regex.is_match(file)) {
+			log::warn!(
+				"You don't seem to have included niji's generated config for {}!\n{hint_text}\nTo \
+				 suppress this warning instead, set suppress_not_sourced_warning in the module \
+				 options.",
+				mod_ctx.name
+			)
+		}
+
+		Ok(path)
 	}
 
 	fn get_output_dir(lua: &Lua, (): ()) -> mlua::Result<String> {
@@ -129,7 +210,11 @@ impl ApiModule for FilesystemApi {
 		module.raw_set("write_config", lua.create_function(Self::write_config)?)?;
 		module.raw_set("write_state", lua.create_function(Self::write_state)?)?;
 		module.raw_set("write_data", lua.create_function(Self::write_data)?)?;
-		module.raw_set("output", lua.create_function(Self::output)?)?;
+		module.raw_set(
+			"output_unchecked",
+			lua.create_function(Self::output_unchecked)?,
+		)?;
+		module.raw_set("output_source", lua.create_function(Self::output_source)?)?;
 		module.raw_set("get_output_dir", lua.create_function(Self::get_output_dir)?)?;
 		module.raw_set("read_config", lua.create_function(Self::read_config)?)?;
 		module.raw_set("read_state", lua.create_function(Self::read_state)?)?;
