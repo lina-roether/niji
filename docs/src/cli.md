@@ -1,6 +1,7 @@
 # Command Line Interface
 
-To get help with the CLI you can always use `niji help` or `niji help <command>`.
+To get help with the CLI you can always use `niji help` or
+`niji help <command>`.
 
 **Usage**: niji [OPTIONS] <COMMAND>
 
@@ -20,8 +21,8 @@ These options are available for all commands.
 
 ### `niji apply [OPTIONS]`
 
-Applies (or re-applies) the current theme and configuration to all active modules, or
-to the selcted modules if `--module` is used.
+Applies (or re-applies) the current theme and configuration to all active
+modules, or to the selected modules if `--module` is used.
 
 #### Options
 
@@ -36,12 +37,14 @@ Return the name of the currently active theme
 
 ### `niji theme show [name]`
 
-Print a preview of the theme with name `[name]`, or the active theme if `[name]` is omitted.
+Print a preview of the theme with name `[name]`, or the active theme if `[name]`
+is omitted.
 
 ### `niji theme set [name]`
 
-Set the active theme to `[name]`. By default, this command also applies the theme to all active
-modules (can be disabled using `--no-apply`), and reloads them (can be disabled using `--no-reload`).
+Set the active theme to `[name]`. By default, this command also applies the
+theme to all active modules (can be disabled using `--no-apply`), and reloads
+them (can be disabled using `--no-reload`).
 
 #### Options
 

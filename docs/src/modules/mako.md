@@ -20,10 +20,11 @@ The following global configuration options are relevant to this module:
 - `font_family`
 - `font_scale`
 
-See [Configuration](../configuration.md#global-options) for a detailed explanation.
+See [Configuration](../configuration.md#global-options) for a detailed
+explanation.
 
-Additionally, these module-specific configuration options can be added to `config.toml`
-(shown here with their default values):
+Additionally, these module-specific configuration options can be added to
+`config.toml` (shown here with their default values):
 
 ```toml
 [mako]
@@ -41,11 +42,12 @@ popup_alpha = 1.0
 custom_config_file = false
 ```
 
-Since niji needs to take control of `.config/mako/config`, if you want to set any of mako's
-numerous additional configuration options that have nothing to do with theming, you'll have
-to create a separate configuration file in your `.config/niji` directory, and link to it in
-`config.toml`. For example, if you wanted to set the default timeout of notifications, you
-might do something like this:
+Since niji needs to take control of `.config/mako/config`, if you want to set
+any of mako's numerous additional configuration options that have nothing to do
+with theming, you'll have to create a separate configuration file in your
+`.config/niji` directory, and link to it in `config.toml`. For example, if you
+wanted to set the default timeout of notifications, you might do something like
+this:
 
 `~/.config/niji/config.toml`
 
