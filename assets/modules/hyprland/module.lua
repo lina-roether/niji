@@ -20,7 +20,7 @@ function M.apply(config, theme)
 		out = "theme.conf",
 		content = theme_conf,
 		sourced_by_config = "hypr/hyprland.conf",
-		pattern = "[\\^\n]%s*source%s+=.*niji/hyprland/theme%.conf",
+		line_pattern = "^%s*source%s+=.*niji/hyprland/theme%.conf",
 		hint = "source = ~/.local/share/niji/hyprland/theme.conf"
 	})
 end
