@@ -21,3 +21,8 @@ toml = "0.9.8"
 
 [dev-dependencies]
 tempfile = "3.23.0"
+
+[build-dependencies]
+anyhow = "1.0.100"
+clap = "4.5.51"
+clap_complete = "4.5.60"
