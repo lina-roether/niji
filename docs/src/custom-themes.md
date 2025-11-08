@@ -1,10 +1,11 @@
 # Custom Themes
 
-If you build a custom theme, consider contributing it! Just make sure you have the proper license for the color scheme
-you're using, as color schemes may be subject to copyright.
+If you build a custom theme, consider contributing it! Just make sure you have
+the proper license for the color scheme you're using, as color schemes may be
+subject to copyright.
 
-Custom niji themes are defined using [TOML](https://toml.io) files placed
-into the `~/.config/niji/themes` directory, with the filename (without the extension)
+Custom niji themes are defined using [TOML](https://toml.io) files placed into
+the `~/.config/niji/themes` directory, with the filename (without the extension)
 matching the theme name.
 
 The file is split into two sections: `[ui]` for GUI colors, and `[terminal]` for
@@ -12,9 +13,9 @@ terminal colors. All colors are defined using `#RRGGBB` or `#RRGGBBAA` syntax.
 
 ## `[ui]`
 
-The `[ui]` section defines colors for graphical interfaces. It also contains
-the option `color_scheme`, which should be either `"light"` or `"dark"` to tell
-GUI toolkits whether the theme should be considered a light or a dark theme.
+The `[ui]` section defines colors for graphical interfaces. It also contains the
+option `color_scheme`, which should be either `"light"` or `"dark"` to tell GUI
+toolkits whether the theme should be considered a light or a dark theme.
 
 The section contains the following options:
 
@@ -41,7 +42,8 @@ The section contains the following options:
 
 ## `[terminal]`
 
-The `[terminal]` section contains color definitions corresponding to the standard 16 ANSI colors:
+The `[terminal]` section contains color definitions corresponding to the
+standard 16 ANSI colors:
 
 - `black`
 - `red`
@@ -62,7 +64,8 @@ The `[terminal]` section contains color definitions corresponding to the standar
 
 ## Example
 
-The following is an example for a theme definition for the built-in `tokyonight` theme:
+The following is an example for a theme definition for the built-in `tokyonight`
+theme:
 
 ```toml
 [ui]

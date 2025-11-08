@@ -11,14 +11,17 @@ Th activate the module, add it to your `config.toml`:
 modules = ["kitty"]
 ```
 
-This will create a kitty theme called "niji". If you have reloads enabled for this module
-(which they are by default), niji will also automatically apply this theme. If you do not want
-this behaviour, you can disable it by adding `"kitty"` to your `disable_reloads` list
-(see [Configuration](../configuration.md#global-options)).
+This will create a kitty theme called "niji". If you have reloads enabled for
+this module (which they are by default), niji will also automatically apply this
+theme. If you do not want this behaviour, you can disable it by adding `"kitty"`
+to your `disable_reloads` list (see
+[Configuration](../configuration.md#global-options)).
 
 ## Configuration
 
-These module-specific configuration options can be added to `config.toml` (shown here with their default values):
+These module-specific configuration options can be added to `config.toml` (shown
+here with their default values):
+
 ```toml
 [kitty]
 

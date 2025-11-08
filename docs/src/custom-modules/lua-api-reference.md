@@ -1,15 +1,18 @@
 # Lua API Reference
 
-niji's Lua API resides in the global `niji` namespace. There is no need to import it.
-The niji namespace contains several sub-namespaces and classes for different purposes, which are listed in
-this document.
+niji's Lua API resides in the global `niji` namespace. There is no need to
+import it. The niji namespace contains several sub-namespaces and classes for
+different purposes, which are listed in this document.
 
-In addution, you can always use the [Lua standard library](https://www.lua.org/manual/5.3/)
-which is fully supported. If one of the functions in the niji API fits what you want to do however,
-you should always prefer using the niji API, as it provides better integration and safety features.
+In addition, you can always use the
+[Lua standard library](https://www.lua.org/manual/5.3/) which is fully
+supported. If one of the functions in the niji API fits what you want to do
+however, you should always prefer using the niji API, as it provides better
+integration and safety features.
 
-Modules are always executed with their working directory inside of their module folder,
-so you can easily reference bundled assets like template files using relative paths.
+Modules are always executed with their working directory inside of their module
+folder, so you can easily reference bundled assets like template files using
+relative paths.
 
 Contents:
 
@@ -24,13 +27,16 @@ Contents:
 
 ## Class `niji.Color`
 
-The class `niji.Color` represents an RGBA color. it can be used to perform certain manipulations
-on colors. All color manipulations use the Oklab perceptual color space, so while some results
-may appear unexpected through an RGB lens, they should look good.
+The class `niji.Color` represents an RGBA color. It can be used to perform
+certain manipulations on colors. All color manipulations use the Oklab
+perceptual color space, so while some results may appear unexpected through an
+RGB lens, they should look good.
 
-All color fields in the `theme` parameter of the module application handler are also instances of `niji.Color`.
+All color fields in the `theme` parameter of the module application handler are
+also instances of `niji.Color`.
 
-All functions that accept colors also accept strings of the format `"#RRGGBB"` and `"#RRGGBBAA"`.
+All functions that accept colors also accept strings of the format `"#RRGGBB"`
+and `"#RRGGBBAA"`.
 
 ### Property `niji.Color.r`
 
@@ -66,8 +72,10 @@ niji.console.debug(my_color)
 
 Interpolates between two colors.
 
-- `color_1`: The first of the two colors to interpolate between (`string` or `niji.Color`)
-- `color_2`: The second of the two colors to interpolate between (`string` or `niji.Color`)
+- `color_1`: The first of the two colors to interpolate between (`string` or
+  `niji.Color`)
+- `color_2`: The second of the two colors to interpolate between (`string` or
+  `niji.Color`)
 - `t`: A number between 0 and 1 that controls the interpolation (`float`)
 - returns: The resulting color (`niji.Color`)
 
@@ -81,10 +89,13 @@ niji.console.debug(my_color)
 
 ### Static `niji.Color:mix(color_1, color_2)`
 
-Mixes two colors together evenly. Equivalent to calling `niji.Color:blend` with a `t` of 0.5.
+Mixes two colors together evenly. Equivalent to calling `niji.Color:blend` with
+a `t` of 0.5.
 
-- `color_1`: The first of the two colors to mix together (`string` or `niji.Color`)
-- `color_2`: The second of the two colors to mix together (`string` or `niji.Color`)
+- `color_1`: The first of the two colors to mix together (`string` or
+  `niji.Color`)
+- `color_2`: The second of the two colors to mix together (`string` or
+  `niji.Color`)
 
 ```lua
 local my_color = niji.Color:mix("#ff0000", "#00ff00")
@@ -96,12 +107,13 @@ niji.console.debug(my_color)
 
 ### `niji.Color:lighten(amount)`
 
-Lightens the color by the given amount. "Amount" here refers to relative perceived
-lightness, which means that the change in lightness for a given amount parameter
-should look the same for any base color, unless the resulting color would fall outside
-the RGB color gamut.
+Lightens the color by the given amount. "Amount" here refers to relative
+perceived lightness, which means that the change in lightness for a given amount
+parameter should look the same for any base color, unless the resulting color
+would fall outside the RGB color gamut.
 
-- `amount`: The desired relative perceived lightness, ranging between -1 and 1 (`float`)
+- `amount`: The desired relative perceived lightness, ranging between -1 and 1
+  (`float`)
 
 ```lua
 local base_color = niji.Color:new("#123faa")
@@ -113,10 +125,11 @@ niji.console.debug(lightened_color)
 
 ### `niji.Color:darken(amount)`
 
-Darkens the color by the given amount. Equivalent to calling `niji.Color:lighten`
-with `-amount`.
+Darkens the color by the given amount. Equivalent to calling
+`niji.Color:lighten` with `-amount`.
 
-- `amount`: The desired relative perceived lightness, ranging between -1 and 1 (`float`)
+- `amount`: The desired relative perceived lightness, ranging between -1 and 1
+  (`float`)
 
 ```lua
 local base_color = niji.Color:new("#c670f9")
@@ -128,10 +141,12 @@ niji.console.debug(lightened_color)
 
 ### `niji.Color:shade(lightness)`
 
-Selects a shade of the color that has the provided absolute perceived lightness. As with other
-operations, if that color falls outside the RGB gamut, it gets gamut-clipped.
+Selects a shade of the color that has the provided absolute perceived lightness.
+As with other operations, if that color falls outside the RGB gamut, it gets
+gamut-clipped.
 
-- `lightness`: The desired perceived lightness, ranging between 0 and 1 (`float`)
+- `lightness`: The desired perceived lightness, ranging between 0 and 1
+  (`float`)
 
 ```lua
 local base_color = niji.Color:new("#cb9174")
@@ -157,8 +172,9 @@ niji.console.debug(transparent_color)
 
 ## Class `niji.Template`
 
-The class `niji.Template` is the lua API for niji's builtin [templating system](./templating-reference.md).
-It can be used to load, parse and render templates.
+The class `niji.Template` is the lua API for niji's builtin
+[templating system](./templating-reference.md). It can be used to load, parse
+and render templates.
 
 ### Static `niji.Template:parse(template)`
 
@@ -200,16 +216,17 @@ niji.console.debug(rendered)
 
 ### `niji.Template:set_format(type_name, format_string)`
 
-Set the custom format for the specified type. See [the template system reference](./templating-reference.md#custom-formats)
-for more information.
+Set the custom format for the specified type. See
+[the template system reference](./templating-reference.md#custom-formats) for
+more information.
 
 - `type_name`: The name of the type for which to set the format (`string`)
 - `format_string`: The format string to use for the given type
 
 ## Namespace `niji.console`
 
-The `niji.console` namespace provides niji-flavored functions for interacting with
-the console.
+The `niji.console` namespace provides niji-flavored functions for interacting
+with the console.
 
 ### `niji.console.debug(message)`
 
@@ -239,8 +256,8 @@ Sends an error message to the console.
 ### `niji.console.prompt(message, default)`
 
 Sends a confirmation prompt to the user. If `default` is not nil, pressing enter
-without entering a response will return that value. If `default` is nil, pressing
-enter without entering a response will trigger a reprompt.
+without entering a response will return that value. If `default` is nil,
+pressing enter without entering a response will trigger a reprompt.
 
 - `prompt`: The message to show in the prompt (any type)
 - `default`: The default value for the prompt (`bool` or `nil`)
@@ -254,28 +271,30 @@ end
 
 ## Namespace `niji.fs`
 
-The namespace `niji.fs` contains functions for interacting with the file system. While it is much
-more restrictive than the filesystem API built into lua, it is strongly recommended to use
-`niji.fs` functions over raw lua functions whenever possible, because they have a lot of
-extra safety features, such as automatically checking for conflicts with preexisting files.
+The namespace `niji.fs` contains functions for interacting with the file system.
+While it is much more restrictive than the filesystem API built into lua, it is
+strongly recommended to use `niji.fs` functions over raw lua functions whenever
+possible, because they have a lot of extra safety features, such as
+automatically checking for conflicts with preexisting files.
 
 ### `niji.fs.write(path, content)`
 
 This function should be used when you have to write to a file that might already
-exist on the system, and which you might not want to silently overwrite if it does;
-the major example for this is configuration files which don't support including files
-from other locations.
+exist on the system, and which you might not want to silently overwrite if it
+does; the major example for this is configuration files which don't support
+including files from other locations.
 
-If you just want to output a file that can then be included/imported by another program,
-consider using `niji.fs.output`. This is often a better approach, because it is a lot less
-invasive.
+If you just want to output a file that can then be included/imported by another
+program, consider using `niji.fs.output`. This is often a better approach,
+because it is a lot less invasive.
 
-Calling `niji.fs.write` will cause niji to check if the file already exists, and contains
-data that wasn't written to it by niji. If that is the case, niji will inform the user via a prompt,
-and create a backup of the previous version if necessary. Ultimately, it writes `content` to file
-at the given `path`.
+Calling `niji.fs.write` will cause niji to check if the file already exists, and
+contains data that wasn't written to it by niji. If that is the case, niji will
+inform the user via a prompt, and create a backup of the previous version if
+necessary. Ultimately, it writes `content` to file at the given `path`.
 
-- `path`: The path of the file to write to (`string`). You can use "~" to refer to the current user's home directory.
+- `path`: The path of the file to write to (`string`). You can use "~" to refer
+  to the current user's home directory.
 - `content`: The string to write to the file (`string`)
 - returns: The absolute, canonical path of the file written to (`string`)
 
@@ -305,16 +324,19 @@ A version of `niji.fs.write` that takes path relative to `~/.local/share`.
 
 ### `niji.fs.output(path, content)`
 
-This function should be used if you want to output a file that is then actively imported/included
-by another program. An example for this is the hyprland module, which outputs a partial hyprland config file
-which you can then include in your config. In many cases, this is the recommended approach over `niji.fs.write`,
-because it is less invasive and makes it easier to manage separate config options. Which approach fits each module
-better is up to the disgression of the module author however.
+This function should be used if you want to output a file that is then actively
+imported/included by another program. An example for this is the hyprland
+module, which outputs a partial hyprland config file which you can then include
+in your config. In many cases, this is the recommended approach over
+`niji.fs.write`, because it is less invasive and makes it easier to manage
+separate config options. Which approach fits each module better is up to the
+discretion of the module author however.
 
-The `path` argument for this functions is relative to your module's output folder, which,
-by default, is located at `~/.local/share/niji/<module name>`.
+The `path` argument for this functions is relative to your module's output
+folder, which, by default, is located at `~/.local/share/niji/<module name>`.
 
-- `path`: The relative path of the output file within the output folde (`string`)
+- `path`: The relative path of the output file within the output folder
+  (`string`)
 - `content`: The content to write to the file (`string`)
 - returns: The absolute path of the file that was written to (`string`)
 
@@ -326,11 +348,12 @@ Returns the directory that `niji.fs.output` places files into.
 
 ### `niji.fs.read_config_asset(path)`
 
-Reads a file with a path relative to `.config/niji`. This is often used for things
-like supplementary configuration files that get inserted into the generated config
-of a module, as used in the `mako` module for example.
+Reads a file with a path relative to `.config/niji`. This is often used for
+things like supplementary configuration files that get inserted into the
+generated config of a module, as used in the `mako` module for example.
 
-- `path`: The relative path of the asset file within the config folder (`string`)
+- `path`: The relative path of the asset file within the config folder
+  (`string`)
 - returns: The contents of the file (`string`)
 
 ### `niji.fs.read_config(path)`
@@ -356,7 +379,8 @@ Reads a file with a path relative to `~/.local/share`.
 
 ## Namespace `niji.mod`
 
-The namespace `niji.mod` can be used to obtain metadata about the current module.
+The namespace `niji.mod` can be used to obtain metadata about the current
+module.
 
 ### `niji.mod.name`
 
@@ -368,16 +392,17 @@ The absolute path to the module folder of the current module (`string`)
 
 ## Namespace `niji.os`
 
-The namespace `niji.os` contains supplementary functions to the "os" functionality in lua.
+The namespace `niji.os` contains supplementary functions to the "os"
+functionality in lua.
 
 ### `niji.os.exec_detached(command)`
 
-Behaves like the builtin `os.exec` function in lua, except it detaches the command
-from the parent process, allowing it to keep running in the background after niji has completed
-execution.
+Behaves like the builtin `os.exec` function in lua, except it detaches the
+command from the parent process, allowing it to keep running in the background
+after niji has completed execution.
 
-You should use this method if you want to restart a background process with updated
-configuration, for example.
+You should use this method if you want to restart a background process with
+updated configuration, for example.
 
 - `command`: The command to execute in the background (`string`)
 
@@ -388,9 +413,9 @@ operations.
 
 ### `niji.util.font_size(config, default)`
 
-This function allows modules to easily handle the global `font_scale` option.
-If you output a font size to somewhere, simply pass it through this function
-to allow the user to scale their system font to their liking.
+This function allows modules to easily handle the global `font_scale` option. If
+you output a font size to somewhere, simply pass it through this function to
+allow the user to scale their system font to their liking.
 
 - `config`: The module configuration passed to the module handlers
 - `default`: The font size to use if the scale is 1.0 (`int`)
@@ -406,12 +431,13 @@ end
 
 ### `niji.util.by_theme(theme, value)`
 
-This function makes it easy to allow a config option to optionally be set for each theme
-individually. The archetypical use case is modules with wallpaper support handling
-the global `wallpaper` config option.
+This function makes it easy to allow a config option to optionally be set for
+each theme individually. The archetypical use case is modules with wallpaper
+support handling the global `wallpaper` config option.
 
-The logic itself is fairly simple; if `value` is a table, return `value[<theme name>]`, or
-`value.default` if that is not set. Otherwise, just return `value` itself.
+The logic itself is fairly simple; if `value` is a table, return
+`value[<theme name>]`, or `value.default` if that is not set. Otherwise, just
+return `value` itself.
 
 - `theme`: The theme passed to the apply handler
 - `value`: The config value to handle
@@ -426,8 +452,8 @@ end
 
 ## Namespace `niji.xdg`
 
-The namespace `niji.xdg` provides bindings to the configured locations
-for the xdg base directories standard.
+The namespace `niji.xdg` provides bindings to the configured locations for the
+XDG base directories standard.
 
 ### `niji.xdg.config_home`
 
@@ -451,8 +477,10 @@ The value of `$XDG_RUNTIME_DIR`. (`string`)
 
 ### `niji.xdg_data_dirs`
 
-The paths contained in `$XDG_DATA_DIRS`, or `{ "/usr/local/share", "/usr/share" }` by default. (`string[]`)
+The paths contained in `$XDG_DATA_DIRS`, or
+`{ "/usr/local/share", "/usr/share" }` by default. (`string[]`)
 
 ### `niji.xdg_config.dirs`
 
-The paths contained in `$XDG_CONFIG_DIRS`, `{ "/etc/xdg" }` by default. (`string[]`)
+The paths contained in `$XDG_CONFIG_DIRS`, `{ "/etc/xdg" }` by default.
+(`string[]`)

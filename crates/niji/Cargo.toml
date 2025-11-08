@@ -1,0 +1,28 @@
+[package]
+name = "niji"
+version = "0.4.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.100"
+chrono = "0.4.42"
+clap = "4.5.51"
+csv = "1.4.0"
+log = "0.4.28"
+mlua = { version = "0.11.4", features = ["luajit", "error-send"] }
+niji_console = { version = "0.1.0", path = "../niji_console" }
+niji_macros = { version = "0.1.0", path = "../niji_macros" }
+niji_templates = { version = "0.1.0", path = "../niji_templates" }
+oklab = "1.1.2"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_with = "3.15.1"
+shellexpand = "3.1.1"
+toml = "0.9.8"
+
+[dev-dependencies]
+tempfile = "3.23.0"
+
+[build-dependencies]
+anyhow = "1.0.100"
+clap = "4.5.51"
+clap_complete = "4.5.60"

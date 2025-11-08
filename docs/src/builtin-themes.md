@@ -16,5 +16,6 @@ The built-in themes currently included with niji are:
 To list these themes, along with any custom or separately installed themes, use
 the `niji theme list` command.
 
-If there is something missing from this list that you'd like to have, take a look
-at [Custom Themes](./custom-themes.md).
+If there is something missing from this list that you'd like to have, take a
+look at [Custom Themes](./custom-themes.md).
+
