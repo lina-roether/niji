@@ -27,7 +27,7 @@ function M.apply(config, theme)
 		wallpaper = wallpaper
 	}
 
-	niji.fs.output_source(config, {
+	niji.fs.output_artifact(config, {
 		out = "theme",
 		content = theme,
 		sourced_by_config = "sway/config",

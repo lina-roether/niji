@@ -116,7 +116,7 @@ impl FilesystemApi {
 		Ok(path.to_string_lossy().into_owned())
 	}
 
-	fn output_source(
+	fn output_artifact(
 		lua: &Lua,
 		(config, options): (mlua::Table, mlua::Table),
 	) -> mlua::Result<String> {
@@ -239,7 +239,10 @@ impl ApiModule for FilesystemApi {
 			"output_unchecked",
 			lua.create_function(Self::output_unchecked)?,
 		)?;
-		module.raw_set("output_source", lua.create_function(Self::output_source)?)?;
+		module.raw_set(
+			"output_artifact",
+			lua.create_function(Self::output_artifact)?,
+		)?;
 		module.raw_set("get_output_dir", lua.create_function(Self::get_output_dir)?)?;
 		module.raw_set("read_config", lua.create_function(Self::read_config)?)?;
 		module.raw_set("read_state", lua.create_function(Self::read_state)?)?;

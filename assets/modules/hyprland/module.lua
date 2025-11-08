@@ -16,7 +16,7 @@ function M.apply(config, theme)
 		shadow_color = theme.ui.shadow
 	}
 
-	niji.fs.output_source(config, {
+	niji.fs.output_artifact(config, {
 		out = "theme.conf",
 		content = theme_conf,
 		sourced_by_config = "hypr/hyprland.conf",
