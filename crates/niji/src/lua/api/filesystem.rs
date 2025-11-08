@@ -1,8 +1,7 @@
 use std::{fs, path::PathBuf, rc::Rc};
 
 use log::info;
-use mlua::{FromLua, IntoLua, Lua};
-use regex::Regex;
+use mlua::{FromLua, IntoLua, Lua, chunk};
 
 use crate::{
 	file_manager::FileManager, files::Files, lua::api::ModuleContext, utils::xdg::XdgDirs,
@@ -17,11 +16,11 @@ fn expand_path(path: &str) -> PathBuf {
 	PathBuf::from(&*expanded)
 }
 
-fn parse_lua_pattern(pattern: String) -> mlua::Result<Regex> {
-	let pattern_ast = lua_pattern::parse(pattern).map_err(mlua::Error::runtime)?;
-	let regex_str =
-		lua_pattern::try_to_regex(&pattern_ast, false, false).map_err(mlua::Error::runtime)?;
-	Regex::new(&regex_str).map_err(mlua::Error::runtime)
+fn match_lua_pattern(lua: &Lua, str: &str, pattern: &str) -> mlua::Result<bool> {
+	lua.load(chunk! {
+		string.match($str, $pattern)
+	})
+	.eval()
 }
 
 fn get_value_or_list<V: FromLua>(lua: &Lua, value: mlua::Value) -> mlua::Result<Vec<V>> {
@@ -122,6 +121,7 @@ impl FilesystemApi {
 		(config, options): (mlua::Table, mlua::Table),
 	) -> mlua::Result<String> {
 		let mod_ctx = lua.app_data_ref::<ModuleContext>().unwrap();
+		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
 		let path = Self::output_unchecked(lua, (options.get("out")?, options.get("content")?))?;
 
 		if config
@@ -134,15 +134,21 @@ impl FilesystemApi {
 		let mut check_files: Vec<String> = Vec::new();
 		let mut config_paths: Vec<String> = Vec::new();
 
-		if let Some(cfg_paths) = options.get::<Option<mlua::Value>>("sourced_from_config")? {
+		if let Some(cfg_paths) = options.get::<Option<mlua::Value>>("sourced_by_config")? {
 			for cfg_path in get_value_or_list::<String>(lua, cfg_paths)? {
-				check_files.push(Self::read_config(lua, cfg_path.clone())?);
+				if fs::exists(xdg.config_home.join(&cfg_path)).map_err(mlua::Error::runtime)? {
+					check_files.push(Self::read_config(lua, cfg_path.clone())?);
+				}
 				config_paths.push(cfg_path);
 			}
 		} else {
-			let paths = options.get::<mlua::Value>("sourced_from_path")?;
-			for path in get_value_or_list(lua, paths)? {
-				check_files.push(fs::read_to_string(&path).map_err(mlua::Error::runtime)?);
+			let paths = options.get::<mlua::Value>("sourced_by_path")?;
+			for path in get_value_or_list::<String>(lua, paths)? {
+				if fs::exists(&path).map_err(mlua::Error::runtime)? {
+					check_files.push(
+						fs::read_to_string(expand_path(&path)).map_err(mlua::Error::runtime)?,
+					);
+				}
 				config_paths.push(path);
 			}
 		};
@@ -166,8 +172,16 @@ impl FilesystemApi {
 		};
 
 		let pattern: String = options.get("pattern")?;
-		let regex = parse_lua_pattern(pattern)?;
-		if check_files.iter().all(|file| !regex.is_match(file)) {
+
+		let mut is_included = false;
+		for file in check_files {
+			if match_lua_pattern(lua, &file, &pattern)? {
+				is_included = true;
+				break;
+			}
+		}
+
+		if !is_included {
 			log::warn!(
 				"You don't seem to have included niji's generated config for {}!\n{hint_text}\nTo \
 				 suppress this warning instead, set suppress_not_sourced_warning in the module \
