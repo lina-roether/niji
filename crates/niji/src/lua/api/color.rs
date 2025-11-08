@@ -58,3 +58,54 @@ impl ApiModule for Color {
 		Color::new_rgba(0, 0, 0, 0).into_lua(lua)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use std::{fs, rc::Rc};
+
+	use tempfile::tempdir;
+
+	use crate::{
+		file_manager::FileManager,
+		files::Files,
+		lua::runtime::{LuaRuntime, LuaRuntimeInit},
+		utils::xdg::XdgDirs,
+	};
+
+	#[test]
+	fn is_accessible() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg,
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::write(
+			tempdir.path().join("module.lua"),
+			r#"
+                assert(niji.Color, "niji.Color not defined!")
+                assert(niji.Color.new, "niji.Color.new not defined!")
+                assert(niji.Color.blend, "niji.Color.blend not defined!")
+                assert(niji.Color.mix, "niji.Color.mix not defined!")
+                assert(niji.Color.lighten, "niji.Color.lighten not defined!")
+                assert(niji.Color.darken, "niji.Color.darken not defined!")
+                assert(niji.Color.shade, "niji.Color.darken not defined!")
+                assert(niji.Color.with_alpha, "niji.Color.with_alpha not defined!")
+                assert(niji.Color.r, "niji.Color.r not defined!")
+                assert(niji.Color.g, "niji.Color.g not defined!")
+                assert(niji.Color.b, "niji.Color.b not defined!")
+                assert(niji.Color.a, "niji.Color.a not defined!")
+
+                return {}
+            "#,
+		)
+		.unwrap();
+
+		runtime.load_lua_module(tempdir.path()).unwrap();
+	}
+}

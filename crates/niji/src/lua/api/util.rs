@@ -51,3 +51,45 @@ impl ApiModule for UtilApi {
 		module.into_lua(lua)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use std::{fs, rc::Rc};
+
+	use tempfile::tempdir;
+
+	use crate::{
+		file_manager::FileManager,
+		files::Files,
+		lua::runtime::{LuaRuntime, LuaRuntimeInit},
+		utils::xdg::XdgDirs,
+	};
+
+	#[test]
+	fn is_accessible() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg,
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::write(
+			tempdir.path().join("module.lua"),
+			r#"
+                assert(niji.util, "niji.util not defined!")
+                assert(niji.util.by_theme, "niji.util.by_theme not defined!")
+                assert(niji.util.font_size, "niji.util.font_size not defined!")
+
+                return {}
+            "#,
+		)
+		.unwrap();
+
+		runtime.load_lua_module(tempdir.path()).unwrap();
+	}
+}

@@ -142,3 +142,54 @@ impl ApiModule for FilesystemApi {
 		module.into_lua(lua)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use std::fs;
+
+	use tempfile::tempdir;
+
+	use crate::{
+		file_manager::FileManager,
+		files::Files,
+		lua::runtime::{LuaRuntime, LuaRuntimeInit},
+	};
+
+	use super::*;
+
+	#[test]
+	fn is_accessible() {
+		let tempdir = tempdir().unwrap();
+		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
+		let files = Rc::new(Files::new(&xdg).unwrap());
+		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
+		let runtime = LuaRuntime::new(LuaRuntimeInit {
+			xdg,
+			files,
+			file_manager,
+		})
+		.unwrap();
+
+		fs::write(
+			tempdir.path().join("module.lua"),
+			r#"
+                assert(niji.fs, "niji.fs not defined!")
+                assert(niji.fs.write, "niji.fs.write not defined!")
+                assert(niji.fs.write_config, "niji.fs.write_config not defined!")
+                assert(niji.fs.write_state, "niji.fs.write_state not defined!")
+                assert(niji.fs.write_data, "niji.fs.write_data not defined!")
+                assert(niji.fs.output, "niji.fs.output not defined!")
+                assert(niji.fs.get_output_dir, "niji.fs.get_output_dir not defined!")
+                assert(niji.fs.read_config, "niji.fs.read_config not defined!")
+                assert(niji.fs.read_state, "niji.fs.read_state not defined!")
+                assert(niji.fs.read_data, "niji.fs.read_data not defined!")
+                assert(niji.fs.read_config_asset, "niji.fs.read_config_asset not defined!")
+
+                return {}
+            "#,
+		)
+		.unwrap();
+
+		runtime.load_lua_module(tempdir.path()).unwrap();
+	}
+}
