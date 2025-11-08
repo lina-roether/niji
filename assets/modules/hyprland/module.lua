@@ -19,7 +19,7 @@ function M.apply(config, theme)
 	niji.fs.output_source(config, {
 		out = "theme.conf",
 		content = theme_conf,
-		sourced_from_config = "hypr/hyprland.conf",
+		sourced_by_config = "hypr/hyprland.conf",
 		pattern = "[\\^\n]%s*source%s+=.*niji/hyprland/theme%.conf",
 		hint = "source = ~/.local/share/niji/hyprland/theme.conf"
 	})
