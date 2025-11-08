@@ -158,12 +158,12 @@ impl FilesystemApi {
 		{
 			if config_paths.len() == 1 {
 				format!(
-					"\nTo do this, add the following line to {}:\n{hint}\n",
+					"\nTo do this, add the following to {}:\n{hint}\n",
 					config_paths[0]
 				)
 			} else {
 				format!(
-					"\nTo do this, add the following line to one of {}:\n{hint}\n",
+					"\nTo do this, add the following to one of {}:\n{hint}\n",
 					config_paths.join(", ")
 				)
 			}
@@ -171,13 +171,24 @@ impl FilesystemApi {
 			String::new()
 		};
 
-		let pattern: String = options.get("pattern")?;
-
 		let mut is_included = false;
-		for file in check_files {
-			if match_lua_pattern(lua, &file, &pattern)? {
-				is_included = true;
-				break;
+
+		if let Some(pattern) = options.get::<Option<String>>("pattern")? {
+			for file in &check_files {
+				if match_lua_pattern(lua, file, &pattern)? {
+					is_included = true;
+					break;
+				}
+			}
+		}
+		if let Some(line_pattern) = options.get::<Option<String>>("line_pattern")? {
+			for file in &check_files {
+				for line in file.lines() {
+					if match_lua_pattern(lua, line, &line_pattern)? {
+						is_included = true;
+						break;
+					}
+				}
 			}
 		}
 

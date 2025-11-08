@@ -339,6 +339,7 @@ included in a specified config file. Prints a warning if this is not the case.
     arbitrary paths that aren't relative to the systems config home.
   - `pattern`: lua regex pattern that the config files are matched against to
     check if they're including the output file properly
+  - `line_pattern`: like `pattern`, except the matching is done line-by-line.
   - `hint`: example of how to properly include the output file in the config
     file
 
