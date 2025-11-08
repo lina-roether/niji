@@ -19,7 +19,7 @@ function M.apply(config, theme)
 		custom_config = custom_config
 	}
 
-	niji.fs.output_source(config, {
+	niji.fs.output_artifact(config, {
 		out = "config",
 		content = cfg,
 		sourced_by_config = "mako/config",

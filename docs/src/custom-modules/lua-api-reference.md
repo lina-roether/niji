@@ -322,7 +322,7 @@ A version of `niji.fs.write` that takes path relative to `~/.local/share`.
 - `content`: The content to write to the file (`string`)
 - returns: The absolute, canonical path of the file written to (`string`)
 
-### `niji.fs.output_source(config, opts)`
+### `niji.fs.output_artifact(config, opts)`
 
 Outputs a file to the module's output directory, and validates that it is
 included in a specified config file. Prints a warning if this is not the case.
@@ -349,7 +349,7 @@ Outputs a file to the module's output directory without performing further
 checks.
 
 If the output file is crucial for this module to function, consider using
-`niji.fs.output_source` instead.
+`niji.fs.output_artifact` instead.
 
 The `path` argument for this functions is relative to your module's output
 folder, which, by default, is located at `~/.local/share/niji/<module name>`.
