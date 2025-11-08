@@ -27,7 +27,13 @@ function M.apply(config, theme)
 		wallpaper = wallpaper
 	}
 
-	niji.fs.output("theme", theme)
+	niji.fs.output_source(config, {
+		out = "theme",
+		content = theme,
+		sourced_by_config = "sway/config",
+		pattern = "[\\^\n]%s*include%s+.*niji/sway/theme",
+		hint = "include = ~/.local/share/niji/sway/theme"
+	})
 end
 
 function M.reload(config)
