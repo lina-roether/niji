@@ -20,7 +20,7 @@ impl UtilApi {
 		Ok(table.get::<Option<mlua::Value>>(name)?.unwrap_or(default))
 	}
 
-	fn font_size<'lua>(_: &'lua Lua, (config, default): (mlua::Table, u32)) -> mlua::Result<u32> {
+	fn font_size(_: &Lua, (config, default): (mlua::Table, u32)) -> mlua::Result<u32> {
 		let font_size = config.get::<Option<u32>>("font_size")?.unwrap_or(default);
 
 		let font_scale = config.get::<Option<f32>>("font_scale")?.unwrap_or(1.0);
