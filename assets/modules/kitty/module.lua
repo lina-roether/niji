@@ -44,10 +44,12 @@ function M.apply(config, theme)
 		bright_white = theme.terminal.bright_white
 	}
 
+	niji.console.info("Installing niji kitty theme...")
 	niji.fs.write_config("kitty/themes/niji.conf", theme)
 end
 
 function M.reload()
+	niji.console.info("Setting kitty theme...")
 	os.execute("kitten themes --reload-in=all niji")
 end
 

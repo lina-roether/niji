@@ -7,6 +7,7 @@ function M.apply(config, theme)
 end
 
 function M.reload(config)
+	niji.console.info("Setting gsettings values...")
 	os.execute("gsettings set org.gnome.desktop.interface gtk-theme \"\"")
 	os.execute("gsettings set org.gnome.desktop.interface gtk-theme \"niji\"")
 
