@@ -1,9 +1,9 @@
 mod app;
 mod cli;
 mod config;
-mod file_manager;
 mod files;
 mod lua;
+mod managed_fs;
 mod module;
 mod module_manager;
 mod template;

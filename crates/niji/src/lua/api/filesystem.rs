@@ -3,9 +3,7 @@ use std::{fs, path::PathBuf, rc::Rc};
 use log::info;
 use mlua::{FromLua, IntoLua, Lua, chunk};
 
-use crate::{
-	file_manager::FileManager, files::Files, lua::api::ModuleContext, utils::xdg::XdgDirs,
-};
+use crate::{files::Files, lua::api::ModuleContext, managed_fs, utils::xdg::XdgDirs};
 
 use super::ApiModule;
 
@@ -37,15 +35,12 @@ fn get_value_or_list<V: FromLua>(lua: &Lua, value: mlua::Value) -> mlua::Result<
 }
 
 impl FilesystemApi {
-	fn write(lua: &Lua, (path, content): (String, String)) -> mlua::Result<String> {
-		let file_mgr = lua.app_data_ref::<Rc<FileManager>>().unwrap();
+	fn write(_: &Lua, (path, content): (String, String)) -> mlua::Result<String> {
 		let path = expand_path(&path);
 
 		fs::create_dir_all(path.parent().unwrap()).map_err(mlua::Error::runtime)?;
 
-		file_mgr
-			.write_managed(&path, &content)
-			.map_err(mlua::Error::runtime)?;
+		managed_fs::write(&path, &content).map_err(mlua::Error::runtime)?;
 
 		Ok(path.to_string_lossy().into_owned())
 	}
@@ -263,7 +258,6 @@ mod tests {
 	use tempfile::tempdir;
 
 	use crate::{
-		file_manager::FileManager,
 		files::Files,
 		lua::runtime::{LuaRuntime, LuaRuntimeInit},
 	};
@@ -275,13 +269,7 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
-		let runtime = LuaRuntime::new(LuaRuntimeInit {
-			xdg,
-			files,
-			file_manager,
-		})
-		.unwrap();
+		let runtime = LuaRuntime::new(LuaRuntimeInit { xdg, files }).unwrap();
 
 		fs::write(
 			tempdir.path().join("module.lua"),

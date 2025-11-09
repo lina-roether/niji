@@ -84,8 +84,8 @@ mod tests {
 	use tempfile::tempdir;
 
 	use crate::{
-		config::test_utils::test_theme, file_manager::FileManager, files::Files,
-		lua::runtime::LuaRuntimeInit, utils::xdg::XdgDirs,
+		config::test_utils::test_theme, files::Files, lua::runtime::LuaRuntimeInit,
+		utils::xdg::XdgDirs,
 	};
 
 	use super::*;
@@ -95,11 +95,9 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: xdg.clone(),
 			files,
-			file_manager,
 		})
 		.unwrap();
 
@@ -118,11 +116,9 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: xdg.clone(),
 			files,
-			file_manager,
 		})
 		.unwrap();
 
@@ -141,11 +137,9 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: xdg.clone(),
 			files,
-			file_manager,
 		})
 		.unwrap();
 
@@ -164,11 +158,9 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: xdg.clone(),
 			files,
-			file_manager,
 		})
 		.unwrap();
 
@@ -188,11 +180,9 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: xdg.clone(),
 			files,
-			file_manager,
 		})
 		.unwrap();
 
@@ -212,11 +202,9 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: xdg.clone(),
 			files,
-			file_manager,
 		})
 		.unwrap();
 
@@ -236,11 +224,9 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: xdg.clone(),
 			files,
-			file_manager,
 		})
 		.unwrap();
 
@@ -260,11 +246,9 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: xdg.clone(),
 			files,
-			file_manager,
 		})
 		.unwrap();
 
@@ -284,11 +268,9 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: xdg.clone(),
 			files,
-			file_manager,
 		})
 		.unwrap();
 
