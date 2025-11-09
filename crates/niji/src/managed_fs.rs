@@ -165,9 +165,7 @@ mod tests {
 		fs::write(tempdir.path().join("test.txt"), "AAA").unwrap();
 
 		// This will fail because the prompt can't complete in a test environment
-
-		write(&tempdir.path().join("test.txt"), "AAA").unwrap();
-		write(&tempdir.path().join("test.txt"), "Test").unwrap();
+		write(&tempdir.path().join("test.txt"), "Test").unwrap_err();
 
 		assert_eq!(
 			fs::read_to_string(tempdir.path().join("test.txt")).unwrap(),
