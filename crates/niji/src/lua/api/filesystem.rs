@@ -40,6 +40,7 @@ impl FilesystemApi {
 
 		fs::create_dir_all(path.parent().unwrap()).map_err(mlua::Error::runtime)?;
 
+		log::info!("Writing to {}", path.display());
 		managed_fs::write(&path, &content).map_err(mlua::Error::runtime)?;
 
 		Ok(path.to_string_lossy().into_owned())
