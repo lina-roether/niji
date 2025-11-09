@@ -55,20 +55,21 @@ fn backup_and_replace(path: &Path, string: &str, hash: u64) -> anyhow::Result<()
 	warn!(
 		"In order to apply your configuration, niji needs to write to {}. This would overwrite a \
 		 previous version of that file that is not managed by niji. You can choose to let niji \
-		 overwrite the file, or cancel the process. If you overwrite the file, the previous \
-		 version will be backed up to {}.",
+		 overwrite the file, or cancel the process. If you overwrite the file, you may choose to \
+		 back up the previous version.",
 		path.display(),
-		backup_path.display()
 	);
-	if !prompt!(default: false, "Backup and overwrite {}?", path.display()) {
+	if !prompt!(default: false, "Overwrite {}?", path.display()) {
 		return Err(anyhow!(
 			"Writing to {} was cancelled by the user",
 			path.display()
 		));
 	}
 
-	fs::copy(path, &backup_path)
-		.context(format!("Failed to write to {}", backup_path.display()))?;
+	if prompt!(default: true, "Backup {} to {}", path.display(), backup_path.display()) {
+		fs::copy(path, &backup_path)
+			.context(format!("Failed to write to {}", backup_path.display()))?;
+	}
 
 	init_new_file(path, string)?;
 
