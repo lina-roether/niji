@@ -1,12 +1,11 @@
 use std::{collections::HashSet, path::PathBuf, rc::Rc, sync::Mutex};
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use log::{debug, error, info};
 use niji_console::heading;
 
 use crate::{
 	config::{Config, Theme},
-	file_manager::FileManager,
 	files::Files,
 	lua::runtime::{LuaRuntime, LuaRuntimeInit},
 	module::Module,
@@ -17,7 +16,6 @@ pub struct ModuleManagerInit {
 	pub xdg: Rc<XdgDirs>,
 	pub files: Rc<Files>,
 	pub config: Rc<Config>,
-	pub file_manager: Rc<FileManager>,
 }
 
 #[derive(Clone)]
@@ -34,12 +32,7 @@ pub struct ModuleManager {
 
 impl ModuleManager {
 	pub fn new(
-		ModuleManagerInit {
-			xdg,
-			files,
-			config,
-			file_manager,
-		}: ModuleManagerInit,
+		ModuleManagerInit { xdg, files, config }: ModuleManagerInit,
 	) -> anyhow::Result<Self> {
 		let mut active_modules = Vec::<ModuleDescriptor>::with_capacity(config.modules.len());
 		for mod_name in &config.modules {
@@ -49,7 +42,6 @@ impl ModuleManager {
 		let lua_runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: Rc::clone(&xdg),
 			files: Rc::clone(&files),
-			file_manager: Rc::clone(&file_manager),
 		})
 		.context("Failed to initialize lua runtime")?;
 
@@ -184,7 +176,7 @@ mod tests {
 
 	use tempfile::tempdir;
 
-	use crate::config::{test_utils::test_theme, DisableReloads};
+	use crate::config::{DisableReloads, test_utils::test_theme};
 
 	use super::*;
 
@@ -193,20 +185,13 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let config = Rc::new(Config {
 			modules: vec![],
 			disable_reloads: DisableReloads::None,
 			global: HashMap::new(),
 			module_config: HashMap::new(),
 		});
-		ModuleManager::new(ModuleManagerInit {
-			xdg,
-			files,
-			config,
-			file_manager,
-		})
-		.unwrap();
+		ModuleManager::new(ModuleManagerInit { xdg, files, config }).unwrap();
 	}
 
 	#[test]
@@ -214,7 +199,6 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let config = Rc::new(Config {
 			modules: vec![],
 			disable_reloads: DisableReloads::None,
@@ -225,7 +209,6 @@ mod tests {
 			xdg: xdg.clone(),
 			files,
 			config: config.clone(),
-			file_manager,
 		})
 		.unwrap();
 
@@ -246,7 +229,6 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
 		let config = Rc::new(Config {
 			modules: vec![],
 			disable_reloads: DisableReloads::None,
@@ -257,7 +239,6 @@ mod tests {
 			xdg: xdg.clone(),
 			files,
 			config: config.clone(),
-			file_manager,
 		})
 		.unwrap();
 

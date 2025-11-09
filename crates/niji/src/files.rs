@@ -14,7 +14,6 @@ use crate::utils::{
 pub struct Files {
 	config_file: PathBuf,
 	current_theme_file: PathBuf,
-	managed_files_file: PathBuf,
 	output_dir: PathBuf,
 	themes_dirs: Vec<PathBuf>,
 	modules_dirs: Vec<PathBuf>,
@@ -30,7 +29,6 @@ impl Files {
 	const PREFIX: &'static str = "niji";
 	const CONFIG_FILE: &'static str = "config.toml";
 	const CURRENT_THEME_FILE: &'static str = "current_theme.txt";
-	const MANAGED_FILES_FILE: &'static str = "managed_files.csv";
 	const THEMES_DIR: &'static str = "themes";
 	const THEME_MAIN_FILE_NAME: &'static str = "theme.toml";
 	const MODULES_DIR: &'static str = "modules";
@@ -46,7 +44,6 @@ impl Files {
 
 		let config_file = config_dir.join(Self::CONFIG_FILE);
 		let current_theme_file = state_dir.join(Self::CURRENT_THEME_FILE);
-		let managed_files_file = state_dir.join(Self::MANAGED_FILES_FILE);
 		let custom_themes_dir = config_dir.join(Self::THEMES_DIR);
 		let custom_modules_dir = config_dir.join(Self::MODULES_DIR);
 
@@ -72,7 +69,6 @@ impl Files {
 			config_file,
 			output_dir: data_dir,
 			current_theme_file,
-			managed_files_file,
 			themes_dirs,
 			modules_dirs,
 		})
@@ -86,11 +82,6 @@ impl Files {
 	#[inline]
 	pub fn current_theme_file(&self) -> &Path {
 		&self.current_theme_file
-	}
-
-	#[inline]
-	pub fn managed_files_file(&self) -> &Path {
-		&self.managed_files_file
 	}
 
 	#[inline]
@@ -161,10 +152,6 @@ mod tests {
 		assert_eq!(
 			files.current_theme_file(),
 			xdg_dirs.state_home.join("niji/current_theme.txt")
-		);
-		assert_eq!(
-			files.managed_files_file(),
-			xdg_dirs.state_home.join("niji/managed_files.csv")
 		);
 		assert_eq!(files.output_dir(), xdg_dirs.data_home.join("niji"));
 	}

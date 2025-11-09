@@ -55,7 +55,6 @@ mod tests {
 	use tempfile::tempdir;
 
 	use crate::{
-		file_manager::FileManager,
 		files::Files,
 		lua::runtime::{LuaRuntime, LuaRuntimeInit},
 		utils::xdg::XdgDirs,
@@ -66,13 +65,7 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let file_manager = Rc::new(FileManager::new(files.clone()).unwrap());
-		let runtime = LuaRuntime::new(LuaRuntimeInit {
-			xdg,
-			files,
-			file_manager,
-		})
-		.unwrap();
+		let runtime = LuaRuntime::new(LuaRuntimeInit { xdg, files }).unwrap();
 
 		fs::write(
 			tempdir.path().join("module.lua"),
