@@ -132,7 +132,7 @@ local function install_gtk4(color_scheme)
 end
 
 function M.install(config, theme)
-	niji.console.info("Installing " .. THEME_NAME .. " gtk theme")
+	niji.console.info("Installing " .. THEME_NAME .. " gtk theme...")
 	niji.console.debug("Install location is " .. THEME_LOCATION)
 
 	tmp_copy_theme()

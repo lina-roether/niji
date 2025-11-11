@@ -13,6 +13,7 @@ function M.apply(config, theme)
 end
 
 function M.reload(config)
+	niji.console.info("Restarting hyprpaper...")
 	os.execute("pkill hyprpaper")
 	niji.os.exec_detached(config.hyprpaper_command or "hyprpaper > /dev/null")
 end

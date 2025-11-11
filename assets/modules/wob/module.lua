@@ -19,6 +19,8 @@ function M.apply(config, theme)
 end
 
 function M.reload(config)
+	niji.console.info("Restarting wob...")
+
 	local wob_command = config.wob_command or ("tail -f " .. niji.xdg.runtime_dir .. "/wob.sock | wob")
 	os.execute("killall wob")
 	niji.os.exec_detached(wob_command)
