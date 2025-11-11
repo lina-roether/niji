@@ -322,15 +322,34 @@ A version of `niji.fs.write` that takes path relative to `~/.local/share`.
 - `content`: The content to write to the file (`string`)
 - returns: The absolute, canonical path of the file written to (`string`)
 
-### `niji.fs.output(path, content)`
+### `niji.fs.output_artifact(config, opts)`
 
-This function should be used if you want to output a file that is then actively
-imported/included by another program. An example for this is the hyprland
-module, which outputs a partial hyprland config file which you can then include
-in your config. In many cases, this is the recommended approach over
-`niji.fs.write`, because it is less invasive and makes it easier to manage
-separate config options. Which approach fits each module better is up to the
-discretion of the module author however.
+Outputs a file to the module's output directory, and validates that it is
+included in a specified config file. Prints a warning if this is not the case.
+
+- `config`: the module config passed to the `apply` function
+- `opts`: a table of options:
+  - `out`: the file path to output to, relative to your module's output folder,
+    by default located at `~/.local/share/niji/<module name>`
+  - `content`: the string to write to the output file
+  - `sourced_by_config`: the config file (or list of config files) that the
+    `out` file is expected to be sourced or included by. The path is relative to
+    `~/.config` (or `$XDG_CONFIG_HOME`).
+  - `sourced_by_path`: use instead of `sourced_by_config` if you need to specify
+    arbitrary paths that aren't relative to the systems config home.
+  - `pattern`: lua regex pattern that the config files are matched against to
+    check if they're including the output file properly
+  - `line_pattern`: like `pattern`, except the matching is done line-by-line.
+  - `hint`: example of how to properly include the output file in the config
+    file
+
+### `niji.fs.output_unchecked(path, content)`
+
+Outputs a file to the module's output directory without performing further
+checks.
+
+If the output file is crucial for this module to function, consider using
+`niji.fs.output_artifact` instead.
 
 The `path` argument for this functions is relative to your module's output
 folder, which, by default, is located at `~/.local/share/niji/<module name>`.

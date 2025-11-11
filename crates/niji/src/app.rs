@@ -2,7 +2,6 @@ use std::rc::Rc;
 
 use crate::{
 	config::{self, Config, Theme},
-	file_manager::FileManager,
 	files::Files,
 	module_manager::{ModuleManager, ModuleManagerInit},
 	theme_manager::ThemeManager,
@@ -13,7 +12,6 @@ pub struct NijiApp {
 	_xdg: Rc<XdgDirs>,
 	_files: Rc<Files>,
 	config: Rc<Config>,
-	_file_manager: Rc<FileManager>,
 	theme_manager: Rc<ThemeManager>,
 	module_manager: Rc<ModuleManager>,
 }
@@ -23,20 +21,17 @@ impl NijiApp {
 		let xdg = Rc::new(XdgDirs::new()?);
 		let files = Rc::new(Files::new(&xdg)?);
 		let config = Rc::<Config>::new(config::read(files.config_file())?);
-		let file_manager = Rc::new(FileManager::new(Rc::clone(&files))?);
 		let theme_manager = Rc::new(ThemeManager::new(Rc::clone(&files)));
 		let module_manager = Rc::new(ModuleManager::new(ModuleManagerInit {
 			xdg: Rc::clone(&xdg),
 			files: Rc::clone(&files),
 			config: Rc::clone(&config),
-			file_manager: Rc::clone(&file_manager),
 		})?);
 
 		Ok(Self {
 			_xdg: xdg,
 			_files: files,
 			config,
-			_file_manager: file_manager,
 			theme_manager,
 			module_manager,
 		})
