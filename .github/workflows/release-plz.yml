@@ -1,0 +1,30 @@
+name: Release-plz
+
+on:
+  push:
+    branches:
+      - main
+    workflow_dispatch:
+
+release-plz-pr:
+  name: Release-plz PR
+  runs-on: ubuntu-latest
+  permissions:
+    contents: write
+    pull-requests: write
+  concurrency:
+    group: release-plz-${{ github.ref }}
+    cancel-in-progress: false
+  steps:
+    - name: Setup rust environment
+      run: |
+        rustup update stable
+        rustup default stable
+    - name: Checkout
+      uses: actions/checkout@v5
+    - name: Run release-plz
+      uses: release-plz/action@v0.5
+      with:
+        command: release-pr
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
