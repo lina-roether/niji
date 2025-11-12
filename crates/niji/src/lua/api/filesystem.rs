@@ -149,10 +149,10 @@ impl FilesystemApi {
 			}
 		};
 
-		let hint_text = if let Some(hint) = options.get::<Option<String>>("hint")?
-			&& !config_paths.is_empty()
-		{
-			if config_paths.len() == 1 {
+		let hint_text = if let Some(hint) = options.get::<Option<String>>("hint")? {
+			if config_paths.is_empty() {
+				String::new()
+			} else if config_paths.len() == 1 {
 				format!(
 					"\nTo do this, add the following to {}:\n{hint}\n",
 					config_paths[0]
