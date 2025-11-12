@@ -3,3 +3,9 @@ disable_changelog = true
 from_latest_tag = true
 ignore_merge_commits = true
 tag_prefix = "v"
+
+pre_bump_hooks = [
+	"cargo build --release",
+	"cargo check --release",
+	"cargo set-version {{version}}",
+]
