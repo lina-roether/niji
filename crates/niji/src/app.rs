@@ -20,7 +20,7 @@ impl NijiApp {
 	pub fn init() -> anyhow::Result<Self> {
 		let xdg = Rc::new(XdgDirs::new()?);
 		let files = Rc::new(Files::new(&xdg)?);
-		let config = Rc::<Config>::new(config::read(files.config_file())?);
+		let config = Rc::new(config::read_config(files.config_file())?);
 		let theme_manager = Rc::new(ThemeManager::new(Rc::clone(&files)));
 		let module_manager = Rc::new(ModuleManager::new(ModuleManagerInit {
 			xdg: Rc::clone(&xdg),

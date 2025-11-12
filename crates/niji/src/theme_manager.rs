@@ -1,6 +1,6 @@
 use std::{collections::HashSet, fs, path::PathBuf, rc::Rc};
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use log::debug;
 
 use crate::{
@@ -93,7 +93,8 @@ impl ThemeManager {
 
 		debug!("Reading theme \"{name}\" from {}", path.display());
 
-		let mut theme: Theme = config::read(path).context(format!("Couldn't read theme {name}"))?;
+		let mut theme: Theme =
+			config::read_theme(path).context(format!("Couldn't read theme {name}"))?;
 
 		theme.name = Some(name.to_string());
 

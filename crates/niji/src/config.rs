@@ -203,7 +203,7 @@ pub struct Config {
 	pub module_config: HashMap<String, ModuleConfig>,
 }
 
-pub fn read<C, P>(path: P) -> anyhow::Result<C>
+fn read<C, P>(path: P) -> anyhow::Result<C>
 where
 	C: for<'de> Deserialize<'de>,
 	P: AsRef<Path>,
@@ -213,6 +213,14 @@ where
 	let config = toml::from_str(&config_str)
 		.context(format!("Invalid syntax in {}", path.as_ref().display()))?;
 	Ok(config)
+}
+
+pub fn read_config(path: impl AsRef<Path>) -> anyhow::Result<Config> {
+	read::<Config, _>(path)
+}
+
+pub fn read_theme(path: impl AsRef<Path>) -> anyhow::Result<Theme> {
+	read::<Theme, _>(path)
 }
 
 #[cfg(test)]
