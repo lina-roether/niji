@@ -7,5 +7,5 @@ tag_prefix = "v"
 pre_bump_hooks = [
 	"cargo build --release",
 	"cargo check --release",
-	"cargo set-version {{version}}",
+	"cargo set-version -p niji {{version}}",
 ]
