@@ -11,7 +11,10 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check for conventional commits compliance
+        id: cog_check
         uses: cocogitto/cocogitto-action@v4
         with:
           command: check
           args: --from-latest-tag --ignore-merge-commits
+      - name: Print stdout
+        run: echo "::debug::${{ steps.cog_check.outputs.stdout }}"
