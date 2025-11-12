@@ -1,0 +1,16 @@
+name: Check commit messages
+on:
+  push
+
+jobs:
+  cog_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Check for conventional commits compliance
+        uses: cocogitto/cocogitto-action@v3
+        with:
+          check-latest-tag-only: true
