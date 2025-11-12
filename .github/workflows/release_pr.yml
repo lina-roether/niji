@@ -1,0 +1,59 @@
+name: Create release PR
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  check_semver:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.cog_get_version.outputs.stdout == steps.cog_bump.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Get last tag version
+        id: cog_get_version
+        uses: cocogitto/cocogitto-action@v4
+        with:
+          command: -v get-version
+          args: --tag
+      - name: Get new semantic version
+        id: cog_bump
+        uses: cocogitto/cocogitto-action@v4
+        with:
+          command: bump
+          args: --auto --dry-run
+
+  create_pr:
+    needs: check_semver
+    if: ${{ needs.check_semver.outputs.changed }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Bump version
+        id: cog_bump
+        uses: cocogitto/cocogitto-action@v4
+        with:
+          command: bump
+          args: --auto
+      - name: Create changelog
+        id: cog_changelog
+        uses: cocogitto/cocogitto-action@v4
+        with:
+          command: changelog
+          args: --at ${{ steps.cog_bump.outputs.version }}
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: release
+          title: "chore: Release ${{ steps.cog_bump.outputs.version }}"
+          body: ${{ steps.cog_changelog.outputs.stdout }}
