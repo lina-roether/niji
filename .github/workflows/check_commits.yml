@@ -14,4 +14,3 @@ jobs:
         uses: cocogitto/cocogitto-action@v4
         with:
           command: check
-          args: --from-latest-tag
