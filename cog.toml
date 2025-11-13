@@ -5,7 +5,6 @@ ignore_merge_commits = true
 tag_prefix = "v"
 
 pre_bump_hooks = [
-	"cargo build --release",
-	"cargo check --release",
+	"just test",
 	"cargo set-version -p niji {{version}}",
 ]

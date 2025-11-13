@@ -9,16 +9,20 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup rust environment
+      - name: Cache crates
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install dependencies
         run: |
-          rustup update stable
-          rustup default stable
-      - name: Install niji dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y libluajit-5.1-dev
+          sudo apt-get install -y libluajit-5.1-dev
+          sudo apt-get install -y just
       - name: Checkout
         uses: actions/checkout@v5
       - name: Test
         run: |
-          cargo test
+          just test
