@@ -31,6 +31,7 @@ jobs:
   create_pr:
     needs: check_semver
     if: ${{ needs.check_semver.outputs.changed }}
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
