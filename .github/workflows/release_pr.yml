@@ -41,6 +41,14 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Setup rust environment
+        run: |
+          rustup update stable
+          rustup default stable
+      - name: Install niji dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libluajit-5.1-dev
       - name: Checkout
         uses: actions/checkout@v5
         with:
