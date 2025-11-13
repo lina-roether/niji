@@ -1,5 +1,7 @@
 name: Check commit messages
-on: push
+on:
+  push:
+  pull_request:
 
 jobs:
   cog_check:
@@ -9,6 +11,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || "" }}
       - name: Check for conventional commits compliance
         id: cog_check
         uses: cocogitto/cocogitto-action@v4.1.0
@@ -19,4 +22,3 @@ jobs:
         if: always()
         run:
           echo "${{ steps.cog_check.outputs.stdout }}" >> "$GITHUB_STEP_SUMMARY"
-
