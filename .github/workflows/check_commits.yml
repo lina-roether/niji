@@ -17,4 +17,4 @@ jobs:
       - name: Install cocogitto
         run: cargo install cocogitto
       - name: Check for conventional commits compliance
-        run: cog check
+        run: cog --config cog.toml check
