@@ -78,8 +78,3 @@ jobs:
           branch: release
           title: "chore: Release ${{ steps.cog_bump.outputs.version }}"
           body: ${{ steps.cog_changelog.outputs.stdout }}
-      - name: Print summary
-        if: always()
-        run:
-          echo "${{ steps.cog_bump.outputs.stdout }}" >>
-          "${GITHUB_STEP_SUMMARY}"
