@@ -227,7 +227,7 @@ where
 				Some(true) => write!(stdout, "[Y/n]")?,
 				Some(false) => write!(stdout, "[y/N]")?,
 				None => write!(stdout, "[y/n]")?,
-			};
+			}
 
 			stdout
 				.set_color(
@@ -338,7 +338,7 @@ mod tests {
 			"Test Prompt [y/n]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, true);
+		assert!(result);
 	}
 
 	#[test]
@@ -355,7 +355,7 @@ mod tests {
 			"Test Prompt [y/n]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, false);
+		assert!(!result);
 	}
 
 	#[test]
@@ -374,7 +374,7 @@ mod tests {
 			"Test Prompt [y/n]: Test Prompt [y/n]: Test Prompt [y/n]: Test Prompt [y/n]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, false);
+		assert!(!result);
 	}
 
 	#[test]
@@ -391,7 +391,7 @@ mod tests {
 			"Test Prompt [y/n]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, true);
+		assert!(result);
 	}
 
 	#[test]
@@ -408,7 +408,7 @@ mod tests {
 			"Test Prompt [y/n]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, false);
+		assert!(!result);
 	}
 
 	#[test]
@@ -427,7 +427,7 @@ mod tests {
 			"Test Prompt [Y/n]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, true);
+		assert!(result);
 	}
 
 	#[test]
@@ -446,7 +446,7 @@ mod tests {
 			"Test Prompt [y/N]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, false);
+		assert!(!result);
 	}
 
 	#[test]
@@ -465,7 +465,7 @@ mod tests {
 			"Test Prompt [Y/n]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, true);
+		assert!(result);
 	}
 
 	#[test]
@@ -484,7 +484,7 @@ mod tests {
 			"Test Prompt [y/N]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, false);
+		assert!(!result);
 	}
 
 	#[test]
@@ -503,7 +503,7 @@ mod tests {
 			"Test Prompt [Y/n]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, false);
+		assert!(!result);
 	}
 
 	#[test]
@@ -522,7 +522,7 @@ mod tests {
 			"Test Prompt [y/N]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, true);
+		assert!(result);
 	}
 
 	#[test]
@@ -543,6 +543,6 @@ mod tests {
 			"Test Prompt [y/N]: Test Prompt [y/N]: Test Prompt [y/N]: "
 		);
 		assert_eq!(&err.into_inner(), b"");
-		assert_eq!(result, false);
+		assert!(!result);
 	}
 }

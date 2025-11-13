@@ -18,7 +18,7 @@ fn is_array(table: &mlua::Table) -> bool {
 	true
 }
 
-fn to_template_vec(table: mlua::Table) -> mlua::Result<niji_templates::Value> {
+fn to_template_vec(table: &mlua::Table) -> mlua::Result<niji_templates::Value> {
 	let len = table.raw_len();
 
 	// Cannot differentiate between empty maps and empty arrays.
@@ -36,7 +36,7 @@ fn to_template_vec(table: mlua::Table) -> mlua::Result<niji_templates::Value> {
 	Ok(vec.into())
 }
 
-fn to_template_map(table: mlua::Table) -> mlua::Result<niji_templates::Value> {
+fn to_template_map(table: &mlua::Table) -> mlua::Result<niji_templates::Value> {
 	let mut map = HashMap::new();
 
 	for pair in table.pairs::<String, mlua::Value>() {
@@ -52,7 +52,7 @@ fn get_template_value(value: mlua::Value) -> mlua::Result<niji_templates::Value>
 		mlua::Value::Number(num) => num.into(),
 		mlua::Value::Integer(int) => int.into(),
 		mlua::Value::Boolean(bool) => bool.into(),
-		mlua::Value::String(string) => string.to_string_lossy().to_owned().into(),
+		mlua::Value::String(string) => string.to_string_lossy().clone().into(),
 		mlua::Value::UserData(user_data) => {
 			if let Ok(color) = user_data.borrow::<Color>() {
 				(*color).into()
@@ -64,9 +64,9 @@ fn get_template_value(value: mlua::Value) -> mlua::Result<niji_templates::Value>
 		}
 		mlua::Value::Table(table) => {
 			if is_array(&table) {
-				to_template_vec(table)?
+				to_template_vec(&table)?
 			} else {
-				to_template_map(table)?
+				to_template_map(&table)?
 			}
 		}
 		mlua::Value::Nil => niji_templates::Value::Nil,
@@ -118,7 +118,7 @@ impl UserData for LuaTemplate {
 					.render(&get_template_value(value)?)
 					.map_err(mlua::Error::runtime)
 			},
-		)
+		);
 	}
 }
 

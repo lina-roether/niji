@@ -12,17 +12,17 @@ use std::{
 const CHECKSUM_XATTR: &str = "user.niji.checksum";
 
 pub fn write(path: &Path, string: &str) -> anyhow::Result<()> {
-	if !path.exists() {
+	if path.exists() {
+		manage_existing_file(path, string)
+	} else {
 		debug!("Creating new managed file at {}", path.display());
 		init_new_file(path, string)
-	} else {
-		manage_existing_file(path, string)
 	}
 }
 
 fn init_new_file(path: &Path, string: &str) -> anyhow::Result<()> {
 	fs::write(path, string).context(format!("Failed to write to {}", path.display()))?;
-	set_managed(path.to_path_buf())?;
+	set_managed(path)?;
 
 	info!("niji now manages {}", path.display());
 
@@ -37,13 +37,12 @@ fn manage_existing_file(path: &Path, string: &str) -> anyhow::Result<()> {
 		if current_hash == known_hash {
 			debug!("Writing to managed file at {}", path.display());
 			fs::write(path, string).context(format!("Failed to write to {}", path.display()))?;
-			set_managed(path.to_path_buf())?;
+			set_managed(path)?;
 			return Ok(());
-		} else {
-			debug!("File contents of {} have changed", path.display())
 		}
+		debug!("File contents of {} have changed", path.display());
 	} else {
-		debug!("{} is not in the managed files table", path.display())
+		debug!("{} is not in the managed files table", path.display());
 	}
 
 	backup_and_replace(path, string, current_hash)
@@ -88,7 +87,7 @@ fn get_backup_path(path: &Path, hash: u64) -> PathBuf {
 	path.parent().unwrap().join(file_name)
 }
 
-fn set_managed(path: PathBuf) -> anyhow::Result<()> {
+fn set_managed(path: &Path) -> anyhow::Result<()> {
 	let path = path.canonicalize()?;
 	let hash = hash_contents(&path)?;
 

@@ -24,7 +24,8 @@ fn match_lua_pattern(lua: &Lua, str: &str, pattern: &str) -> mlua::Result<bool> 
 fn get_value_or_list<V: FromLua>(lua: &Lua, value: mlua::Value) -> mlua::Result<Vec<V>> {
 	match value {
 		mlua::Value::Table(table) => {
-			let mut values = Vec::with_capacity(table.len()? as usize);
+			let len = usize::try_from(table.len()?).map_err(mlua::Error::runtime)?;
+			let mut values = Vec::with_capacity(len);
 			for i in 0..table.len()? {
 				values.push(table.get(i)?);
 			}
@@ -34,6 +35,8 @@ fn get_value_or_list<V: FromLua>(lua: &Lua, value: mlua::Value) -> mlua::Result<
 	}
 }
 
+#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::unnecessary_wraps)]
 impl FilesystemApi {
 	fn write(_: &Lua, (path, content): (String, String)) -> mlua::Result<String> {
 		let path = expand_path(&path);
@@ -147,7 +150,7 @@ impl FilesystemApi {
 				}
 				config_paths.push(path);
 			}
-		};
+		}
 
 		let hint_text = if let Some(hint) = options.get::<Option<String>>("hint")? {
 			if config_paths.is_empty() {
@@ -194,7 +197,7 @@ impl FilesystemApi {
 				 suppress this warning instead, set suppress_not_sourced_warning in the module \
 				 options.",
 				mod_ctx.name
-			)
+			);
 		}
 
 		Ok(path)

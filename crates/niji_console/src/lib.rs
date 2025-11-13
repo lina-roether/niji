@@ -10,6 +10,8 @@ mod logger;
 #[macro_use]
 mod macros;
 
+/// # Panics
+/// panics if a logger has already been set
 pub fn init(level: LevelFilter, color_choice: ColorChoice) {
 	let console = Console::new_std(color_choice);
 	if level != LevelFilter::Off {

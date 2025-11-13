@@ -260,7 +260,7 @@ mod tests {
 		.unwrap();
 
 		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
-		module.reload(ModuleConfig::new()).unwrap()
+		module.reload(ModuleConfig::new()).unwrap();
 	}
 
 	#[test]

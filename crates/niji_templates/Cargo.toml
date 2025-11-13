@@ -2,7 +2,8 @@
 name = "niji_templates"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lints.clippy]
+pedantic = "warn"
 
 [dependencies]
 anyhow = "1.0.100"

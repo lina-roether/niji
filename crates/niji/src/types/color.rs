@@ -1,8 +1,17 @@
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::{fmt, mem::transmute, str::FromStr};
 
 use crate::utils::{lerp, oklch::OklchColor};
+
+// If the channel is negative something went *very* wrong somewhere else
+#[allow(clippy::cast_sign_loss)]
+// The truncation is intended in this case; we only have a limited number of colors we can
+// represent after all
+#[allow(clippy::cast_possible_truncation)]
+fn discretize(channel: f32) -> u8 {
+	(channel * 255.0) as u8
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, SerializeDisplay, DeserializeFromStr)]
 #[repr(C, align(4))]
@@ -15,12 +24,12 @@ pub struct Color {
 
 impl Color {
 	pub fn new_rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
-		Self { r, g, b, a }
+		Self { a, b, g, r }
 	}
 
 	#[inline]
 	pub fn alpha(self) -> f32 {
-		self.a as f32 / 255.0
+		f32::from(self.a) / 255.0
 	}
 
 	pub fn lighten(self, amount: f32) -> Self {
@@ -42,7 +51,7 @@ impl Color {
 
 		Self::from_oklch(
 			OklchColor::blend(col1.into_oklch(), col2.into_oklch(), t),
-			f32::round(out_alpha * 255.0) as u8,
+			discretize(out_alpha),
 		)
 	}
 
@@ -51,7 +60,7 @@ impl Color {
 	}
 
 	pub fn with_alpha(self, alpha: f32) -> Self {
-		Self::new_rgba(self.r, self.g, self.b, (alpha * 255.0) as u8)
+		Self::new_rgba(self.r, self.g, self.b, discretize(alpha))
 	}
 
 	fn into_oklch(self) -> OklchColor {
@@ -66,7 +75,7 @@ impl Color {
 
 impl Default for Color {
 	fn default() -> Self {
-		Self::from(0x000000ff)
+		Self::from(0x00_00_00_ff)
 	}
 }
 
@@ -109,7 +118,7 @@ impl FromStr for Color {
 				return Err(anyhow!(
 					"Colors must have 3, 6, or 8 hex digits! (got {})",
 					s.len()
-				))
+				));
 			}
 		};
 
@@ -123,7 +132,7 @@ mod test {
 
 	#[test]
 	fn should_construct_from_int() {
-		let col = Color::from(0x0a0b0c0d);
+		let col = Color::from(0x0a_0b_0c_0d);
 
 		assert_eq!(col.r, 0x0a);
 		assert_eq!(col.g, 0x0b);
@@ -133,26 +142,29 @@ mod test {
 
 	#[test]
 	fn should_display_correctly() {
-		let col = Color::from(0xf10234ff);
+		let col = Color::from(0xf1_02_34_ff);
 
-		assert_eq!(col.to_string(), String::from("#f10234ff"))
+		assert_eq!(col.to_string(), String::from("#f10234ff"));
 	}
 
 	#[test]
 	fn should_parse_3_len() {
-		assert_eq!(Color::from_str("#222").unwrap(), Color::from(0x222222ff))
+		assert_eq!(Color::from_str("#222").unwrap(), Color::from(0x22_22_22_ff));
 	}
 
 	#[test]
 	fn should_parse_6_len() {
-		assert_eq!(Color::from_str("#abcdef").unwrap(), Color::from(0xabcdefff));
+		assert_eq!(
+			Color::from_str("#abcdef").unwrap(),
+			Color::from(0xab_cd_ef_ff)
+		);
 	}
 
 	#[test]
 	fn should_parse_8_len() {
 		assert_eq!(
 			Color::from_str("#abcdef80").unwrap(),
-			Color::from(0xabcdef80)
+			Color::from(0xab_cd_ef_80)
 		);
 	}
 }

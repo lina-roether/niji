@@ -24,10 +24,10 @@ impl niji_templates::Format for Color {
 			"gx" => Some(format!("{:02x}", self.g).into()),
 			"bx" => Some(format!("{:02x}", self.b).into()),
 			"ax" => Some(format!("{:02x}", self.a).into()),
-			"rf" => Some((self.r as f32 / 255.0).into()),
-			"gf" => Some((self.g as f32 / 255.0).into()),
-			"bf" => Some((self.b as f32 / 255.0).into()),
-			"af" => Some((self.a as f32 / 255.0).into()),
+			"rf" => Some((f32::from(self.r) / 255.0).into()),
+			"gf" => Some((f32::from(self.g) / 255.0).into()),
+			"bf" => Some((f32::from(self.b) / 255.0).into()),
+			"af" => Some((f32::from(self.a) / 255.0).into()),
 			_ => None,
 		}
 	}
@@ -38,7 +38,7 @@ where
 	P: AsRef<Path>,
 {
 	let path_name = path.as_ref().display().to_string();
-	let source = fs::read_to_string(path).context(format!("Failed to load {}", path_name))?;
+	let source = fs::read_to_string(path).context(format!("Failed to load {path_name}"))?;
 
 	Ok(source.parse()?)
 }
@@ -62,6 +62,6 @@ mod tests {
 			result,
 			"r=17; g=51; b=85; a=255; rx=11; gx=33; bx=55; ax=ff; rf=0.06666667014360428; \
 			 gf=0.20000000298023224; bf=0.3333333432674408; af=1"
-		)
+		);
 	}
 }

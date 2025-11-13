@@ -1,7 +1,8 @@
 use std::{
-	fs::{read_dir, ReadDir},
+	fs::{ReadDir, read_dir},
 	io,
 	path::{Path, PathBuf},
+	result::Result,
 };
 
 pub struct SubPathIter(ReadDir);
@@ -54,17 +55,13 @@ where
 				);
 			}
 
-			let path = self
-				.sub_path_iter
-				.as_mut()
-				.unwrap()
-				.find_map(|path| path.ok());
+			let path = self.sub_path_iter.as_mut().unwrap().find_map(Result::ok);
 
 			if path.is_some() {
 				return path;
-			} else {
-				self.sub_path_iter = None;
 			}
+
+			self.sub_path_iter = None;
 		}
 	}
 }
@@ -121,7 +118,6 @@ where
 
 pub type FindFilesIter<I> = FileIter<FindSubPathsIter<I>>;
 
-
 pub fn find_files<P, S>(search_paths: S) -> FindFilesIter<S::IntoIter>
 where
 	P: AsRef<Path>,
@@ -129,7 +125,6 @@ where
 {
 	FileIter::new(FindSubPathsIter::new(search_paths.into_iter()))
 }
-
 
 pub type FindDirsIter<I> = DirIter<FindSubPathsIter<I>>;
 

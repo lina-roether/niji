@@ -14,7 +14,7 @@ macro_rules! fmt_value_from_int {
         $(
             impl From<$ty> for FmtValue {
                 fn from(value: $ty) -> Self {
-                    Self::Int(value as i64)
+                    Self::Int(i64::from(value))
                 }
             }
          )*
@@ -26,14 +26,15 @@ macro_rules! fmt_value_from_float {
         $(
             impl From<$ty> for FmtValue {
                 fn from(value: $ty) -> Self {
-                    Self::Float(value as f64)
+                    Self::Float(f64::from(value))
                 }
             }
          )*
     };
 }
 
-fmt_value_from_int!(i8, u8, i16, u16, i32, u32, i64, u64);
+// u64 is missing bc it can't be losslessly represented as an i64
+fmt_value_from_int!(i8, u8, i16, u16, i32, u32, i64);
 fmt_value_from_float!(f32, f64);
 
 impl From<String> for FmtValue {
@@ -59,6 +60,8 @@ pub trait Format: Debug {
 
 	fn get_placeholder(&self, name: &str) -> Option<FmtValue>;
 
+	/// # Errors
+	/// errors when one of the placeholder handles used fails
 	fn format(&self, fmtstr: Option<&str>) -> anyhow::Result<String> {
 		let fmtstr = fmtstr.unwrap_or_else(|| self.default_fmtstr());
 		let result = strfmt_map(fmtstr, |mut fmt| {
@@ -73,6 +76,8 @@ pub trait Format: Debug {
 		Ok(result)
 	}
 
+	/// # Errors
+	/// errors when one of the placeholder handles used in `default_fmtstr` fails
 	fn display(&self) -> anyhow::Result<String> {
 		self.format(Some(self.default_fmtstr()))
 	}

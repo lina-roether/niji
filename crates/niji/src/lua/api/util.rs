@@ -6,9 +6,8 @@ pub struct UtilApi;
 
 impl UtilApi {
 	fn by_theme(_: &Lua, (theme, value): (mlua::Table, mlua::Value)) -> mlua::Result<mlua::Value> {
-		let table = match value {
-			mlua::Value::Table(table) => table,
-			_ => return Ok(value),
+		let mlua::Value::Table(table) = value else {
+			return Ok(value);
 		};
 
 		let default: mlua::Value = table.get("default")?;
@@ -25,6 +24,12 @@ impl UtilApi {
 
 		let font_scale = config.get::<Option<f32>>("font_scale")?.unwrap_or(1.0);
 
+		// clippy is a bit annoyed when it comes to casts from floats to unsigned integers.
+		// generally speaking, the standard casting semantics should be fine here, and we don't
+		// really care about precision
+		#[allow(clippy::cast_precision_loss)]
+		#[allow(clippy::cast_sign_loss)]
+		#[allow(clippy::cast_possible_truncation)]
 		Ok((font_size as f32 * font_scale).round() as u32)
 	}
 }

@@ -1,4 +1,4 @@
-use oklab::{oklab_to_srgb, srgb_to_oklab, Oklab, Rgb};
+use oklab::{Oklab, Rgb, oklab_to_srgb, srgb_to_oklab};
 
 use crate::utils::lerp;
 
@@ -9,6 +9,7 @@ pub struct OklchColor {
 	h: f32,
 }
 
+#[allow(clippy::many_single_char_names)]
 impl OklchColor {
 	pub const fn new(l: f32, c: f32, h: f32) -> Self {
 		Self { l, c, h }
@@ -81,6 +82,6 @@ mod tests {
 	fn srgb_conversion() {
 		let color = OklchColor::from_srgb(174, 49, 39);
 
-		assert_eq!(color.into_srgb(), (174, 49, 39))
+		assert_eq!(color.into_srgb(), (174, 49, 39));
 	}
 }

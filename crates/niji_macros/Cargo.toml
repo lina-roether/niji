@@ -5,6 +5,8 @@ edition = "2021"
 [lib]
 proc-macro = true
 
+[lints.clippy]
+pedantic = "warn"
 
 [dependencies]
 proc-macro-error = "1.0.4"

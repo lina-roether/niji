@@ -6,6 +6,7 @@ use super::ApiModule;
 
 pub struct OsApi;
 
+#[allow(clippy::needless_pass_by_value)]
 impl OsApi {
 	fn exec_detached(_: &Lua, command: String) -> mlua::Result<()> {
 		Command::new("sh")

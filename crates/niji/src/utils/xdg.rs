@@ -16,6 +16,7 @@ fn map_path_vec(path_vec: &[PathBuf]) -> Vec<Cow<'_, str>> {
 		.collect::<Vec<_>>()
 }
 
+#[allow(clippy::ref_option)]
 fn map_path_option(path_option: &Option<PathBuf>) -> Option<Cow<'_, str>> {
 	path_option.as_ref().map(|p| p.to_string_lossy())
 }
@@ -52,24 +53,22 @@ impl XdgDirs {
 
 		Ok(Self {
 			config_home: env::var_os("XDG_CONFIG_HOME")
-				.map(PathBuf::from)
-				.unwrap_or_else(|| home.join(".config")),
+				.map_or_else(|| home.join(".config"), PathBuf::from),
 			data_home: env::var_os("XDG_DATA_HOME")
-				.map(PathBuf::from)
-				.unwrap_or_else(|| home.join(".local/share")),
+				.map_or_else(|| home.join(".local/share"), PathBuf::from),
 			state_home: env::var_os("XDG_STATE_HOME")
-				.map(PathBuf::from)
-				.unwrap_or_else(|| home.join(".local/state")),
+				.map_or_else(|| home.join(".local/state"), PathBuf::from),
 			cache_home: env::var_os("XDG_CACHE_HOME")
-				.map(PathBuf::from)
-				.unwrap_or_else(|| home.join(".cache")),
+				.map_or_else(|| home.join(".cache"), PathBuf::from),
 			runtime_dir: env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from),
-			data_dirs: env::var_os("XDG_DATA_DIRS")
-				.map(|a| split_paths(&a).collect::<Vec<_>>())
-				.unwrap_or_else(|| vec!["/usr/local/share".into(), "/usr/share".into()]),
-			config_dirs: env::var_os("XDG_CONFIG_DIRS")
-				.map(|a| split_paths(&a).collect::<Vec<_>>())
-				.unwrap_or_else(|| vec!["/etc/xdg".into()]),
+			data_dirs: env::var_os("XDG_DATA_DIRS").map_or_else(
+				|| vec!["/usr/local/share".into(), "/usr/share".into()],
+				|a| split_paths(&a).collect::<Vec<_>>(),
+			),
+			config_dirs: env::var_os("XDG_CONFIG_DIRS").map_or_else(
+				|| vec!["/etc/xdg".into()],
+				|a| split_paths(&a).collect::<Vec<_>>(),
+			),
 		})
 	}
 }

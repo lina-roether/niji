@@ -48,8 +48,7 @@ impl ThemeManager {
 		let theme: Option<Theme> = self.read_theme(&current_theme)?;
 		let Some(mut theme) = theme else {
 			return Err(anyhow!(
-				"Current theme is \"{}\", but that theme doesn't exist!",
-				current_theme
+				"Current theme is \"{current_theme}\", but that theme doesn't exist!",
 			));
 		};
 

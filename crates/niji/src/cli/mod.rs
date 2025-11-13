@@ -1,5 +1,5 @@
 use clap::ArgMatches;
-use log::{error, LevelFilter};
+use log::{LevelFilter, error};
 use niji_console::ColorChoice;
 mod syntax;
 
@@ -26,7 +26,7 @@ macro_rules! handle {
 
 pub fn run() {
 	let matches = build_cmd().get_matches();
-	cmd(&matches)
+	cmd(&matches);
 }
 
 fn cmd(args: &ArgMatches) {
@@ -65,7 +65,7 @@ fn cmd_apply(app: &NijiApp, args: &ArgMatches) {
 		.get_many::<String>("modules")
 		.map(|v| v.cloned().collect());
 
-	handle!(app.apply(!no_reload, modules.as_deref()))
+	handle!(app.apply(!no_reload, modules.as_deref()));
 }
 
 fn cmd_theme(app: &NijiApp, args: &ArgMatches) {
@@ -104,7 +104,7 @@ fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) {
 
 	niji_console::println!("Theme \"{}\":", theme.name.as_ref().unwrap());
 	niji_console::println!();
-	niji_console::println!("{theme}")
+	niji_console::println!("{theme}");
 }
 
 fn cmd_theme_set(app: &NijiApp, args: &ArgMatches) {
@@ -123,7 +123,7 @@ fn cmd_theme_list(app: &NijiApp) {
 
 	for theme in app.list_themes() {
 		empty = false;
-		niji_console::println!("{theme}")
+		niji_console::println!("{theme}");
 	}
 
 	if empty {
@@ -132,5 +132,5 @@ fn cmd_theme_list(app: &NijiApp) {
 }
 
 fn cmd_theme_unset(app: &NijiApp) {
-	handle!(app.unset_current_theme())
+	handle!(app.unset_current_theme());
 }

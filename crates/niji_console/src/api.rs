@@ -16,6 +16,8 @@ pub(crate) fn use_console<T>(cb: impl FnOnce(&Console) -> T) -> Option<T> {
 
 macro_rules! api_fn {
 	($fn:ident($($arg:ident : $ty:ty),*) -> $out:ty : $default:expr) => {
+        #[doc = "# Errors"]
+        #[doc = "Returns an error when no console is configured"]
         pub fn $fn($($arg: $ty),*) -> ::anyhow::Result<$out> {
             let result = use_console(|console| console.$fn($($arg),*)).unwrap_or(Ok($default))?;
             Ok(result)

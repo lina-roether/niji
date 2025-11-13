@@ -29,6 +29,6 @@ impl log::Log for Logger {
 	}
 
 	fn flush(&self) {
-		api::flush().unwrap()
+		api::flush().unwrap();
 	}
 }

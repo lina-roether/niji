@@ -61,7 +61,7 @@ pub struct ParseError {
 
 impl ParseError {
 	fn new(kind: ParseErrorKind, position: Position) -> Self {
-		Self { kind, position }
+		Self { position, kind }
 	}
 }
 
@@ -126,7 +126,7 @@ impl<'a> Source<'a> {
 	}
 }
 
-impl<'a> Iterator for Source<'a> {
+impl Iterator for Source<'_> {
 	type Item = char;
 
 	fn next(&mut self) -> Option<Self::Item> {
@@ -178,7 +178,7 @@ fn has_delimiter(source: &mut Source, delimiter: &str) -> bool {
 	true
 }
 
-fn parse_ident(source: &mut Source) -> ParseResult<String> {
+fn parse_ident(source: &mut Source) -> Option<String> {
 	let mut src = source.clone();
 	let mut ident = String::new();
 
@@ -190,11 +190,11 @@ fn parse_ident(source: &mut Source) -> ParseResult<String> {
 	}
 
 	if ident.is_empty() {
-		return Ok(None);
+		return None;
 	}
 
 	*source = src;
-	Ok(Some(ident))
+	Some(ident)
 }
 
 fn parse_name(source: &mut Source) -> ParseResult<Name> {
@@ -209,7 +209,7 @@ fn parse_name(source: &mut Source) -> ParseResult<Name> {
 	let mut segments = Vec::<String>::with_capacity(1);
 
 	loop {
-		let Some(segment) = parse_ident(&mut src)? else {
+		let Some(segment) = parse_ident(&mut src) else {
 			return Err(ParseError::new(ParseErrorKind::ExpectedIdent, src.position));
 		};
 		segments.push(segment);
@@ -245,7 +245,7 @@ fn parse_tag(source: &mut Source, state: &State, operator: Option<char>) -> Pars
 	skip_whitespace(&mut src);
 	if !has_delimiter(&mut src, &state.end_delimiter) {
 		return Err(ParseError::new(
-			ParseErrorKind::ExpectedClosingDelim(state.end_delimiter.to_string()),
+			ParseErrorKind::ExpectedClosingDelim(state.end_delimiter.clone()),
 			src.position,
 		));
 	}
@@ -278,7 +278,7 @@ fn parse_str_lit(source: &mut Source) -> ParseResult<String> {
 			complete = true;
 			break;
 		}
-		str.push(ch)
+		str.push(ch);
 	}
 
 	if !complete {
@@ -321,7 +321,7 @@ fn parse_insert(source: &mut Source, state: &State) -> ParseResult<Insert> {
 
 		skip_whitespace(&mut src);
 
-		format = Some(format_str)
+		format = Some(format_str);
 	}
 
 	if !has_delimiter(&mut src, &state.end_delimiter) {
@@ -515,7 +515,7 @@ fn parse_instruction(source: &mut Source, state: &mut State) -> ParseResult<()> 
 	Ok(Some(()))
 }
 
-fn parse_string(source: &mut Source, state: &State) -> ParseResult<String> {
+fn parse_string(source: &mut Source, state: &State) -> Option<String> {
 	let mut checkpoint = source.clone();
 	let mut checkpoint_dist = 0;
 	let mut buffer = String::new();
@@ -538,10 +538,10 @@ fn parse_string(source: &mut Source, state: &State) -> ParseResult<String> {
 	}
 
 	if buffer.is_empty() {
-		return Ok(None);
+		return None;
 	}
 
-	Ok(Some(buffer))
+	Some(buffer)
 }
 
 fn parse_token(source: &mut Source, state: &mut State) -> ParseResult<Token> {
@@ -551,7 +551,7 @@ fn parse_token(source: &mut Source, state: &mut State) -> ParseResult<Token> {
 		Ok(Some(Token::SetFmt(value)))
 	} else if let Some(value) = parse_insert(source, state)? {
 		Ok(Some(Token::Insert(value)))
-	} else if let Some(string) = parse_string(source, state)? {
+	} else if let Some(string) = parse_string(source, state) {
 		Ok(Some(Token::String(string)))
 	} else {
 		Ok(None)
@@ -697,7 +697,7 @@ mod tests {
 				name: Name(vec!["value".to_string()]),
 				format: Some("{a}".to_string())
 			})])
-		)
+		);
 	}
 
 	#[test]
@@ -710,6 +710,6 @@ mod tests {
 				type_name: "color".to_string(),
 				format: "{r}".to_string()
 			})])
-		)
+		);
 	}
 }

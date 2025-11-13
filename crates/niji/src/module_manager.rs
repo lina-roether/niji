@@ -61,7 +61,7 @@ impl ModuleManager {
 	) -> anyhow::Result<()> {
 		let mut remaining = HashSet::<String>::new();
 		if let Some(modules) = modules {
-			remaining.extend(modules.iter().cloned())
+			remaining.extend(modules.iter().cloned());
 		}
 
 		for module_descr in &*self.active_modules.lock().unwrap() {
@@ -92,7 +92,7 @@ impl ModuleManager {
 		mod_name: &str,
 	) -> anyhow::Result<ModuleDescriptor> {
 		let module_dir = Self::find_module_dir(files, mod_name)
-			.ok_or_else(|| anyhow!("Module \"{}\" does not exist", mod_name))?;
+			.ok_or_else(|| anyhow!("Module \"{mod_name}\" does not exist"))?;
 
 		debug!(
 			"Activating module \"{mod_name}\" at path {}",
@@ -144,7 +144,7 @@ impl ModuleManager {
 					"Reloading is disabled for module {}. You will only see the changes after a \
 					 restart",
 					module_descr.name
-				)
+				);
 			} else if module.can_reload() {
 				info!("Reloading...");
 				if let Err(err) = module.reload(module_config) {
@@ -153,7 +153,7 @@ impl ModuleManager {
 					niji_console::println!();
 				}
 			} else {
-				debug!("Module {} does not support reloading.", module_descr.name)
+				debug!("Module {} does not support reloading.", module_descr.name);
 			}
 		}
 		info!("Done!");

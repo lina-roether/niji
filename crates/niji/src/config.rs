@@ -200,6 +200,7 @@ pub struct Config {
 	pub global: ModuleConfig,
 
 	#[serde(flatten)]
+	#[allow(clippy::struct_field_names)]
 	pub module_config: HashMap<String, ModuleConfig>,
 }
 

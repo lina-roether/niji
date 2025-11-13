@@ -2,7 +2,10 @@ use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;
 use proc_macro_error::{abort, abort_call_site};
 use quote::quote;
-use syn::*;
+use syn::{
+	parse, parse2, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Ident, LitStr, Meta,
+	Path,
+};
 
 extern crate proc_macro;
 
@@ -37,7 +40,7 @@ fn get_lua_attr(attrs: &[Attribute]) -> Option<LuaAttr> {
 	attrs.iter().find_map(LuaAttr::parse)
 }
 
-fn derive_into_lua_with(ast: DeriveInput, path: Path) -> TokenStream {
+fn derive_into_lua_with(ast: DeriveInput, path: &Path) -> TokenStream {
 	let name = ast.ident;
 
 	quote! {
@@ -54,13 +57,13 @@ fn derive_into_lua_direct(ast: DeriveInput) -> TokenStream {
 	let name = ast.ident;
 
 	match ast.data {
-		Data::Struct(data) => derive_into_lua_struct(name, data),
-		Data::Enum(data) => derive_into_lua_enum(name, data),
+		Data::Struct(data) => derive_into_lua_struct(&name, &data),
+		Data::Enum(data) => derive_into_lua_enum(&name, &data),
 		Data::Union(..) => abort_call_site!("Deriving IntoLua for unions is not supported"),
 	}
 }
 
-fn derive_into_lua_enum(name: Ident, data: DataEnum) -> TokenStream {
+fn derive_into_lua_enum(name: &Ident, data: &DataEnum) -> TokenStream {
 	let variant_mappings: Vec<proc_macro2::TokenStream> = data
 		.variants
 		.iter()
@@ -102,7 +105,7 @@ fn derive_into_lua_enum(name: Ident, data: DataEnum) -> TokenStream {
 	.into()
 }
 
-fn derive_into_lua_struct(name: Ident, data: DataStruct) -> TokenStream {
+fn derive_into_lua_struct(name: &Ident, data: &DataStruct) -> TokenStream {
 	let field_names: Vec<&Ident> = data
 		.fields
 		.iter()
@@ -121,13 +124,14 @@ fn derive_into_lua_struct(name: Ident, data: DataStruct) -> TokenStream {
 			let lua_attr = get_lua_attr(&f.attrs);
 			let name = f.ident.clone().unwrap();
 
-			match lua_attr {
-				Some(LuaAttr::With(path)) => quote! {
+			if let Some(LuaAttr::With(path)) = lua_attr {
+				quote! {
 					::mlua::IntoLua::into_lua(#path(&self.#name), lua)
-				},
-				_ => quote! {
+				}
+			} else {
+				quote! {
 					::mlua::IntoLua::into_lua(self.#name, lua)
-				},
+				}
 			}
 		})
 		.collect();
@@ -154,7 +158,7 @@ pub fn derive_into_lua(input: TokenStream) -> TokenStream {
 	let lua_attr = get_lua_attr(&ast.attrs);
 
 	match lua_attr {
-		Some(LuaAttr::With(path)) => derive_into_lua_with(ast, path),
+		Some(LuaAttr::With(path)) => derive_into_lua_with(ast, &path),
 		_ => derive_into_lua_direct(ast),
 	}
 }

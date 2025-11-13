@@ -3,6 +3,8 @@ use clap::{Arg, ArgAction, Command};
 pub const NAME: &str = "niji";
 pub const AUTHOR: &str = "Lina Roether <lina.roether@proton.me>";
 
+#[allow(clippy::too_many_lines)]
+#[must_use]
 pub fn build_cmd() -> Command {
 	Command::new(NAME)
 		.author(AUTHOR)

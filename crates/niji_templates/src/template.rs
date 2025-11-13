@@ -62,6 +62,8 @@ impl Template {
 		self.fmt.insert(type_name, format);
 	}
 
+	/// # Errors
+	/// Returns an error when one of the values' failed to be inserted
 	pub fn render(&mut self, value: &Value) -> anyhow::Result<String> {
 		let mut buf = String::new();
 		Self::render_tokens(&mut buf, &self.tokens, &[value], &mut self.fmt)?;
@@ -97,7 +99,7 @@ impl Template {
 
 		match (section.inverted, value) {
 			(false, Value::String(..) | Value::Fmt(..) | Value::Map(..)) => {
-				Self::render_tokens(buf, &section.content, &[&[value], context].concat(), fmt)?
+				Self::render_tokens(buf, &section.content, &[&[value], context].concat(), fmt)?;
 			}
 			(true, Value::String(..)) => {
 				return Err(anyhow!(
@@ -117,12 +119,12 @@ impl Template {
 			}
 			(invert, Value::Bool(bool)) => {
 				if bool ^ invert {
-					Self::render_tokens(buf, &section.content, &[&[value], context].concat(), fmt)?
+					Self::render_tokens(buf, &section.content, &[&[value], context].concat(), fmt)?;
 				}
 			}
 			(invert, Value::Nil) => {
 				if invert {
-					Self::render_tokens(buf, &section.content, &[&[value], context].concat(), fmt)?
+					Self::render_tokens(buf, &section.content, &[&[value], context].concat(), fmt)?;
 				}
 			}
 			(false, Value::Vec(vec)) => {
