@@ -1,0 +1,33 @@
+name: Create binary release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version to release"
+  push:
+    tags: "v*.*.*"
+
+permissions:
+  contents: read
+
+jobs:
+  get_release_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ github.event.inputs.version || steps.get_latest_tag.outputs.version }}
+    steps:
+      - name: Get latest release tag
+        id: get_latest_tag
+        if: ${{ !github.events.inputs.version }}
+        run: |
+          "version=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
+  create_release:
+    runs-on: ubuntu-latest
+    needs: get_release_version
+    env:
+      RELEASE_VERSION: ${{ needs.get_release_version.outputs.version }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+    steps:
+      - name: Create release
+        run: |
+          gh release create "$RELEASE_VERSION" --repo="$GITHUB_REPOSITORY" --title="$RELEASE_VERSION"
