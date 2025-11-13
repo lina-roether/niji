@@ -1,6 +1,5 @@
 name: Check commit messages
-on:
-  push
+on: push
 
 jobs:
   cog_check:
@@ -18,4 +17,6 @@ jobs:
           args: --from-latest-tag --ignore-merge-commits
       - name: Print summary
         if: always()
-        run: echo "${{ steps.cog_check.outputs.stdout }}" >> "$GITHUB_STEP_SUMMARY"
+        run:
+          echo "${{ steps.cog_check.outputs.stdout }}" >> "$GITHUB_STEP_SUMMARY"
+

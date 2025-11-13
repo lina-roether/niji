@@ -14,7 +14,8 @@ jobs:
   get_release_version:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ github.event.inputs.version || steps.get_latest_tag.outputs.version }}
+      version: |
+        ${{ github.event.inputs.version || steps.get_latest_tag.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
