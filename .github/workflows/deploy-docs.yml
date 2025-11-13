@@ -9,6 +9,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v5
       - name: Cache crates
         uses: actions/cache@v4
         with:
@@ -19,8 +21,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install MdBook
         run: cargo install mdbook
-      - name: Checkout
-        uses: actions/checkout@v5
       - name: Build Docs
         run: |
           cd docs

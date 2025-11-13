@@ -42,6 +42,10 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Cache crates
         uses: actions/cache@v4
         with:
@@ -56,10 +60,6 @@ jobs:
         run: |
           sudo apt-get install -y libluajit-5.1-dev
           sudo apt-get install -y just
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
       - name: Bump version
         id: cog_bump
         uses: cocogitto/cocogitto-action@v4.1.0
