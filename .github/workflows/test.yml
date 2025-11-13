@@ -19,10 +19,10 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install dependencies
-        run: |
-          sudo apt-get install -y libluajit-5.1-dev
-          sudo apt-get install -y just
+      - name: Install niji dependencies
+        run: sudo apt-get install -y libluajit-5.1-dev
+      - name: Install just
+        run: cargo install just
       - name: Test
         run: |
           just test

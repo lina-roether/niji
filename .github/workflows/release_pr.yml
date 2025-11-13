@@ -56,10 +56,10 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install cargo-edit
         run: cargo install cargo-edit
+      - name: Install just
+        run: cargo install just
       - name: Install niji dependencies
-        run: |
-          sudo apt-get install -y libluajit-5.1-dev
-          sudo apt-get install -y just
+        run: sudo apt-get install -y libluajit-5.1-dev
       - name: Bump version
         id: cog_bump
         uses: cocogitto/cocogitto-action@v4.1.0
