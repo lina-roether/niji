@@ -20,7 +20,8 @@ jobs:
         id: get_latest_tag
         if: ${{ !github.events.inputs.version }}
         run: |
-          "version=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
+          TAG_VERSION="$(git describe --tags "$(git rev-list --tags --max-count=1)")"
+          "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
   create_release:
     runs-on: ubuntu-latest
     needs: get_release_version
