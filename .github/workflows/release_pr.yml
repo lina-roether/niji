@@ -17,23 +17,21 @@ jobs:
           fetch-depth: 0
       - name: Get last tag version
         id: cog_get_version
-        uses: cocogitto/cocogitto-action@v4
+        uses: cocogitto/cocogitto-action@v4.1.0
         with:
-          command: -v get-version
+          command: get-version
           args: --tag
       - name: Get new semantic version
         id: cog_bump
-        uses: cocogitto/cocogitto-action@v4
+        uses: cocogitto/cocogitto-action@v4.1.0
         with:
           command: bump
           args: --auto --dry-run
       - name: Print summary
         if: always()
         run: |
-          echo "# Last tagged version" >> "${GITHUB_STEP_SUMMARY}"
-          echo "${{ steps.cog_get_version.outputs.stdout }}" >> "${GITHUB_STEP_SUMMARY}"
-          echo "# New version" >> "${GITHUB_STEP_SUMMARY}"
-          echo "${{ steps.cog_bump.outputs.stdout }}" >> "${GITHUB_STEP_SUMMARY}"
+          echo "Last tagged: ${{ steps.cog_get_version.outputs.stdout }}" >> "${GITHUB_STEP_SUMMARY}"
+          echo "New: ${{ steps.cog_bump.outputs.stdout }}" >> "${GITHUB_STEP_SUMMARY}"
 
   create_pr:
     needs: check_semver
@@ -49,7 +47,7 @@ jobs:
           fetch-depth: 0
       - name: Bump version
         id: cog_bump
-        uses: cocogitto/cocogitto-action@v4
+        uses: cocogitto/cocogitto-action@v4.1.0
         with:
           command: bump
           args: --auto

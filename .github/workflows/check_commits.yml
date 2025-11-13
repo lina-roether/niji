@@ -12,7 +12,7 @@ jobs:
           fetch-depth: 0
       - name: Check for conventional commits compliance
         id: cog_check
-        uses: cocogitto/cocogitto-action@v4
+        uses: cocogitto/cocogitto-action@v4.1.0
         with:
           command: check
           args: --from-latest-tag --ignore-merge-commits
