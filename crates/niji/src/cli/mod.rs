@@ -71,7 +71,7 @@ fn cmd_apply(app: &NijiApp, args: &ArgMatches) {
 fn cmd_theme(app: &NijiApp, args: &ArgMatches) {
 	match args.subcommand() {
 		Some(("get", _)) => cmd_theme_get(app),
-		Some(("show", args)) => cmd_theme_preview(app, args),
+		Some(("preview", args)) => cmd_theme_preview(app, args),
 		Some(("set", args)) => cmd_theme_set(app, args),
 		Some(("list", _)) => cmd_theme_list(app),
 		Some(("unset", _)) => cmd_theme_unset(app),
