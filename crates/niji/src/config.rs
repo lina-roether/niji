@@ -24,8 +24,51 @@ impl fmt::Display for ColorScheme {
 }
 
 #[derive(Debug, Clone, IntoLua, Serialize, Deserialize, PartialEq)]
+pub struct Palette {
+	pub blue_light: Color,
+	pub blue_dark: Color,
+	pub yellow_light: Color,
+	pub yellow_dark: Color,
+	pub orange_light: Color,
+	pub orange_dark: Color,
+	pub red_light: Color,
+	pub red_dark: Color,
+	pub purple_light: Color,
+	pub purple_dark: Color,
+	pub brown_light: Color,
+	pub brown_dark: Color,
+	pub neutral_light: Color,
+	pub neutral_dark: Color,
+}
+
+impl fmt::Display for Palette {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str(&colored_square(self.blue_light))?;
+		f.write_str(&colored_square(self.yellow_light))?;
+		f.write_str(&colored_square(self.orange_light))?;
+		f.write_str(&colored_square(self.red_light))?;
+		f.write_str(&colored_square(self.purple_light))?;
+		f.write_str(&colored_square(self.brown_light))?;
+		f.write_str(&colored_square(self.neutral_light))?;
+
+		writeln!(f)?;
+
+		f.write_str(&colored_square(self.blue_dark))?;
+		f.write_str(&colored_square(self.yellow_dark))?;
+		f.write_str(&colored_square(self.orange_dark))?;
+		f.write_str(&colored_square(self.red_dark))?;
+		f.write_str(&colored_square(self.purple_dark))?;
+		f.write_str(&colored_square(self.brown_dark))?;
+		f.write_str(&colored_square(self.neutral_dark))?;
+
+		Ok(())
+	}
+}
+
+#[derive(Debug, Clone, IntoLua, Serialize, Deserialize, PartialEq)]
 pub struct UiTheme {
 	pub color_scheme: ColorScheme,
+	pub palette: Palette,
 	pub background: Color,
 	pub surface: Color,
 	pub primary: Color,
@@ -82,6 +125,10 @@ impl fmt::Display for UiTheme {
 			color_display("Warning", self.warning, self.text_warning)
 		)?;
 		writeln!(f, "{}", color_display("Error", self.error, self.text_error))?;
+
+		writeln!(f)?;
+
+		writeln!(f, "{}", self.palette)?;
 
 		Ok(())
 	}
@@ -232,6 +279,22 @@ pub(crate) mod test_utils {
 		Theme {
 			name: Some("test_theme".to_string()),
 			ui: UiTheme {
+				palette: Palette {
+					blue_light: Color::new_rgba(1, 2, 3, 4),
+					blue_dark: Color::new_rgba(1, 2, 3, 4),
+					yellow_light: Color::new_rgba(1, 2, 3, 4),
+					yellow_dark: Color::new_rgba(1, 2, 3, 4),
+					orange_light: Color::new_rgba(1, 2, 3, 4),
+					orange_dark: Color::new_rgba(1, 2, 3, 4),
+					red_light: Color::new_rgba(1, 2, 3, 4),
+					red_dark: Color::new_rgba(1, 2, 3, 4),
+					purple_light: Color::new_rgba(1, 2, 3, 4),
+					purple_dark: Color::new_rgba(1, 2, 3, 4),
+					brown_light: Color::new_rgba(1, 2, 3, 4),
+					brown_dark: Color::new_rgba(1, 2, 3, 4),
+					neutral_light: Color::new_rgba(1, 2, 3, 4),
+					neutral_dark: Color::new_rgba(1, 2, 3, 4),
+				},
 				color_scheme: ColorScheme::Dark,
 				background: Color::new_rgba(1, 2, 3, 4),
 				surface: Color::new_rgba(1, 2, 3, 4),
