@@ -19,6 +19,22 @@ text_warning = "#1a1b26"
 error = "#f7768e"
 text_error = "#1a1b26"
 
+[ui.palette]
+blue_light = "#7aa2f7"
+blue_dark = "#2959aa"
+yellow_light = "#e0af68"
+yellow_dark = "#8f5e15"
+orange_light = "#ff9e64"
+orange_dark = "#965027"
+red_light = "#f7768e"
+red_dark = "#8c4351"
+purple_light = "#bb9af7"
+purple_dark = "#5a3e8e"
+brown_light = "#cfc9c2"
+brown_dark = "#634f30"
+neutral_light = "#a9b1d6"
+neutral_dark = "#24283b"
+
 [terminal]
 black = "#15161e"
 red = "#f7768e"
