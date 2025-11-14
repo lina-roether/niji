@@ -18,12 +18,13 @@ jobs:
         ${{ github.event.inputs.version || steps.get_latest_tag.outputs.version }}
     steps:
       - name: Checkout
+        if: ${{ !github.event.inputs.version }}
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Get latest release tag
         id: get_latest_tag
-        if: ${{ !github.events.inputs.version }}
+        if: ${{ !github.event.inputs.version }}
         run: |
           TAG_VERSION="$(git describe --tags "$(git rev-list --tags --max-count=1)")"
           echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
