@@ -39,4 +39,4 @@ jobs:
     steps:
       - name: Create release
         run: |
-          gh release create "$RELEASE_VERSION" --repo="$GITHUB_REPOSITORY" --title="$RELEASE_VERSION"
+          gh release create $RELEASE_VERSION --repo="$GITHUB_REPOSITORY" --title="$RELEASE_VERSION"
