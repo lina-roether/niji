@@ -1,4 +1,8 @@
-use std::{env::join_paths, fs, process::Command};
+use std::{
+	env::join_paths,
+	fs,
+	process::{Command, Stdio},
+};
 
 use tempfile::{TempDir, tempdir};
 
@@ -71,7 +75,16 @@ pub fn setup() -> TestFixture {
 	fs::create_dir_all(dir.path().join("run/user/1000")).unwrap();
 
 	Command::new("just")
+		.arg("build")
+		.stdout(Stdio::null())
+		.stderr(Stdio::null())
+		.status()
+		.expect("Failed to build niji in integration test");
+
+	Command::new("just")
 		.args(["install", &dir.path().to_string_lossy()])
+		.stdout(Stdio::null())
+		.stderr(Stdio::null())
 		.status()
 		.expect("Failed to install niji in integration test");
 

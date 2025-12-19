@@ -10,5 +10,5 @@ fn install() {
 		.output()
 		.expect("Failed to get niji version");
 
-	assert_eq!(String::from_utf8_lossy(&out.stdout), "niji 0.5.0");
+	assert_eq!(String::from_utf8_lossy(&out.stdout), "niji 0.5.0\n");
 }
