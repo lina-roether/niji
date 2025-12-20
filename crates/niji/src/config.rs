@@ -25,14 +25,20 @@ impl fmt::Display for ColorScheme {
 
 #[derive(Debug, Clone, IntoLua, Serialize, Deserialize, PartialEq)]
 pub struct Palette {
-	pub blue_light: Color,
-	pub blue_dark: Color,
-	pub yellow_light: Color,
-	pub yellow_dark: Color,
-	pub orange_light: Color,
-	pub orange_dark: Color,
+	pub pink_light: Color,
+	pub pink_dark: Color,
 	pub red_light: Color,
 	pub red_dark: Color,
+	pub orange_light: Color,
+	pub orange_dark: Color,
+	pub yellow_light: Color,
+	pub yellow_dark: Color,
+	pub green_light: Color,
+	pub green_dark: Color,
+	pub teal_light: Color,
+	pub teal_dark: Color,
+	pub blue_light: Color,
+	pub blue_dark: Color,
 	pub purple_light: Color,
 	pub purple_dark: Color,
 	pub brown_light: Color,
@@ -43,20 +49,26 @@ pub struct Palette {
 
 impl fmt::Display for Palette {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str(&colored_square(self.blue_light))?;
-		f.write_str(&colored_square(self.yellow_light))?;
-		f.write_str(&colored_square(self.orange_light))?;
+		f.write_str(&colored_square(self.pink_light))?;
 		f.write_str(&colored_square(self.red_light))?;
+		f.write_str(&colored_square(self.orange_light))?;
+		f.write_str(&colored_square(self.yellow_light))?;
+		f.write_str(&colored_square(self.green_light))?;
+		f.write_str(&colored_square(self.teal_light))?;
+		f.write_str(&colored_square(self.blue_light))?;
 		f.write_str(&colored_square(self.purple_light))?;
 		f.write_str(&colored_square(self.brown_light))?;
 		f.write_str(&colored_square(self.neutral_light))?;
 
 		writeln!(f)?;
 
-		f.write_str(&colored_square(self.blue_dark))?;
-		f.write_str(&colored_square(self.yellow_dark))?;
-		f.write_str(&colored_square(self.orange_dark))?;
+		f.write_str(&colored_square(self.pink_dark))?;
 		f.write_str(&colored_square(self.red_dark))?;
+		f.write_str(&colored_square(self.orange_dark))?;
+		f.write_str(&colored_square(self.yellow_dark))?;
+		f.write_str(&colored_square(self.green_dark))?;
+		f.write_str(&colored_square(self.teal_dark))?;
+		f.write_str(&colored_square(self.blue_dark))?;
 		f.write_str(&colored_square(self.purple_dark))?;
 		f.write_str(&colored_square(self.brown_dark))?;
 		f.write_str(&colored_square(self.neutral_dark))?;
@@ -294,6 +306,10 @@ pub(crate) mod test_utils {
 			name: Some("test_theme".to_string()),
 			ui: UiTheme {
 				palette: Palette {
+					green_light: Color::new_rgba(1, 2, 3, 4),
+					green_dark: Color::new_rgba(1, 2, 3, 4),
+					teal_light: Color::new_rgba(1, 2, 3, 4),
+					teal_dark: Color::new_rgba(1, 2, 3, 4),
 					blue_light: Color::new_rgba(1, 2, 3, 4),
 					blue_dark: Color::new_rgba(1, 2, 3, 4),
 					yellow_light: Color::new_rgba(1, 2, 3, 4),
@@ -302,6 +318,8 @@ pub(crate) mod test_utils {
 					orange_dark: Color::new_rgba(1, 2, 3, 4),
 					red_light: Color::new_rgba(1, 2, 3, 4),
 					red_dark: Color::new_rgba(1, 2, 3, 4),
+					pink_light: Color::new_rgba(1, 2, 3, 4),
+					pink_dark: Color::new_rgba(1, 2, 3, 4),
 					purple_light: Color::new_rgba(1, 2, 3, 4),
 					purple_dark: Color::new_rgba(1, 2, 3, 4),
 					brown_light: Color::new_rgba(1, 2, 3, 4),
