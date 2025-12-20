@@ -65,6 +65,26 @@ impl Files {
 		let builtin_modules_dirs = data_dirs.iter().map(|dir| dir.join(Self::MODULES_DIR));
 		modules_dirs.extend(builtin_modules_dirs);
 
+		log::debug!("Config file location is {}", config_file.display());
+		log::debug!("Output directory is {}", data_dir.display());
+		log::debug!("Current theme file is {}", current_theme_file.display());
+		log::debug!(
+			"Theme directories are {}",
+			themes_dirs
+				.iter()
+				.map(|p| p.to_string_lossy().into_owned())
+				.collect::<Vec<_>>()
+				.join(", ")
+		);
+		log::debug!(
+			"Module directories are {}",
+			modules_dirs
+				.iter()
+				.map(|p| p.to_string_lossy().into_owned())
+				.collect::<Vec<_>>()
+				.join(", ")
+		);
+
 		Ok(Self {
 			config_file,
 			output_dir: data_dir,
@@ -124,6 +144,7 @@ impl Files {
 }
 
 fn init_dir(dir: &Path) -> anyhow::Result<()> {
+	log::debug!("Initializing {}...", dir.display());
 	fs::create_dir_all(dir).context(format!("Failed to create {}", dir.display()))
 }
 
