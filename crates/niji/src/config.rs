@@ -251,6 +251,17 @@ pub struct Config {
 	pub module_config: HashMap<String, ModuleConfig>,
 }
 
+impl Default for Config {
+	fn default() -> Self {
+		Self {
+			modules: vec![],
+			disable_reloads: DisableReloads::None,
+			global: ModuleConfig::new(),
+			module_config: HashMap::new(),
+		}
+	}
+}
+
 fn read<C, P>(path: P) -> anyhow::Result<C>
 where
 	C: for<'de> Deserialize<'de>,
@@ -264,6 +275,9 @@ where
 }
 
 pub fn read_config(path: impl AsRef<Path>) -> anyhow::Result<Config> {
+	if !path.as_ref().exists() {
+		return Ok(Config::default());
+	}
 	read::<Config, _>(path)
 }
 
