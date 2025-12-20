@@ -1,14 +1,19 @@
-mod common;
+use assert_cmd::cargo::cargo_bin_cmd;
 
 #[test]
-fn install() {
-	let fixture = common::setup();
+fn version() {
+	let cmd = cargo_bin_cmd!("niji").arg("--version").assert();
+	cmd.success().stdout("niji 0.5.0\n");
+}
 
-	let out = fixture
-		.niji()
-		.arg("--version")
-		.output()
-		.expect("Failed to get niji version");
+#[test]
+fn help_option() {
+	let cmd = cargo_bin_cmd!("niji").arg("--help").assert();
+	cmd.success();
+}
 
-	assert_eq!(String::from_utf8_lossy(&out.stdout), "niji 0.5.0\n");
+#[test]
+fn help_command() {
+	let cmd = cargo_bin_cmd!("niji").arg("help").assert();
+	cmd.success();
 }
