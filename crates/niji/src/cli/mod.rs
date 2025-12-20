@@ -1,3 +1,5 @@
+use std::process::ExitCode;
+
 use clap::ArgMatches;
 use log::{LevelFilter, error};
 use niji_console::ColorChoice;
@@ -15,7 +17,7 @@ macro_rules! handle {
 				#[allow(clippy::redundant_closure_call)]
 				$cleanup();
 
-				return;
+				return ::std::process::ExitCode::FAILURE;
 			}
 		}
 	};
@@ -24,12 +26,13 @@ macro_rules! handle {
 	};
 }
 
-pub fn run() {
+#[must_use]
+pub fn run() -> ExitCode {
 	let matches = build_cmd().get_matches();
-	cmd(&matches);
+	cmd(&matches)
 }
 
-fn cmd(args: &ArgMatches) {
+fn cmd(args: &ArgMatches) -> ExitCode {
 	let quiet = *args.get_one::<bool>("quiet").unwrap();
 	let verbose = *args.get_one::<bool>("verbose").unwrap();
 	let no_color = *args.get_one::<bool>("no_color").unwrap();
@@ -59,16 +62,17 @@ fn cmd(args: &ArgMatches) {
 	}
 }
 
-fn cmd_apply(app: &NijiApp, args: &ArgMatches) {
+fn cmd_apply(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	let no_reload = args.get_one::<bool>("no_reload").unwrap();
 	let modules: Option<Vec<String>> = args
 		.get_many::<String>("modules")
 		.map(|v| v.cloned().collect());
 
 	handle!(app.apply(!no_reload, modules.as_deref()));
+	ExitCode::SUCCESS
 }
 
-fn cmd_theme(app: &NijiApp, args: &ArgMatches) {
+fn cmd_theme(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	match args.subcommand() {
 		Some(("get", _)) => cmd_theme_get(app),
 		Some(("preview", args)) => cmd_theme_preview(app, args),
@@ -79,12 +83,13 @@ fn cmd_theme(app: &NijiApp, args: &ArgMatches) {
 	}
 }
 
-fn cmd_theme_get(app: &NijiApp) {
+fn cmd_theme_get(app: &NijiApp) -> ExitCode {
 	let theme = handle!(app.get_current_theme());
 	niji_console::println!("{}", theme.name.unwrap());
+	ExitCode::SUCCESS
 }
 
-fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) {
+fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	let name = args.get_one::<String>("name");
 	let no_color = args.get_one::<bool>("no_color").unwrap();
 
@@ -93,7 +98,7 @@ fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) {
 			"Theme display is not supported in no-color mode. You can query the theme name by \
 			 using `niji theme get`."
 		);
-		return;
+		return ExitCode::FAILURE;
 	}
 
 	let theme = match name {
@@ -105,9 +110,10 @@ fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) {
 	niji_console::println!("Theme \"{}\":", theme.name.as_ref().unwrap());
 	niji_console::println!();
 	niji_console::println!("{theme}");
+	ExitCode::SUCCESS
 }
 
-fn cmd_theme_set(app: &NijiApp, args: &ArgMatches) {
+fn cmd_theme_set(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	let name = args.get_one::<String>("name").unwrap().as_str();
 	let no_apply = *args.get_one::<bool>("no_apply").unwrap();
 	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
@@ -116,9 +122,10 @@ fn cmd_theme_set(app: &NijiApp, args: &ArgMatches) {
 	if !no_apply {
 		handle!(app.apply(!no_reload, None));
 	}
+	ExitCode::SUCCESS
 }
 
-fn cmd_theme_list(app: &NijiApp) {
+fn cmd_theme_list(app: &NijiApp) -> ExitCode {
 	let mut empty = true;
 
 	for theme in app.list_themes() {
@@ -128,9 +135,12 @@ fn cmd_theme_list(app: &NijiApp) {
 
 	if empty {
 		error!("No usable themes were found");
+		return ExitCode::FAILURE;
 	}
+	ExitCode::SUCCESS
 }
 
-fn cmd_theme_unset(app: &NijiApp) {
+fn cmd_theme_unset(app: &NijiApp) -> ExitCode {
 	handle!(app.unset_current_theme());
+	ExitCode::SUCCESS
 }

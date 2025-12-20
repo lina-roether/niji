@@ -1,3 +1,5 @@
+use std::process::ExitCode;
+
 mod app;
 mod cli;
 mod config;
@@ -11,6 +13,6 @@ mod theme_manager;
 mod types;
 mod utils;
 
-fn main() {
-	cli::run();
+fn main() -> ExitCode {
+	cli::run()
 }
