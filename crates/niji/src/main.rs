@@ -9,6 +9,7 @@ mod managed_fs;
 mod module;
 mod module_manager;
 mod template;
+mod theme;
 mod theme_manager;
 mod types;
 mod utils;
