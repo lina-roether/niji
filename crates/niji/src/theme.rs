@@ -1,9 +1,9 @@
-use std::{collections::HashMap, fmt, str::FromStr};
+use std::{collections::HashMap, fmt, fs, path::Path, str::FromStr};
 
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use niji_macros::IntoLua;
-use serde::{Deserialize, Serialize};
-use serde_with::{DeserializeFromStr, SerializeDisplay};
+use serde::Deserialize;
+use serde_with::DeserializeFromStr;
 
 use crate::types::color::Color;
 
@@ -11,7 +11,7 @@ fn colored_square(color: Color) -> String {
 	format!("\x1b[48;2;{};{};{}m   \x1b[0m", color.r, color.g, color.b)
 }
 
-#[derive(Debug, Clone, IntoLua, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, IntoLua, Deserialize, PartialEq)]
 pub struct Palette {
 	pub pink: Color,
 	pub red: Color,
@@ -75,7 +75,7 @@ impl fmt::Display for Palette {
 	}
 }
 
-#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr)]
+#[derive(Debug, Clone, DeserializeFromStr)]
 pub enum ColorRef {
 	Named(String),
 	Exact(Color),
@@ -123,7 +123,7 @@ impl From<Color> for ColorRef {
 	}
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ColorSpec {
 	pub color: ColorRef,
 	pub lighten: Option<f32>,
@@ -169,13 +169,11 @@ impl From<Color> for ColorSpec {
 	}
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct UiThemeSpec {
 	pub background: ColorSpec,
-	pub on_background: Option<ColorSpec>,
 	pub surface: Option<ColorSpec>,
-	pub on_surface: Option<ColorSpec>,
 	pub border: Option<ColorSpec>,
 	pub shadow: Option<ColorSpec>,
 
@@ -183,20 +181,15 @@ pub struct UiThemeSpec {
 	pub text_dark: ColorSpec,
 
 	pub success: ColorSpec,
-	pub on_success: Option<ColorSpec>,
 	pub warning: ColorSpec,
-	pub on_warning: Option<ColorSpec>,
 	pub error: ColorSpec,
-	pub on_error: Option<ColorSpec>,
 }
 
 impl Default for UiThemeSpec {
 	fn default() -> Self {
 		Self {
 			background: ColorRef::named("black").into(),
-			on_background: None,
 			surface: None,
-			on_surface: None,
 			border: None,
 			shadow: None,
 
@@ -204,11 +197,8 @@ impl Default for UiThemeSpec {
 			text_dark: ColorRef::named("black").into(),
 
 			success: ColorRef::named("green").into(),
-			on_success: None,
 			warning: ColorRef::named("yellow").into(),
-			on_warning: None,
 			error: ColorRef::named("red").into(),
-			on_error: None,
 		}
 	}
 }
@@ -248,48 +238,27 @@ impl UiThemeSpec {
 		let text_light = self.text_light.resolve(palette)?;
 		let text_dark = self.text_dark.resolve(palette)?;
 
-		let text_color_for = |color: Color| -> Color {
-			if color.is_light() {
-				text_dark
-			} else {
-				text_light
-			}
-		};
-
-		let on_background = resolve_or!(self.on_background, text_color_for(background));
-		let on_surface = resolve_or!(self.on_surface, text_color_for(surface));
-		let on_success = resolve_or!(self.on_success, text_color_for(success));
-		let on_warning = resolve_or!(self.on_warning, text_color_for(warning));
-		let on_error = resolve_or!(self.on_error, text_color_for(error));
-
 		Ok(UiTheme {
 			kind,
 			background,
-			on_background,
 			surface,
-			on_surface,
 			border,
 			shadow,
 			text_light,
 			text_dark,
 			success,
-			on_success,
 			warning,
-			on_warning,
 			error,
-			on_error,
 		})
 	}
 }
 
-#[derive(Debug, Clone, IntoLua)]
+#[derive(Debug, Clone)]
 pub struct UiTheme {
 	pub kind: UiThemeKind,
 
 	pub background: Color,
-	pub on_background: Color,
 	pub surface: Color,
-	pub on_surface: Color,
 	pub border: Color,
 	pub shadow: Color,
 
@@ -297,11 +266,65 @@ pub struct UiTheme {
 	pub text_dark: Color,
 
 	pub success: Color,
-	pub on_success: Color,
 	pub warning: Color,
-	pub on_warning: Color,
 	pub error: Color,
-	pub on_error: Color,
+}
+
+impl UiTheme {
+	pub fn text_color_on(&self, background: Color) -> Color {
+		if background.is_light() {
+			self.text_dark
+		} else {
+			self.text_light
+		}
+	}
+}
+
+fn color_display(text: &str, bg_col: Color, fg_col: Color) -> String {
+	format!(
+		"\x1b[48;2;{};{};{}m\x1b[38;2;{};{};{}m {text} \x1b[0m",
+		bg_col.r, bg_col.g, bg_col.b, fg_col.r, fg_col.g, fg_col.b
+	)
+}
+
+impl fmt::Display for UiTheme {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		writeln!(
+			f,
+			"{}",
+			color_display(
+				"Background",
+				self.background,
+				self.text_color_on(self.background)
+			)
+		)?;
+		writeln!(
+			f,
+			"{}",
+			color_display("Surface", self.surface, self.text_color_on(self.surface))
+		)?;
+		writeln!(f, "Border: {}", colored_square(self.border))?;
+
+		writeln!(f)?;
+
+		writeln!(
+			f,
+			"{}",
+			color_display("Success", self.success, self.text_color_on(self.success))
+		)?;
+		writeln!(
+			f,
+			"{}",
+			color_display("Warning", self.warning, self.text_color_on(self.warning))
+		)?;
+		writeln!(
+			f,
+			"{}",
+			color_display("Error", self.error, self.text_color_on(self.error))
+		)?;
+
+		Ok(())
+	}
 }
 
 #[derive(Debug, Clone, Copy, IntoLua, PartialEq, Eq)]
@@ -321,23 +344,23 @@ impl fmt::Display for UiThemeKind {
 	}
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct TerminalThemeSpec {
-	pub darken_by: f32,
+	pub shade_difference: f32,
 
 	pub default: ColorSpec,
 
-	pub black: ColorSpec,
-	pub red: ColorSpec,
-	pub green: ColorSpec,
-	pub yellow: ColorSpec,
-	pub blue: ColorSpec,
-	pub magenta: ColorSpec,
-	pub cyan: ColorSpec,
-	pub white: ColorSpec,
-
 	pub bright_black: Option<ColorSpec>,
+	pub bright_red: Option<ColorSpec>,
+	pub bright_green: Option<ColorSpec>,
+	pub bright_yellow: Option<ColorSpec>,
+	pub bright_blue: Option<ColorSpec>,
+	pub bright_magenta: Option<ColorSpec>,
+	pub bright_cyan: Option<ColorSpec>,
+	pub bright_white: Option<ColorSpec>,
+
+	pub dark_black: Option<ColorSpec>,
 	pub dark_red: Option<ColorSpec>,
 	pub dark_green: Option<ColorSpec>,
 	pub dark_yellow: Option<ColorSpec>,
@@ -350,16 +373,16 @@ pub struct TerminalThemeSpec {
 impl Default for TerminalThemeSpec {
 	fn default() -> Self {
 		Self {
-			darken_by: 0.2,
+			shade_difference: 0.2,
 			default: ColorRef::named("white").into(),
-			black: ColorRef::named("black").into(),
-			red: ColorRef::named("red").into(),
-			green: ColorRef::named("green").into(),
-			yellow: ColorRef::named("yellow").into(),
-			blue: ColorRef::named("blue").into(),
-			magenta: ColorRef::named("purple").into(),
-			cyan: ColorRef::named("teal").into(),
-			white: ColorRef::named("white").into(),
+			dark_black: Some(ColorRef::named("black").into()),
+			bright_red: Some(ColorRef::named("red").into()),
+			bright_green: Some(ColorRef::named("green").into()),
+			bright_yellow: Some(ColorRef::named("yellow").into()),
+			bright_blue: Some(ColorRef::named("blue").into()),
+			bright_magenta: Some(ColorRef::named("purple").into()),
+			bright_cyan: Some(ColorRef::named("teal").into()),
+			bright_white: Some(ColorRef::named("white").into()),
 
 			bright_black: None,
 			dark_red: None,
@@ -373,8 +396,69 @@ impl Default for TerminalThemeSpec {
 	}
 }
 
+impl TerminalThemeSpec {
+	fn resolve(&self, palette: &Palette) -> anyhow::Result<TerminalTheme> {
+		macro_rules! resolve_pair {
+			($name: expr, $bright:expr, $dark:expr) => {
+				match (Option::as_ref(&$bright), Option::as_ref(&$dark)) {
+					(Some(bright), Some(dark)) => {
+						(bright.resolve(palette)?, dark.resolve(palette)?)
+					}
+					(Some(bright), None) => {
+						let bright = bright.resolve(palette)?;
+						(bright, bright.darken(self.shade_difference))
+					}
+					(None, Some(dark)) => {
+						let dark = dark.resolve(palette)?;
+						(dark.lighten(self.shade_difference), dark)
+					}
+					(None, None) => {
+						return Err(anyhow!(
+							"Must specify one of \"bright_{}\" or \"dark_{}\"",
+							$name,
+							$name
+						))
+					}
+				}
+			};
+		}
+
+		let default = self.default.resolve(palette)?;
+		let (bright_black, dark_black) = resolve_pair!("black", self.bright_black, self.dark_black);
+		let (bright_red, dark_red) = resolve_pair!("red", self.bright_red, self.dark_red);
+		let (bright_green, dark_green) = resolve_pair!("green", self.bright_green, self.dark_green);
+		let (bright_yellow, dark_yellow) =
+			resolve_pair!("yellow", self.bright_yellow, self.dark_yellow);
+		let (bright_blue, dark_blue) = resolve_pair!("bblue", self.bright_blue, self.dark_blue);
+		let (bright_magenta, dark_magenta) =
+			resolve_pair!("magenta", self.bright_magenta, self.dark_magenta);
+		let (bright_cyan, dark_cyan) = resolve_pair!("cyan", self.bright_cyan, self.dark_cyan);
+		let (bright_white, dark_white) = resolve_pair!("white", self.bright_white, self.dark_white);
+
+		Ok(TerminalTheme {
+			default,
+			dark_black,
+			dark_red,
+			dark_green,
+			dark_yellow,
+			dark_blue,
+			dark_magenta,
+			dark_cyan,
+			dark_white,
+			bright_black,
+			bright_red,
+			bright_green,
+			bright_yellow,
+			bright_blue,
+			bright_magenta,
+			bright_cyan,
+			bright_white,
+		})
+	}
+}
+
 #[derive(Debug, Clone, IntoLua, PartialEq)]
-struct TerminalTheme {
+pub struct TerminalTheme {
 	pub default: Color,
 	pub dark_black: Color,
 	pub dark_red: Color,
@@ -384,12 +468,87 @@ struct TerminalTheme {
 	pub dark_magenta: Color,
 	pub dark_cyan: Color,
 	pub dark_white: Color,
-	pub brightblack: Color,
-	pub brightred: Color,
+	pub bright_black: Color,
+	pub bright_red: Color,
 	pub bright_green: Color,
 	pub bright_yellow: Color,
 	pub bright_blue: Color,
 	pub bright_magenta: Color,
 	pub bright_cyan: Color,
 	pub bright_white: Color,
+}
+
+impl fmt::Display for TerminalTheme {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str(&colored_square(self.default))?;
+
+		writeln!(f)?;
+
+		f.write_str(&colored_square(self.dark_black))?;
+		f.write_str(&colored_square(self.dark_red))?;
+		f.write_str(&colored_square(self.dark_green))?;
+		f.write_str(&colored_square(self.dark_yellow))?;
+		f.write_str(&colored_square(self.dark_blue))?;
+		f.write_str(&colored_square(self.dark_magenta))?;
+		f.write_str(&colored_square(self.dark_cyan))?;
+		f.write_str(&colored_square(self.dark_white))?;
+
+		writeln!(f)?;
+
+		f.write_str(&colored_square(self.bright_black))?;
+		f.write_str(&colored_square(self.bright_red))?;
+		f.write_str(&colored_square(self.bright_green))?;
+		f.write_str(&colored_square(self.bright_yellow))?;
+		f.write_str(&colored_square(self.bright_blue))?;
+		f.write_str(&colored_square(self.bright_magenta))?;
+		f.write_str(&colored_square(self.bright_cyan))?;
+		f.write_str(&colored_square(self.bright_white))?;
+
+		Ok(())
+	}
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ThemeSpec {
+	pub palette: Palette,
+
+	#[serde(default)]
+	pub ui: UiThemeSpec,
+
+	#[serde(default)]
+	pub terminal: TerminalThemeSpec,
+}
+
+impl ThemeSpec {
+	fn resolve(self, name: String) -> anyhow::Result<Theme> {
+		let ui = self.ui.resolve(&self.palette)?;
+		let terminal = self.terminal.resolve(&self.palette)?;
+		Ok(Theme {
+			name,
+			palette: self.palette,
+			ui,
+			terminal,
+		})
+	}
+}
+
+#[derive(Debug, Clone)]
+pub struct Theme {
+	pub name: String,
+	pub palette: Palette,
+	pub ui: UiTheme,
+	pub terminal: TerminalTheme,
+}
+
+pub fn read_theme(path: impl AsRef<Path>) -> anyhow::Result<Theme> {
+	let name = path
+		.as_ref()
+		.file_prefix()
+		.unwrap_or_default()
+		.to_string_lossy()
+		.into_owned();
+	let theme_str = fs::read_to_string(&path)?;
+	let theme_spec: ThemeSpec = toml::from_str(&theme_str)?;
+	let theme = theme_spec.resolve(name)?;
+	Ok(theme)
 }
