@@ -85,7 +85,7 @@ fn cmd_theme(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 
 fn cmd_theme_get(app: &NijiApp) -> ExitCode {
 	let theme = handle!(app.get_current_theme());
-	niji_console::println!("{}", theme.name.unwrap());
+	niji_console::println!("{}", theme.name);
 	ExitCode::SUCCESS
 }
 
@@ -107,7 +107,7 @@ fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 		None => handle!(app.get_current_theme()),
 	};
 
-	niji_console::println!("Theme \"{}\":", theme.name.as_ref().unwrap());
+	niji_console::println!("Theme \"{}\":", theme.name);
 	niji_console::println!();
 	niji_console::println!("{theme}");
 	ExitCode::SUCCESS

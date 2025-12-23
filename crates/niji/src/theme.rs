@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt, fs, path::Path, str::FromStr};
 
-use anyhow::{Context, anyhow};
+use anyhow::anyhow;
 use niji_macros::IntoLua;
 use serde::Deserialize;
 use serde_with::DeserializeFromStr;
@@ -11,7 +11,7 @@ fn colored_square(color: Color) -> String {
 	format!("\x1b[48;2;{};{};{}m   \x1b[0m", color.r, color.g, color.b)
 }
 
-#[derive(Debug, Clone, IntoLua, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Palette {
 	pub pink: Color,
 	pub red: Color,
@@ -253,7 +253,7 @@ impl UiThemeSpec {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UiTheme {
 	pub kind: UiThemeKind,
 
@@ -457,7 +457,7 @@ impl TerminalThemeSpec {
 	}
 }
 
-#[derive(Debug, Clone, IntoLua, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TerminalTheme {
 	pub default: Color,
 	pub dark_black: Color,
@@ -532,12 +532,22 @@ impl ThemeSpec {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Theme {
 	pub name: String,
 	pub palette: Palette,
 	pub ui: UiTheme,
 	pub terminal: TerminalTheme,
+}
+
+impl fmt::Display for Theme {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(
+			f,
+			"Theme '{}':\n{}\n{}\n{}",
+			self.name, self.palette, self.ui, self.terminal
+		)
+	}
 }
 
 pub fn read_theme(path: impl AsRef<Path>) -> anyhow::Result<Theme> {
@@ -551,4 +561,16 @@ pub fn read_theme(path: impl AsRef<Path>) -> anyhow::Result<Theme> {
 	let theme_spec: ThemeSpec = toml::from_str(&theme_str)?;
 	let theme = theme_spec.resolve(name)?;
 	Ok(theme)
+}
+
+#[cfg(test)]
+pub mod test_utils {
+	use super::*;
+
+	pub const TEST_THEME_STR: &str = include_str!("test_theme.toml");
+
+	pub fn test_theme() -> Theme {
+		let theme_spec: ThemeSpec = toml::from_str(TEST_THEME_STR).unwrap();
+		theme_spec.resolve("test_theme".to_string()).unwrap()
+	}
 }

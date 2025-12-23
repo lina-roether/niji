@@ -9,8 +9,9 @@ use anyhow::anyhow;
 use log::debug;
 
 use crate::{
-	config::{ModuleConfig, Theme},
+	config::ModuleConfig,
 	lua::runtime::{LuaModule, LuaRuntime},
+	theme::Theme,
 };
 
 #[derive(Debug)]
@@ -84,7 +85,7 @@ mod tests {
 	use tempfile::tempdir;
 
 	use crate::{
-		config::test_utils::test_theme, files::Files, lua::runtime::LuaRuntimeInit,
+		files::Files, lua::runtime::LuaRuntimeInit, theme::test_utils::test_theme,
 		utils::xdg::XdgDirs,
 	};
 

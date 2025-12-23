@@ -5,10 +5,11 @@ use log::{debug, error, info};
 use niji_console::heading;
 
 use crate::{
-	config::{Config, Theme},
+	config::Config,
 	files::Files,
 	lua::runtime::{LuaRuntime, LuaRuntimeInit},
 	module::Module,
+	theme::Theme,
 	utils::xdg::XdgDirs,
 };
 
@@ -176,7 +177,7 @@ mod tests {
 
 	use tempfile::tempdir;
 
-	use crate::config::{DisableReloads, test_utils::test_theme};
+	use crate::{config::DisableReloads, theme::test_utils::test_theme};
 
 	use super::*;
 

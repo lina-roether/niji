@@ -4,8 +4,8 @@ use anyhow::{Context, anyhow};
 use log::debug;
 
 use crate::{
-	config::{self, Theme},
 	files::Files,
+	theme::{self, Theme},
 };
 
 pub struct ThemeManager {
@@ -46,13 +46,12 @@ impl ThemeManager {
 		}
 
 		let theme: Option<Theme> = self.read_theme(&current_theme)?;
-		let Some(mut theme) = theme else {
+		let Some(theme) = theme else {
 			return Err(anyhow!(
 				"Current theme is \"{current_theme}\", but that theme doesn't exist!",
 			));
 		};
-
-		theme.name = Some(current_theme);
+		assert_eq!(theme.name, current_theme);
 
 		Ok(theme)
 	}
@@ -92,10 +91,8 @@ impl ThemeManager {
 
 		debug!("Reading theme \"{name}\" from {}", path.display());
 
-		let mut theme: Theme =
-			config::read_theme(path).context(format!("Couldn't read theme {name}"))?;
-
-		theme.name = Some(name.to_string());
+		let theme: Theme =
+			theme::read_theme(path).context(format!("Couldn't read theme {name}"))?;
 
 		Ok(Some(theme))
 	}
@@ -105,7 +102,10 @@ impl ThemeManager {
 mod tests {
 	use tempfile::tempdir;
 
-	use crate::{config::test_utils::test_theme, utils::xdg::XdgDirs};
+	use crate::{
+		theme::test_utils::{TEST_THEME_STR, test_theme},
+		utils::xdg::XdgDirs,
+	};
 
 	use super::*;
 
@@ -133,7 +133,7 @@ mod tests {
 
 		fs::write(
 			xdg.config_home.join("niji/themes/test_theme.toml"),
-			toml::to_string(&test_theme()).unwrap(),
+			toml::to_string(TEST_THEME_STR).unwrap(),
 		)
 		.unwrap();
 
@@ -158,7 +158,7 @@ mod tests {
 		fs::write(xdg.state_home.join("niji/current_theme.txt"), "test_theme").unwrap();
 		fs::write(
 			xdg.config_home.join("niji/themes/test_theme.toml"),
-			toml::to_string(&test_theme()).unwrap(),
+			toml::to_string(TEST_THEME_STR).unwrap(),
 		)
 		.unwrap();
 
@@ -185,7 +185,7 @@ mod tests {
 		fs::write(xdg.state_home.join("niji/current_theme.txt"), "").unwrap();
 		fs::write(
 			xdg.config_home.join("niji/themes/theme1.toml"),
-			toml::to_string(&test_theme()).unwrap(),
+			toml::to_string(TEST_THEME_STR).unwrap(),
 		)
 		.unwrap();
 
@@ -200,7 +200,7 @@ mod tests {
 
 		fs::write(
 			xdg.config_home.join("niji/themes/test_theme.toml"),
-			toml::to_string(&test_theme()).unwrap(),
+			toml::to_string(TEST_THEME_STR).unwrap(),
 		)
 		.unwrap();
 

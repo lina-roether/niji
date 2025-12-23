@@ -1,9 +1,10 @@
 use std::rc::Rc;
 
 use crate::{
-	config::{self, Config, Theme},
+	config::{self, Config},
 	files::Files,
 	module_manager::{ModuleManager, ModuleManagerInit},
+	theme::Theme,
 	theme_manager::ThemeManager,
 	utils::xdg::XdgDirs,
 };
