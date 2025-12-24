@@ -133,7 +133,7 @@ mod tests {
 
 		fs::write(
 			xdg.config_home.join("niji/themes/test_theme.toml"),
-			toml::to_string(TEST_THEME_STR).unwrap(),
+			TEST_THEME_STR,
 		)
 		.unwrap();
 
@@ -158,7 +158,7 @@ mod tests {
 		fs::write(xdg.state_home.join("niji/current_theme.txt"), "test_theme").unwrap();
 		fs::write(
 			xdg.config_home.join("niji/themes/test_theme.toml"),
-			toml::to_string(TEST_THEME_STR).unwrap(),
+			TEST_THEME_STR,
 		)
 		.unwrap();
 
@@ -185,7 +185,7 @@ mod tests {
 		fs::write(xdg.state_home.join("niji/current_theme.txt"), "").unwrap();
 		fs::write(
 			xdg.config_home.join("niji/themes/theme1.toml"),
-			toml::to_string(TEST_THEME_STR).unwrap(),
+			TEST_THEME_STR,
 		)
 		.unwrap();
 
@@ -200,7 +200,7 @@ mod tests {
 
 		fs::write(
 			xdg.config_home.join("niji/themes/test_theme.toml"),
-			toml::to_string(TEST_THEME_STR).unwrap(),
+			TEST_THEME_STR,
 		)
 		.unwrap();
 
