@@ -124,15 +124,15 @@ impl From<Color> for ColorRef {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct ColorSpec {
-	pub color: ColorRef,
-	pub lighten: Option<f32>,
-	pub darken: Option<f32>,
-	pub shade: Option<f32>,
-	pub alpha: Option<f32>,
+pub struct DerivedColor {
+	color: ColorRef,
+	lighten: Option<f32>,
+	darken: Option<f32>,
+	shade: Option<f32>,
+	alpha: Option<f32>,
 }
 
-impl ColorSpec {
+impl DerivedColor {
 	fn resolve(&self, palette: &Palette) -> anyhow::Result<Color> {
 		let mut color = self.color.resolve(palette)?;
 		if let Some(lightness) = self.shade {
@@ -151,15 +151,25 @@ impl ColorSpec {
 	}
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
+pub enum ColorSpec {
+	Color(ColorRef),
+	Derived(DerivedColor),
+}
+
+impl ColorSpec {
+	fn resolve(&self, palette: &Palette) -> anyhow::Result<Color> {
+		match self {
+			Self::Color(color) => color.resolve(palette),
+			Self::Derived(derived) => derived.resolve(palette),
+		}
+	}
+}
+
 impl From<ColorRef> for ColorSpec {
 	fn from(color: ColorRef) -> Self {
-		Self {
-			color,
-			lighten: None,
-			darken: None,
-			shade: None,
-			alpha: None,
-		}
+		Self::Color(color)
 	}
 }
 
@@ -595,17 +605,17 @@ mod tests {
 			white: Color::from_str("#aaaaaa").unwrap(),
 			custom: HashMap::new(),
 		};
-		assert_eq!(palette.get("pink").unwrap().to_string(), "#000000");
-		assert_eq!(palette.get("red").unwrap().to_string(), "#111111");
-		assert_eq!(palette.get("orange").unwrap().to_string(), "#222222");
-		assert_eq!(palette.get("yellow").unwrap().to_string(), "#333333");
-		assert_eq!(palette.get("green").unwrap().to_string(), "#444444");
-		assert_eq!(palette.get("teal").unwrap().to_string(), "#555555");
-		assert_eq!(palette.get("blue").unwrap().to_string(), "#666666");
-		assert_eq!(palette.get("purple").unwrap().to_string(), "#777777");
-		assert_eq!(palette.get("brown").unwrap().to_string(), "#888888");
-		assert_eq!(palette.get("black").unwrap().to_string(), "#999999");
-		assert_eq!(palette.get("white").unwrap().to_string(), "#aaaaaa");
+		assert_eq!(palette.get("pink").unwrap().to_string(), "#000000ff");
+		assert_eq!(palette.get("red").unwrap().to_string(), "#111111ff");
+		assert_eq!(palette.get("orange").unwrap().to_string(), "#222222ff");
+		assert_eq!(palette.get("yellow").unwrap().to_string(), "#333333ff");
+		assert_eq!(palette.get("green").unwrap().to_string(), "#444444ff");
+		assert_eq!(palette.get("teal").unwrap().to_string(), "#555555ff");
+		assert_eq!(palette.get("blue").unwrap().to_string(), "#666666ff");
+		assert_eq!(palette.get("purple").unwrap().to_string(), "#777777ff");
+		assert_eq!(palette.get("brown").unwrap().to_string(), "#888888ff");
+		assert_eq!(palette.get("black").unwrap().to_string(), "#999999ff");
+		assert_eq!(palette.get("white").unwrap().to_string(), "#aaaaaaff");
 		assert!(palette.get("dsfsdfgaqsdea").is_err());
 		assert!(palette.get("custom_color").is_err());
 	}
@@ -630,7 +640,10 @@ mod tests {
 			"custom_color".to_string(),
 			Color::from_str("#bbbbbb").unwrap(),
 		);
-		assert_eq!(palette.get("custom_color").unwrap().to_string(), "#bbbbbb");
+		assert_eq!(
+			palette.get("custom_color").unwrap().to_string(),
+			"#bbbbbbff"
+		);
 		assert!(palette.get("dsfsdfgaqsdea").is_err());
 	}
 }
