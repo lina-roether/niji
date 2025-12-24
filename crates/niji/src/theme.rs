@@ -574,3 +574,63 @@ pub mod test_utils {
 		theme_spec.resolve("test_theme".to_string()).unwrap()
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn palette_get_builtin() {
+		let palette = Palette {
+			pink: Color::from_str("#000000").unwrap(),
+			red: Color::from_str("#111111").unwrap(),
+			orange: Color::from_str("#222222").unwrap(),
+			yellow: Color::from_str("#333333").unwrap(),
+			green: Color::from_str("#444444").unwrap(),
+			teal: Color::from_str("#555555").unwrap(),
+			blue: Color::from_str("#666666").unwrap(),
+			purple: Color::from_str("#777777").unwrap(),
+			brown: Color::from_str("#888888").unwrap(),
+			black: Color::from_str("#999999").unwrap(),
+			white: Color::from_str("#aaaaaa").unwrap(),
+			custom: HashMap::new(),
+		};
+		assert_eq!(palette.get("pink").unwrap().to_string(), "#000000");
+		assert_eq!(palette.get("red").unwrap().to_string(), "#111111");
+		assert_eq!(palette.get("orange").unwrap().to_string(), "#222222");
+		assert_eq!(palette.get("yellow").unwrap().to_string(), "#333333");
+		assert_eq!(palette.get("green").unwrap().to_string(), "#444444");
+		assert_eq!(palette.get("teal").unwrap().to_string(), "#555555");
+		assert_eq!(palette.get("blue").unwrap().to_string(), "#666666");
+		assert_eq!(palette.get("purple").unwrap().to_string(), "#777777");
+		assert_eq!(palette.get("brown").unwrap().to_string(), "#888888");
+		assert_eq!(palette.get("black").unwrap().to_string(), "#999999");
+		assert_eq!(palette.get("white").unwrap().to_string(), "#aaaaaa");
+		assert!(palette.get("dsfsdfgaqsdea").is_err());
+		assert!(palette.get("custom_color").is_err());
+	}
+
+	#[test]
+	fn palette_get_custom() {
+		let mut palette = Palette {
+			pink: Color::from_str("#000000").unwrap(),
+			red: Color::from_str("#111111").unwrap(),
+			orange: Color::from_str("#222222").unwrap(),
+			yellow: Color::from_str("#333333").unwrap(),
+			green: Color::from_str("#444444").unwrap(),
+			teal: Color::from_str("#555555").unwrap(),
+			blue: Color::from_str("#666666").unwrap(),
+			purple: Color::from_str("#777777").unwrap(),
+			brown: Color::from_str("#888888").unwrap(),
+			black: Color::from_str("#999999").unwrap(),
+			white: Color::from_str("#aaaaaa").unwrap(),
+			custom: HashMap::new(),
+		};
+		palette.custom.insert(
+			"custom_color".to_string(),
+			Color::from_str("#bbbbbb").unwrap(),
+		);
+		assert_eq!(palette.get("custom_color").unwrap().to_string(), "#bbbbbb");
+		assert!(palette.get("dsfsdfgaqsdea").is_err());
+	}
+}
