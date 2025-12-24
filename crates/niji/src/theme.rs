@@ -197,8 +197,30 @@ pub struct UiThemeSpec {
 
 impl Default for UiThemeSpec {
 	fn default() -> Self {
+		Self::default_dark()
+	}
+}
+
+impl UiThemeSpec {
+	fn default_dark() -> Self {
 		Self {
 			background: ColorRef::named("black").into(),
+			surface: None,
+			border: None,
+			shadow: None,
+
+			text_light: ColorRef::named("white").into(),
+			text_dark: ColorRef::named("black").into(),
+
+			success: ColorRef::named("green").into(),
+			warning: ColorRef::named("yellow").into(),
+			error: ColorRef::named("red").into(),
+		}
+	}
+
+	fn default_light() -> Self {
+		Self {
+			background: ColorRef::named("white").into(),
 			surface: None,
 			border: None,
 			shadow: None,
@@ -228,11 +250,6 @@ impl UiThemeSpec {
 		}
 
 		let background = self.background.resolve(palette)?;
-		let kind = if background.is_light() {
-			UiThemeKind::Light
-		} else {
-			UiThemeKind::Dark
-		};
 		let surface = resolve_or!(self.surface, background);
 		let border = resolve_or!(self.border, background);
 		let shadow = resolve_or!(self.border, {
@@ -249,7 +266,6 @@ impl UiThemeSpec {
 		let text_dark = self.text_dark.resolve(palette)?;
 
 		Ok(UiTheme {
-			kind,
 			background,
 			surface,
 			border,
@@ -265,8 +281,6 @@ impl UiThemeSpec {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UiTheme {
-	pub kind: UiThemeKind,
-
 	pub background: Color,
 	pub surface: Color,
 	pub border: Color,
@@ -337,15 +351,16 @@ impl fmt::Display for UiTheme {
 	}
 }
 
-#[derive(Debug, Clone, Copy, IntoLua, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, IntoLua, Deserialize, PartialEq, Eq)]
 #[lua_with("ToString::to_string")]
+#[serde(rename_all = "snake_case")]
 #[repr(u8)]
-pub enum UiThemeKind {
+pub enum ThemeKind {
 	Light,
 	Dark,
 }
 
-impl fmt::Display for UiThemeKind {
+impl fmt::Display for ThemeKind {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Dark => write!(f, "dark"),
@@ -382,9 +397,39 @@ pub struct TerminalThemeSpec {
 
 impl Default for TerminalThemeSpec {
 	fn default() -> Self {
+		Self::default_dark()
+	}
+}
+
+impl TerminalThemeSpec {
+	fn default_dark() -> Self {
 		Self {
 			shade_difference: 0.2,
 			default: ColorRef::named("white").into(),
+			dark_black: Some(ColorRef::named("black").into()),
+			bright_red: Some(ColorRef::named("red").into()),
+			bright_green: Some(ColorRef::named("green").into()),
+			bright_yellow: Some(ColorRef::named("yellow").into()),
+			bright_blue: Some(ColorRef::named("blue").into()),
+			bright_magenta: Some(ColorRef::named("purple").into()),
+			bright_cyan: Some(ColorRef::named("teal").into()),
+			bright_white: Some(ColorRef::named("white").into()),
+
+			bright_black: None,
+			dark_red: None,
+			dark_green: None,
+			dark_yellow: None,
+			dark_blue: None,
+			dark_magenta: None,
+			dark_cyan: None,
+			dark_white: None,
+		}
+	}
+
+	fn default_light() -> Self {
+		Self {
+			shade_difference: 0.2,
+			default: ColorRef::named("black").into(),
 			dark_black: Some(ColorRef::named("black").into()),
 			bright_red: Some(ColorRef::named("red").into()),
 			bright_green: Some(ColorRef::named("green").into()),
@@ -520,19 +565,33 @@ impl fmt::Display for TerminalTheme {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ThemeSpec {
+	pub kind: ThemeKind,
+
 	pub palette: Palette,
 
 	#[serde(default)]
-	pub ui: UiThemeSpec,
+	pub ui: Option<UiThemeSpec>,
 
 	#[serde(default)]
-	pub terminal: TerminalThemeSpec,
+	pub terminal: Option<TerminalThemeSpec>,
 }
 
 impl ThemeSpec {
 	fn resolve(self, name: String) -> anyhow::Result<Theme> {
-		let ui = self.ui.resolve(&self.palette)?;
-		let terminal = self.terminal.resolve(&self.palette)?;
+		let ui = self
+			.ui
+			.unwrap_or_else(|| match self.kind {
+				ThemeKind::Dark => UiThemeSpec::default_dark(),
+				ThemeKind::Light => UiThemeSpec::default_light(),
+			})
+			.resolve(&self.palette)?;
+		let terminal = self
+			.terminal
+			.unwrap_or_else(|| match self.kind {
+				ThemeKind::Dark => TerminalThemeSpec::default_dark(),
+				ThemeKind::Light => TerminalThemeSpec::default_light(),
+			})
+			.resolve(&self.palette)?;
 		Ok(Theme {
 			name,
 			palette: self.palette,
@@ -560,13 +619,7 @@ impl fmt::Display for Theme {
 	}
 }
 
-pub fn read_theme(path: impl AsRef<Path>) -> anyhow::Result<Theme> {
-	let name = path
-		.as_ref()
-		.file_prefix()
-		.unwrap_or_default()
-		.to_string_lossy()
-		.into_owned();
+pub fn read_theme(name: String, path: impl AsRef<Path>) -> anyhow::Result<Theme> {
 	let theme_str = fs::read_to_string(&path)?;
 	let theme_spec: ThemeSpec = toml::from_str(&theme_str)?;
 	let theme = theme_spec.resolve(name)?;

@@ -91,8 +91,8 @@ impl ThemeManager {
 
 		debug!("Reading theme \"{name}\" from {}", path.display());
 
-		let theme: Theme =
-			theme::read_theme(path).context(format!("Couldn't read theme {name}"))?;
+		let theme: Theme = theme::read_theme(name.to_string(), path)
+			.context(format!("Couldn't read theme {name}"))?;
 
 		Ok(Some(theme))
 	}

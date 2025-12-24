@@ -1,3 +1,5 @@
+kind = "dark"
+
 [palette]
 pink = "#e87fe6"
 red = "#e02629"

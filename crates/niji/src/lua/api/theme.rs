@@ -15,7 +15,6 @@ impl UserData for Palette {
 
 impl UserData for UiTheme {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_field_method_get("kind", |_, this| Ok(this.kind.to_string()));
 		fields.add_field_method_get("background", |_, this| Ok(this.background));
 		fields.add_field_method_get("surface", |_, this| Ok(this.surface));
 		fields.add_field_method_get("border", |_, this| Ok(this.border));
