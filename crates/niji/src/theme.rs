@@ -133,6 +133,42 @@ pub struct DerivedColor {
 }
 
 impl DerivedColor {
+	fn new(color: ColorRef) -> Self {
+		Self {
+			color,
+			lighten: None,
+			darken: None,
+			shade: None,
+			alpha: None,
+		}
+	}
+
+	fn named(name: &str) -> Self {
+		Self::new(ColorRef::named(name))
+	}
+
+	fn lighten(mut self, amount: f32) -> Self {
+		self.lighten = Some(amount);
+		self
+	}
+
+	fn darken(mut self, amount: f32) -> Self {
+		self.darken = Some(amount);
+		self
+	}
+
+	fn shade(mut self, lightness: f32) -> Self {
+		self.shade = Some(lightness);
+		self
+	}
+
+	fn alpha(mut self, alpha: f32) -> Self {
+		self.alpha = Some(alpha);
+		self
+	}
+}
+
+impl DerivedColor {
 	fn resolve(&self, palette: &Palette) -> anyhow::Result<Color> {
 		let mut color = self.color.resolve(palette)?;
 		if let Some(lightness) = self.shade {
@@ -179,11 +215,17 @@ impl From<Color> for ColorSpec {
 	}
 }
 
+impl From<DerivedColor> for ColorSpec {
+	fn from(color: DerivedColor) -> Self {
+		Self::Derived(color)
+	}
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct UiThemeSpec {
 	pub background: ColorSpec,
-	pub surface: Option<ColorSpec>,
+	pub surface: ColorSpec,
 	pub border: Option<ColorSpec>,
 	pub shadow: Option<ColorSpec>,
 
@@ -205,7 +247,7 @@ impl UiThemeSpec {
 	fn default_dark() -> Self {
 		Self {
 			background: ColorRef::named("black").into(),
-			surface: None,
+			surface: DerivedColor::named("black").lighten(0.1).into(),
 			border: None,
 			shadow: None,
 
@@ -221,7 +263,7 @@ impl UiThemeSpec {
 	fn default_light() -> Self {
 		Self {
 			background: ColorRef::named("white").into(),
-			surface: None,
+			surface: DerivedColor::named("white").into(),
 			border: None,
 			shadow: None,
 
@@ -250,7 +292,7 @@ impl UiThemeSpec {
 		}
 
 		let background = self.background.resolve(palette)?;
-		let surface = resolve_or!(self.surface, background);
+		let surface = self.surface.resolve(palette)?;
 		let border = resolve_or!(self.border, background);
 		let shadow = resolve_or!(self.border, {
 			background
@@ -299,7 +341,7 @@ impl UiTheme {
 		let dark_contrast = self.text_dark.contrast(background);
 		let light_contrast = self.text_light.contrast(background);
 
-		if dbg!(dark_contrast) >= dbg!(light_contrast) {
+		if dark_contrast >= light_contrast {
 			self.text_dark
 		} else {
 			self.text_light
