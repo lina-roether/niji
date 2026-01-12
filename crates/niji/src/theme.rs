@@ -1,7 +1,6 @@
-use std::{collections::HashMap, fmt, fs, path::Path, str::FromStr};
+use std::{collections::HashMap, fmt, fs, marker::PhantomData, path::Path, str::FromStr};
 
 use anyhow::anyhow;
-use niji_macros::IntoLua;
 use serde::Deserialize;
 use serde_with::DeserializeFromStr;
 
@@ -21,7 +20,6 @@ pub struct Palette {
 	pub teal: Color,
 	pub blue: Color,
 	pub purple: Color,
-	pub brown: Color,
 	pub black: Color,
 	pub white: Color,
 
@@ -40,7 +38,6 @@ impl Palette {
 			"teal" => self.teal,
 			"blue" => self.blue,
 			"purple" => self.purple,
-			"brown" => self.brown,
 			"black" => self.black,
 			"white" => self.white,
 			_ => *self
@@ -62,15 +59,9 @@ impl fmt::Display for Palette {
 		f.write_str(&colored_square(self.teal))?;
 		f.write_str(&colored_square(self.blue))?;
 		f.write_str(&colored_square(self.purple))?;
-		f.write_str(&colored_square(self.brown))?;
 		f.write_str(&colored_square(self.black))?;
 		f.write_str(&colored_square(self.white))?;
 
-		write!(f, " ")?;
-
-		for color in self.custom.values() {
-			f.write_str(&colored_square(*color))?;
-		}
 		Ok(())
 	}
 }
@@ -221,13 +212,22 @@ impl From<DerivedColor> for ColorSpec {
 	}
 }
 
+pub mod markers {
+	#[derive(Debug, Clone, Copy)]
+	pub struct Light;
+
+	#[derive(Debug, Clone, Copy)]
+	pub struct Dark;
+}
+use markers::{Dark, Light};
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
-pub struct UiThemeSpec {
+pub struct UiThemeSpec<T> {
 	pub background: ColorSpec,
 	pub surface: ColorSpec,
-	pub border: Option<ColorSpec>,
-	pub shadow: Option<ColorSpec>,
+	pub border: ColorSpec,
+	pub shadow: ColorSpec,
 
 	pub text_light: ColorSpec,
 	pub text_dark: ColorSpec,
@@ -235,21 +235,18 @@ pub struct UiThemeSpec {
 	pub success: ColorSpec,
 	pub warning: ColorSpec,
 	pub error: ColorSpec,
+
+	#[serde(skip)]
+	pub _marker: PhantomData<T>,
 }
 
-impl Default for UiThemeSpec {
+impl Default for UiThemeSpec<Dark> {
 	fn default() -> Self {
-		Self::default_dark()
-	}
-}
-
-impl UiThemeSpec {
-	fn default_dark() -> Self {
 		Self {
 			background: ColorRef::named("black").into(),
 			surface: DerivedColor::named("black").lighten(0.1).into(),
-			border: None,
-			shadow: None,
+			border: DerivedColor::named("black").lighten(0.2).into(),
+			shadow: DerivedColor::named("black").shade(0.05).alpha(0.3).into(),
 
 			text_light: ColorRef::named("white").into(),
 			text_dark: ColorRef::named("black").into(),
@@ -257,48 +254,38 @@ impl UiThemeSpec {
 			success: ColorRef::named("green").into(),
 			warning: ColorRef::named("yellow").into(),
 			error: ColorRef::named("red").into(),
-		}
-	}
 
-	fn default_light() -> Self {
-		Self {
-			background: ColorRef::named("white").into(),
-			surface: DerivedColor::named("white").into(),
-			border: None,
-			shadow: None,
-
-			text_light: ColorRef::named("white").into(),
-			text_dark: ColorRef::named("black").into(),
-
-			success: ColorRef::named("green").into(),
-			warning: ColorRef::named("yellow").into(),
-			error: ColorRef::named("red").into(),
+			_marker: PhantomData,
 		}
 	}
 }
 
-impl UiThemeSpec {
-	const DEFAULT_SHADOW_ALPHA: f32 = 0.3;
-	const DEFAULT_SHADOW_DARKEN: f32 = 0.1;
+impl Default for UiThemeSpec<Light> {
+	fn default() -> Self {
+		Self {
+			background: ColorRef::named("white").into(),
+			surface: DerivedColor::named("white").into(),
+			border: DerivedColor::named("white").darken(0.2).into(),
+			shadow: DerivedColor::named("black").shade(0.5).alpha(0.3).into(),
 
-	fn resolve(&self, palette: &Palette) -> anyhow::Result<UiTheme> {
-		macro_rules! resolve_or {
-			($spec:expr, $default:expr) => {
-				Option::as_ref(&$spec)
-					.map(|s| s.resolve(palette))
-					.transpose()?
-					.unwrap_or_else(|| $default)
-			};
+			text_light: ColorRef::named("white").into(),
+			text_dark: ColorRef::named("black").into(),
+
+			success: ColorRef::named("green").into(),
+			warning: ColorRef::named("yellow").into(),
+			error: ColorRef::named("red").into(),
+
+			_marker: PhantomData,
 		}
+	}
+}
 
+impl<T> UiThemeSpec<T> {
+	fn resolve(&self, palette: &Palette) -> anyhow::Result<UiTheme> {
 		let background = self.background.resolve(palette)?;
 		let surface = self.surface.resolve(palette)?;
-		let border = resolve_or!(self.border, background);
-		let shadow = resolve_or!(self.border, {
-			background
-				.darken(Self::DEFAULT_SHADOW_DARKEN)
-				.with_alpha(Self::DEFAULT_SHADOW_ALPHA)
-		});
+		let border = self.border.resolve(palette)?;
+		let shadow = self.shadow.resolve(palette)?;
 
 		let success = self.success.resolve(palette)?;
 		let warning = self.warning.resolve(palette)?;
@@ -396,27 +383,9 @@ impl fmt::Display for UiTheme {
 	}
 }
 
-#[derive(Debug, Clone, Copy, IntoLua, Deserialize, PartialEq, Eq)]
-#[lua_with("ToString::to_string")]
-#[serde(rename_all = "snake_case")]
-#[repr(u8)]
-pub enum ThemeKind {
-	Light,
-	Dark,
-}
-
-impl fmt::Display for ThemeKind {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		match self {
-			Self::Dark => write!(f, "dark"),
-			Self::Light => write!(f, "light"),
-		}
-	}
-}
-
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
-pub struct TerminalThemeSpec {
+pub struct TerminalThemeSpec<T> {
 	pub shade_difference: f32,
 
 	pub default: ColorSpec,
@@ -438,16 +407,12 @@ pub struct TerminalThemeSpec {
 	pub dark_magenta: Option<ColorSpec>,
 	pub dark_cyan: Option<ColorSpec>,
 	pub dark_white: Option<ColorSpec>,
+
+	pub _marker: PhantomData<T>,
 }
 
-impl Default for TerminalThemeSpec {
+impl Default for TerminalThemeSpec<Dark> {
 	fn default() -> Self {
-		Self::default_dark()
-	}
-}
-
-impl TerminalThemeSpec {
-	fn default_dark() -> Self {
 		Self {
 			shade_difference: 0.2,
 			default: ColorRef::named("white").into(),
@@ -468,10 +433,14 @@ impl TerminalThemeSpec {
 			dark_magenta: None,
 			dark_cyan: None,
 			dark_white: None,
+
+			_marker: PhantomData,
 		}
 	}
+}
 
-	fn default_light() -> Self {
+impl Default for TerminalThemeSpec<Light> {
+	fn default() -> Self {
 		Self {
 			shade_difference: 0.2,
 			default: ColorRef::named("black").into(),
@@ -492,11 +461,13 @@ impl TerminalThemeSpec {
 			dark_magenta: None,
 			dark_cyan: None,
 			dark_white: None,
+
+			_marker: PhantomData,
 		}
 	}
 }
 
-impl TerminalThemeSpec {
+impl<T> TerminalThemeSpec<T> {
 	fn resolve(&self, palette: &Palette) -> anyhow::Result<TerminalTheme> {
 		macro_rules! resolve_pair {
 			($name:expr, $bright:expr, $dark:expr) => {
@@ -609,37 +580,46 @@ impl fmt::Display for TerminalTheme {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct ThemeSpec {
-	pub kind: ThemeKind,
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum ThemeSpec {
+	Dark {
+		palette: Palette,
 
-	pub palette: Palette,
+		#[serde(default)]
+		ui: UiThemeSpec<Dark>,
 
-	#[serde(default)]
-	pub ui: Option<UiThemeSpec>,
+		#[serde(default)]
+		terminal: TerminalThemeSpec<Dark>,
+	},
+	Light {
+		palette: Palette,
 
-	#[serde(default)]
-	pub terminal: Option<TerminalThemeSpec>,
+		#[serde(default)]
+		ui: UiThemeSpec<Light>,
+
+		#[serde(default)]
+		terminal: TerminalThemeSpec<Light>,
+	},
 }
 
 impl ThemeSpec {
 	fn resolve(self, name: String) -> anyhow::Result<Theme> {
-		let ui = self
-			.ui
-			.unwrap_or_else(|| match self.kind {
-				ThemeKind::Dark => UiThemeSpec::default_dark(),
-				ThemeKind::Light => UiThemeSpec::default_light(),
-			})
-			.resolve(&self.palette)?;
-		let terminal = self
-			.terminal
-			.unwrap_or_else(|| match self.kind {
-				ThemeKind::Dark => TerminalThemeSpec::default_dark(),
-				ThemeKind::Light => TerminalThemeSpec::default_light(),
-			})
-			.resolve(&self.palette)?;
+		let (ui, terminal, palette) = match self {
+			Self::Dark {
+				palette,
+				ui,
+				terminal,
+			} => (ui.resolve(&palette)?, terminal.resolve(&palette)?, palette),
+			Self::Light {
+				palette,
+				ui,
+				terminal,
+			} => (ui.resolve(&palette)?, terminal.resolve(&palette)?, palette),
+		};
+
 		Ok(Theme {
 			name,
-			palette: self.palette,
+			palette,
 			ui,
 			terminal,
 		})
@@ -698,7 +678,6 @@ mod tests {
 			teal: Color::from_str("#555555").unwrap(),
 			blue: Color::from_str("#666666").unwrap(),
 			purple: Color::from_str("#777777").unwrap(),
-			brown: Color::from_str("#888888").unwrap(),
 			black: Color::from_str("#999999").unwrap(),
 			white: Color::from_str("#aaaaaa").unwrap(),
 			custom: HashMap::new(),
@@ -711,7 +690,6 @@ mod tests {
 		assert_eq!(palette.get("teal").unwrap().to_string(), "#555555ff");
 		assert_eq!(palette.get("blue").unwrap().to_string(), "#666666ff");
 		assert_eq!(palette.get("purple").unwrap().to_string(), "#777777ff");
-		assert_eq!(palette.get("brown").unwrap().to_string(), "#888888ff");
 		assert_eq!(palette.get("black").unwrap().to_string(), "#999999ff");
 		assert_eq!(palette.get("white").unwrap().to_string(), "#aaaaaaff");
 		assert!(palette.get("dsfsdfgaqsdea").is_err());
@@ -729,7 +707,6 @@ mod tests {
 			teal: Color::from_str("#555555").unwrap(),
 			blue: Color::from_str("#666666").unwrap(),
 			purple: Color::from_str("#777777").unwrap(),
-			brown: Color::from_str("#888888").unwrap(),
 			black: Color::from_str("#999999").unwrap(),
 			white: Color::from_str("#aaaaaa").unwrap(),
 			custom: HashMap::new(),
