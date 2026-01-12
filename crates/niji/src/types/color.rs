@@ -40,8 +40,8 @@ impl Color {
 		self.into_oklch().lightness()
 	}
 
-	pub fn is_light(self) -> bool {
-		self.lightness() >= 0.5
+	pub fn contrast(self, other: Color) -> f32 {
+		f32::abs(self.lightness() - other.lightness())
 	}
 
 	pub fn lighten(self, amount: f32) -> Self {

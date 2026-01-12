@@ -296,7 +296,10 @@ pub struct UiTheme {
 
 impl UiTheme {
 	pub fn text_color_on(&self, background: Color) -> Color {
-		if background.is_light() {
+		let dark_contrast = self.text_dark.contrast(background);
+		let light_contrast = self.text_light.contrast(background);
+
+		if dbg!(dark_contrast) >= dbg!(light_contrast) {
 			self.text_dark
 		} else {
 			self.text_light
@@ -454,7 +457,7 @@ impl TerminalThemeSpec {
 impl TerminalThemeSpec {
 	fn resolve(&self, palette: &Palette) -> anyhow::Result<TerminalTheme> {
 		macro_rules! resolve_pair {
-			($name: expr, $bright:expr, $dark:expr) => {
+			($name:expr, $bright:expr, $dark:expr) => {
 				match (Option::as_ref(&$bright), Option::as_ref(&$dark)) {
 					(Some(bright), Some(dark)) => {
 						(bright.resolve(palette)?, dark.resolve(palette)?)
