@@ -3,7 +3,7 @@ local Color = niji.Color;
 local M = {}
 
 local function by_scheme(theme, for_light, for_dark)
-	if theme.ui.color_scheme == "light" then
+	if theme.kind == "light" then
 		return for_light
 	else
 		return for_dark
@@ -17,38 +17,38 @@ local function background_colors(theme)
 		by_scheme(theme, theme.ui.background:darken(0.2), theme.ui.background:lighten(0.2)),
 		by_scheme(theme, theme.ui.background:darken(0.3), theme.ui.background:lighten(0.3)),
 
-		surface = by_scheme(theme, theme.ui.background:darken(0.06), theme.ui.background:lighten(0.06)),
+		surface = theme.ui.surface,
 		black = {
-			theme.ui.background:shade(0.02),
-			theme.ui.background:shade(0.1),
-			theme.ui.background:shade(0.2)
+			theme.palette.black,
+			theme.palette.black:lighten(0.1),
+			theme.palette.black:lighten(0.2),
 		},
 		white = {
-			theme.ui.background:shade(0.98),
-			theme.ui.background:shade(0.9),
-			theme.ui.background:shade(0.8)
+			theme.palette.white,
+			theme.palette.white:darken(0.1),
+			theme.palette.white:darken(0.2),
 		}
 	}
 end
 
 local function fill_color(theme)
-	return by_scheme(theme, theme.ui.background:darken(0.1), theme.ui.background:lighten(0.1))
+	return theme.ui.surface
 end
 
 local function text_colors(theme)
 	return {
-		theme.ui.text_background,
-		theme.ui.text_background:with_alpha(0.8),
-		theme.ui.text_background:with_alpha(0.6),
-		theme.ui.text_background:with_alpha(0.4),
-		theme.ui.text_background:with_alpha(0.3),
-		theme.ui.text_background:with_alpha(0.2)
+		theme.ui.text_default,
+		theme.ui.text_default:with_alpha(0.85),
+		theme.ui.text_default:with_alpha(0.7),
+		theme.ui.text_default:with_alpha(0.55),
+		theme.ui.text_default:with_alpha(0.4),
+		theme.ui.text_default:with_alpha(0.25),
 	}
 end
 
 local function overlay_colors(theme)
 	local col = Color:new("#000")
-	if theme.ui.color_scheme == "dark" then col = Color:new("#fff") end
+	if theme.kind == "dark" then col = Color:new("#fff") end
 	return {
 		col:with_alpha(0.04),
 		col:with_alpha(0.08),
@@ -65,13 +65,16 @@ function M.make_colors(theme)
 	local txt = text_colors(theme)
 	local overlay = overlay_colors(theme)
 
+	-- TODO: mechanism for accent colors;
+	local accent = theme.palette.teal;
+
 	return {
-		primary = theme.ui.primary,
-		drop_target_color = theme.ui.warning,
-		indicator = theme.ui.primary,
-		titlebar_indicator = by_scheme(theme, theme.ui.primary, "currentColor"),
-		inverse_indicator = theme.ui.primary,
-		applet_primary = theme.ui.primary,
+		primary = accent,
+		drop_target_color = accent,
+		indicator = accent,
+		titlebar_indicator = by_scheme(theme, accent, "currentColor"),
+		inverse_indicator = accent,
+		applet_primary = accent,
 
 		background = bg[1],
 		surface = bg.surface,
@@ -85,10 +88,10 @@ function M.make_colors(theme)
 		scrim_inverse = bg.white[2],
 		titlebar = by_scheme(theme, bg[2], bg[1]),
 		titlebar_backdrop = by_scheme(theme, bg[2], bg[1]),
-		titlebar_primary = theme.ui.primary,
+		titlebar_primary = accent,
 		sidebar = by_scheme(theme, bg[2], bg[1]),
 		sidebar_backdrop = by_scheme(theme, bg[2], bg[1]),
-		sidebar_primary = theme.ui.primary,
+		sidebar_primary = accent,
 		popover = bg[1],
 		panel_solid = bg[3],
 		panel = bg[3]:with_alpha(panel_opacity),
@@ -96,17 +99,17 @@ function M.make_colors(theme)
 		button = fill,
 		entry = fill,
 
-		link = theme.ui.secondary,
-		link_visited = theme.ui.secondary:darken(0.3),
+		link = theme.palette.blue,
+		link_visited = theme.palette.purple,
 
 		warning = theme.ui.warning,
 		error = theme.ui.error,
 		success = theme.ui.success,
 
-		suggested = theme.ui.primary,
+		suggested = accent,
 		destructive = theme.ui.error,
 
-		assets_color = theme.ui.secondary,
+		assets_color = accent,
 		frame = theme.ui.border,
 		border = theme.ui.border,
 		shade = theme.ui.shadow,
@@ -149,43 +152,43 @@ function M.make_colors(theme)
 		panel_divider = txt[6],
 		panel_fill = fill,
 
-		titlebutton_close = theme.ui.error,
-		titlebutton_max = theme.terminal.bright_green,
-		titlebutton_min = theme.terminal.bright_yellow,
+		titlebutton_close = theme.palette.red,
+		titlebutton_max = theme.palette.green,
+		titlebutton_min = theme.palette.yellow,
 
-		button_close = theme.ui.error,
-		button_max = theme.terminal.bright_green,
-		button_min = theme.terminal.bright_yellow,
+		button_close = theme.palette.red,
+		button_max = theme.palette.green,
+		button_min = theme.palette.yellow,
 
-		links = theme.ui.secondary,
+		links = theme.palette.blue,
 
 		placeholder_text_color = by_scheme(theme, "mix($black, $base, percentage(0.6))",
 			"mix($white, $base, percentage(0.6))"),
 
-		on_primary = theme.ui.text_primary,
-		on_background = theme.ui.text_background,
-		on_surface = theme.ui.text_surface,
-		on_warning = theme.ui.text_warning,
-		on_error = theme.ui.text_error,
-		on_success = theme.ui.text_success,
-		on_assets = theme.ui.background,
+		on_primary = theme.ui:text_on(accent),
+		on_background = theme.ui:text_on(theme.ui.background),
+		on_surface = theme.ui:text_on(theme.ui.surface),
+		on_warning = theme.ui:text_on(theme.ui.warning),
+		on_error = theme.ui:text_on(theme.ui.error),
+		on_success = theme.ui:text_on(theme.ui.success),
+		on_assets = theme.ui.text_default,
 
-		red_light = theme.ui.palette.red_light,
-		red_dark = theme.ui.palette.red_dark,
-		pink_light = theme.ui.palette.pink_light,
-		pink_dark = theme.ui.palette.pink_dark,
-		purple_light = theme.ui.palette.purple_light,
-		purple_dark = theme.ui.palette.purple_dark,
-		blue_light = theme.ui.palette.blue_light,
-		blue_dark = theme.ui.palette.blue_dark,
-		teal_light = theme.ui.palette.teal_light,
-		teal_dark = theme.ui.palette.teal_dark,
-		green_light = theme.ui.palette.green_light,
-		green_dark = theme.ui.palette.green_dark,
-		yellow_light = theme.ui.palette.yellow_light,
-		yellow_dark = theme.ui.palette.yellow_dark,
-		orange_light = theme.ui.palette.orange_light,
-		orange_dark = theme.ui.palette.orange_dark,
+		red_light = theme.palette.red:shade(0.9),
+		red_dark = theme.palette.red:shade(0.1),
+		pink_light = theme.palette.pink:shade(0.9),
+		pink_dark = theme.palette.pink:shade(0.1),
+		purple_light = theme.palette.purple:shade(0.9),
+		purple_dark = theme.palette.purple:shade(0.1),
+		blue_light = theme.palette.blue:shade(0.9),
+		blue_dark = theme.palette.blue:shade(0.1),
+		teal_light = theme.palette.teal:shade(0.9),
+		teal_dark = theme.palette.teal:shade(0.1),
+		green_light = theme.palette.green:shade(0.9),
+		green_dark = theme.palette.green:shade(0.1),
+		yellow_light = theme.palette.yellow:shade(0.9),
+		yellow_dark = theme.palette.yellow:shade(0.1),
+		orange_light = theme.palette.orange:shade(0.9),
+		orange_dark = theme.palette.orange:shade(0.1),
 
 		grey_050 = theme.ui.background:shade(0.95),
 		grey_100 = theme.ui.background:shade(0.9),
@@ -207,8 +210,8 @@ function M.make_colors(theme)
 		grey_900 = theme.ui.background:shade(0.1),
 		grey_950 = theme.ui.background:shade(0.05),
 
-		black = Color:new("#000"),
-		white = Color:new("#fff")
+		black = theme.palette.black,
+		white = theme.palette.white,
 	}
 end
 
