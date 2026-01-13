@@ -43,12 +43,14 @@ Additionally, these module-specific configuration options can be added to
 ```toml
 [sway]
 
-# Can be either "background", "surface", or "primary".
-# This value determines which theme color is used for focused window borders.
-focused_color = "surface"
+# Set to true to use a muted border color for focused windows instead of
+# the accent color
+muted_border = false
 
-# Can be either "background", "surface", "primary" or "secondary".
-# This value determines which theme color is used for the indicator bar.
-# Set to the same value as `focused_color` to hide the indicator entirely.
-indicator_color = "surface"
+# Set to true to display sway's indicator bar to show where the next window
+# will open
+show_indicator = false
+
+# Set to true to prevent niji from managing the wallpaper via swaybg
+disable_wallpaper = false
 ```
