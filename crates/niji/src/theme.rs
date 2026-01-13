@@ -324,7 +324,11 @@ pub struct UiTheme {
 }
 
 impl UiTheme {
-	pub fn text_color_on(&self, background: Color) -> Color {
+	pub fn text_default(&self) -> Color {
+		self.text_on(self.background)
+	}
+
+	pub fn text_on(&self, background: Color) -> Color {
 		let dark_contrast = self.text_dark.contrast(background);
 		let light_contrast = self.text_light.contrast(background);
 
@@ -348,16 +352,12 @@ impl fmt::Display for UiTheme {
 		writeln!(
 			f,
 			"{}",
-			color_display(
-				"Background",
-				self.background,
-				self.text_color_on(self.background)
-			)
+			color_display("Background", self.background, self.text_on(self.background))
 		)?;
 		writeln!(
 			f,
 			"{}",
-			color_display("Surface", self.surface, self.text_color_on(self.surface))
+			color_display("Surface", self.surface, self.text_on(self.surface))
 		)?;
 		writeln!(f, "Border: {}", colored_square(self.border))?;
 
@@ -366,17 +366,17 @@ impl fmt::Display for UiTheme {
 		writeln!(
 			f,
 			"{}",
-			color_display("Success", self.success, self.text_color_on(self.success))
+			color_display("Success", self.success, self.text_on(self.success))
 		)?;
 		writeln!(
 			f,
 			"{}",
-			color_display("Warning", self.warning, self.text_color_on(self.warning))
+			color_display("Warning", self.warning, self.text_on(self.warning))
 		)?;
 		writeln!(
 			f,
 			"{}",
-			color_display("Error", self.error, self.text_color_on(self.error))
+			color_display("Error", self.error, self.text_on(self.error))
 		)?;
 
 		Ok(())
@@ -604,21 +604,32 @@ pub enum ThemeSpec {
 
 impl ThemeSpec {
 	fn resolve(self, name: String) -> anyhow::Result<Theme> {
-		let (ui, terminal, palette) = match self {
+		let (kind, ui, terminal, palette) = match self {
 			Self::Dark {
 				palette,
 				ui,
 				terminal,
-			} => (ui.resolve(&palette)?, terminal.resolve(&palette)?, palette),
+			} => (
+				ThemeKind::Dark,
+				ui.resolve(&palette)?,
+				terminal.resolve(&palette)?,
+				palette,
+			),
 			Self::Light {
 				palette,
 				ui,
 				terminal,
-			} => (ui.resolve(&palette)?, terminal.resolve(&palette)?, palette),
+			} => (
+				ThemeKind::Light,
+				ui.resolve(&palette)?,
+				terminal.resolve(&palette)?,
+				palette,
+			),
 		};
 
 		Ok(Theme {
 			name,
+			kind,
 			palette,
 			ui,
 			terminal,
@@ -626,9 +637,25 @@ impl ThemeSpec {
 	}
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ThemeKind {
+	Light,
+	Dark,
+}
+
+impl fmt::Display for ThemeKind {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			Self::Light => write!(f, "light"),
+			Self::Dark => write!(f, "dark"),
+		}
+	}
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Theme {
 	pub name: String,
+	pub kind: ThemeKind,
 	pub palette: Palette,
 	pub ui: UiTheme,
 	pub terminal: TerminalTheme,

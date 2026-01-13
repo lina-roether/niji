@@ -21,14 +21,15 @@ impl UserData for UiTheme {
 		fields.add_field_method_get("shadow", |_, this| Ok(this.shadow));
 		fields.add_field_method_get("text_light", |_, this| Ok(this.text_light));
 		fields.add_field_method_get("text_dark", |_, this| Ok(this.text_dark));
+		fields.add_field_method_get("text_default", |_, this| Ok(this.text_default()));
 		fields.add_field_method_get("success", |_, this| Ok(this.success));
 		fields.add_field_method_get("warning", |_, this| Ok(this.warning));
 		fields.add_field_method_get("error", |_, this| Ok(this.error));
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_method("text_color_on", |_, this, background: Color| {
-			Ok(this.text_color_on(background))
+		methods.add_method("text_on", |_, this, background: Color| {
+			Ok(this.text_on(background))
 		});
 	}
 }
@@ -58,6 +59,7 @@ impl UserData for TerminalTheme {
 impl UserData for Theme {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("name", |_, this| Ok(this.name.clone()));
+		fields.add_field_method_get("kind", |_, this| Ok(this.kind.to_string()));
 		fields.add_field_method_get("palette", |_, this| Ok(this.palette.clone()));
 		fields.add_field_method_get("ui", |_, this| Ok(this.ui.clone()));
 		fields.add_field_method_get("terminal", |_, this| Ok(this.terminal.clone()));
