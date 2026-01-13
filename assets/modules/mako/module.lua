@@ -10,7 +10,7 @@ function M.apply(config, theme)
 		font_family = config.font_family or "sans-serif",
 		font_size = niji.util.font_size(config, 11),
 		background_color = theme.ui.background:with_alpha(alpha),
-		text_color = theme.ui.text_background,
+		text_color = theme.ui.text_default,
 		border_size = config.border_width or 2,
 		low_border_color = theme.ui.border,
 		normal_border_color = theme.ui.info,
