@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::{
 	config::{self, Config},
 	files::Files,
-	module_manager::{ModuleManager, ModuleManagerInit},
+	module_manager::{ApplyParams, ModuleManager, ModuleManagerInit},
 	theme::Theme,
 	theme_manager::ThemeManager,
 	utils::xdg::XdgDirs,
@@ -50,10 +50,10 @@ impl NijiApp {
 		self.theme_manager.list_themes()
 	}
 
-	pub fn apply(&self, reload: bool, modules: Option<&[String]>) -> anyhow::Result<()> {
+	pub fn apply(&self, params: &ApplyParams, modules: Option<&[String]>) -> anyhow::Result<()> {
 		let theme = self.get_current_theme()?;
 		self.module_manager
-			.apply(&self.config, &theme, reload, modules)?;
+			.apply(&self.config, &theme, params, modules)?;
 		Ok(())
 	}
 

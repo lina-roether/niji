@@ -5,7 +5,7 @@ use log::{LevelFilter, error};
 use niji_console::ColorChoice;
 mod syntax;
 
-use crate::{app::NijiApp, cli::syntax::build_cmd};
+use crate::{app::NijiApp, cli::syntax::build_cmd, module_manager::ApplyParams};
 
 macro_rules! handle {
 	($expr:expr, $cleanup:expr) => {
@@ -63,12 +63,19 @@ fn cmd(args: &ArgMatches) -> ExitCode {
 }
 
 fn cmd_apply(app: &NijiApp, args: &ArgMatches) -> ExitCode {
-	let no_reload = args.get_one::<bool>("no_reload").unwrap();
+	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
+	let ignore_deps = *args.get_one::<bool>("ignore_deps").unwrap();
+
+	let params = ApplyParams {
+		reload: !no_reload,
+		check_deps: !ignore_deps,
+	};
+
 	let modules: Option<Vec<String>> = args
 		.get_many::<String>("modules")
 		.map(|v| v.cloned().collect());
 
-	handle!(app.apply(!no_reload, modules.as_deref()));
+	handle!(app.apply(&params, modules.as_deref()));
 	ExitCode::SUCCESS
 }
 
@@ -117,10 +124,16 @@ fn cmd_theme_set(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	let name = args.get_one::<String>("name").unwrap().as_str();
 	let no_apply = *args.get_one::<bool>("no_apply").unwrap();
 	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
+	let ignore_deps = *args.get_one::<bool>("ignore_deps").unwrap();
+
+	let params = ApplyParams {
+		reload: !no_reload,
+		check_deps: !ignore_deps,
+	};
 
 	handle!(app.set_current_theme(name));
 	if !no_apply {
-		handle!(app.apply(!no_reload, None));
+		handle!(app.apply(&params, None));
 	}
 	ExitCode::SUCCESS
 }
