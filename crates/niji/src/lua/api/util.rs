@@ -1,22 +1,25 @@
 use mlua::{IntoLua, Lua};
 
+use crate::theme::Theme;
+
 use super::ApiModule;
 
 pub struct UtilApi;
 
 impl UtilApi {
-	fn by_theme(_: &Lua, (theme, value): (mlua::Table, mlua::Value)) -> mlua::Result<mlua::Value> {
+	fn by_theme(
+		_: &Lua,
+		(theme, value): (mlua::UserDataRef<Theme>, mlua::Value),
+	) -> mlua::Result<mlua::Value> {
 		let mlua::Value::Table(table) = value else {
 			return Ok(value);
 		};
 
 		let default: mlua::Value = table.get("default")?;
 
-		let Some(name) = theme.get::<Option<String>>("name")? else {
-			return Ok(default);
-		};
-
-		Ok(table.get::<Option<mlua::Value>>(name)?.unwrap_or(default))
+		Ok(table
+			.get::<Option<mlua::Value>>(theme.name.clone())?
+			.unwrap_or(default))
 	}
 
 	fn font_size(_: &Lua, (config, default): (mlua::Table, u32)) -> mlua::Result<u32> {
