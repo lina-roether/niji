@@ -61,11 +61,11 @@ impl<'lua> Module<'lua> {
 	fn check_dependency(program: &str) -> anyhow::Result<()> {
 		debug!("Checking for module dependency {program}...");
 
-		let output = Command::new("/bin/which")
+		let output = Command::new("which")
 			.arg(program)
 			.stdout(Stdio::piped())
 			.output()
-			.expect("Failed to run /bin/which");
+			.expect("Failed to run which");
 
 		if !output.status.success() {
 			return Err(anyhow!("Missing dependency: {program}"));
