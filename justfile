@@ -27,6 +27,8 @@ install base_dir="":
 	mkdir -p "{{base_dir}}/usr/share/niji"
 	cp -a assets/modules "{{base_dir}}/usr/share/niji/"
 	cp -a assets/themes "{{base_dir}}/usr/share/niji/"
+	chown -R root:root "{{base_dir}}/usr/share/niji"
+	find "{{base_dir}}/usr/share/niji" -type d -exec chmod 755 {} \;
 	find "{{base_dir}}/usr/share/niji" -type f -exec chmod 644 {} \;
 
 	@echo "Installation complete!"
