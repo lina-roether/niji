@@ -34,7 +34,16 @@ function M.apply(config, theme)
 		indicator = theme.ui[indicator_color],
 		cursor = config.cursor_theme,
 		cursor_size = config.cursor_size,
-		wallpaper = wallpaper
+		wallpaper = wallpaper,
+		swaybar = not config.disable_swaybar,
+		bar_background = theme.ui.background,
+		text_bar_background = theme.ui:text_on(theme.ui.background),
+		bar_statusline = theme.ui.background,
+		bar_separator = theme.ui.border,
+		accent = accent,
+		text_accent = theme.ui:text_on(accent),
+		active = theme.ui.surface,
+		text_active = theme.ui:text_on(theme.ui.surface),
 	}
 
 	niji.fs.output_artifact(config, {
