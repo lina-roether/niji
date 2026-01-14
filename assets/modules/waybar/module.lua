@@ -7,6 +7,9 @@ function M.apply(config, theme)
 	local show_shadow = true
 	if config.show_shadow ~= nil then show_shadow = config.show_shadow end
 
+	-- TODO: accent color mechanism
+	local accent = theme.palette.teal;
+
 	local style = style_css:render {
 		icon_font = config.icon_font,
 		font = config.font_family,
@@ -15,16 +18,15 @@ function M.apply(config, theme)
 		hidden_opacity = config.hidden_opacity or 0.0,
 		bar_background = "transparent",
 		background = theme.ui.background,
-		text_background = theme.ui.text_background,
+		text_background = theme.ui.text_default,
 		surface = theme.ui.surface,
-		text_surface = theme.ui.text_surface,
-		primary = theme.ui.primary,
-		text_primary = theme.ui.text_primary,
-		secondary = theme.ui.secondary,
+		text_surface = theme.ui:text_on(theme.ui.surface),
+		primary = accent,
+		text_primary = theme.ui:text_on(accent),
 		warning = theme.ui.warning,
-		text_warning = theme.ui.text_warning,
-		info = theme.ui.info,
-		text_info = theme.ui.text_info,
+		text_warning = theme.ui:text_on(theme.ui.warning),
+		info = accent,
+		text_info = theme.ui:text_on(accent),
 		padding_x = config.padding_x or 12,
 		padding_y = config.padding_y or 4,
 		workspace_button_margin = config.workspace_button_margin or 6,

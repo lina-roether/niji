@@ -9,8 +9,9 @@ use anyhow::anyhow;
 use log::debug;
 
 use crate::{
-	config::{ModuleConfig, Theme},
+	config::ModuleConfig,
 	lua::runtime::{LuaModule, LuaRuntime},
+	theme::Theme,
 };
 
 #[derive(Debug)]
@@ -19,8 +20,10 @@ pub struct Module<'lua>(LuaModule<'lua>);
 impl<'lua> Module<'lua> {
 	const DEPS_FILE: &'static str = "deps.txt";
 
-	pub fn load(runtime: &'lua LuaRuntime, path: &Path) -> anyhow::Result<Self> {
-		Self::check_dependencies(path)?;
+	pub fn load(runtime: &'lua LuaRuntime, path: &Path, check_deps: bool) -> anyhow::Result<Self> {
+		if check_deps {
+			Self::check_dependencies(path)?;
+		}
 		let module = runtime.load_lua_module(path)?;
 		Ok(Self(module))
 	}
@@ -84,7 +87,7 @@ mod tests {
 	use tempfile::tempdir;
 
 	use crate::{
-		config::test_utils::test_theme, files::Files, lua::runtime::LuaRuntimeInit,
+		files::Files, lua::runtime::LuaRuntimeInit, theme::test_utils::test_theme,
 		utils::xdg::XdgDirs,
 	};
 
@@ -108,7 +111,7 @@ mod tests {
 		)
 		.unwrap();
 
-		Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap();
 	}
 
 	#[test]
@@ -129,7 +132,7 @@ mod tests {
 		)
 		.unwrap();
 
-		Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap_err();
+		Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap_err();
 	}
 
 	#[test]
@@ -150,7 +153,7 @@ mod tests {
 		)
 		.unwrap();
 
-		Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap_err();
+		Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap_err();
 	}
 
 	#[test]
@@ -171,7 +174,8 @@ mod tests {
 		)
 		.unwrap();
 
-		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		let module =
+			Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap();
 		assert!(!module.can_reload());
 	}
 
@@ -193,7 +197,8 @@ mod tests {
 		)
 		.unwrap();
 
-		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		let module =
+			Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap();
 		assert!(module.can_reload());
 	}
 
@@ -215,7 +220,8 @@ mod tests {
 		)
 		.unwrap();
 
-		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		let module =
+			Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap();
 		module.apply(HashMap::new(), test_theme()).unwrap();
 	}
 
@@ -237,7 +243,8 @@ mod tests {
 		)
 		.unwrap();
 
-		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		let module =
+			Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap();
 		module.apply(HashMap::new(), test_theme()).unwrap_err();
 	}
 
@@ -259,7 +266,8 @@ mod tests {
 		)
 		.unwrap();
 
-		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		let module =
+			Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap();
 		module.reload(ModuleConfig::new()).unwrap();
 	}
 
@@ -281,7 +289,8 @@ mod tests {
 		)
 		.unwrap();
 
-		let module = Module::load(&runtime, &xdg.config_home.join("niji/modules/test")).unwrap();
+		let module =
+			Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap();
 		module.reload(ModuleConfig::new()).unwrap_err();
 	}
 }

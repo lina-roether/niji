@@ -6,14 +6,17 @@ function M.apply(config, theme)
 	local custom_config = config.custom_config_file and niji.fs.read_config_asset(config.custom_config_file)
 	local alpha = config.popup_alpha or 1.0
 
+	-- TODO: accent color mechanism
+	local accent = theme.palette.teal;
+
 	local cfg = template:render {
 		font_family = config.font_family or "sans-serif",
 		font_size = niji.util.font_size(config, 11),
 		background_color = theme.ui.background:with_alpha(alpha),
-		text_color = theme.ui.text_background,
+		text_color = theme.ui.text_default,
 		border_size = config.border_width or 2,
 		low_border_color = theme.ui.border,
-		normal_border_color = theme.ui.info,
+		normal_border_color = accent,
 		high_border_color = theme.ui.warning,
 		border_radius = config.border_radius or 10,
 		custom_config = custom_config

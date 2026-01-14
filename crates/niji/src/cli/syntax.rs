@@ -61,6 +61,13 @@ pub fn build_cmd() -> Command {
 							"Do not reload the module targets to apply the changes immediately. \
 							 Changes will only take effect after a restart.",
 						),
+				)
+				.arg(
+					Arg::new("ignore_deps")
+						.long("ignore-deps")
+						.short('i')
+						.action(ArgAction::SetTrue)
+						.help("Ignore missing module dependencies."),
 				),
 		)
 		.subcommand(
@@ -100,6 +107,13 @@ pub fn build_cmd() -> Command {
 									"Do not reload the module targets to apply the changes \
 									 immediately. Changes will only take effect after a restart.",
 								),
+						)
+						.arg(
+							Arg::new("ignore_deps")
+								.long("ignore-deps")
+								.short('i')
+								.action(ArgAction::SetTrue)
+								.help("Ignore missing module dependencies."),
 						),
 				)
 				.subcommand(Command::new("list").about("List the names of available themes"))

@@ -5,10 +5,11 @@ use log::{debug, error, info};
 use niji_console::heading;
 
 use crate::{
-	config::{Config, Theme},
+	config::Config,
 	files::Files,
 	lua::runtime::{LuaRuntime, LuaRuntimeInit},
 	module::Module,
+	theme::Theme,
 	utils::xdg::XdgDirs,
 };
 
@@ -16,6 +17,12 @@ pub struct ModuleManagerInit {
 	pub xdg: Rc<XdgDirs>,
 	pub files: Rc<Files>,
 	pub config: Rc<Config>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ApplyParams {
+	pub reload: bool,
+	pub check_deps: bool,
 }
 
 #[derive(Clone)]
@@ -56,7 +63,7 @@ impl ModuleManager {
 		&self,
 		config: &Config,
 		theme: &Theme,
-		reload: bool,
+		params: &ApplyParams,
 		modules: Option<&[String]>,
 	) -> anyhow::Result<()> {
 		let mut remaining = HashSet::<String>::new();
@@ -69,7 +76,7 @@ impl ModuleManager {
 				continue;
 			}
 
-			self.apply_module(module_descr, config, theme, reload);
+			self.apply_module(module_descr, config, theme, params);
 		}
 
 		if modules.is_some() {
@@ -79,7 +86,7 @@ impl ModuleManager {
 					&mut self.active_modules.lock().unwrap(),
 					&mod_name,
 				)?;
-				self.apply_module(&module_descr, config, theme, reload);
+				self.apply_module(&module_descr, config, theme, params);
 			}
 		}
 
@@ -114,11 +121,11 @@ impl ModuleManager {
 		module_descr: &ModuleDescriptor,
 		config: &Config,
 		theme: &Theme,
-		reload: bool,
+		params: &ApplyParams,
 	) {
 		heading!("{}", module_descr.name);
 
-		let module = match Module::load(&self.lua_runtime, &module_descr.path) {
+		let module = match Module::load(&self.lua_runtime, &module_descr.path, params.check_deps) {
 			Ok(module) => module,
 			Err(error) => {
 				error!("{error:?}");
@@ -138,7 +145,7 @@ impl ModuleManager {
 			niji_console::println!();
 			return;
 		}
-		if reload {
+		if params.reload {
 			if config.disable_reloads.is_disabled(&module_descr.name) {
 				info!(
 					"Reloading is disabled for module {}. You will only see the changes after a \
@@ -176,7 +183,7 @@ mod tests {
 
 	use tempfile::tempdir;
 
-	use crate::config::{DisableReloads, test_utils::test_theme};
+	use crate::{config::DisableReloads, theme::test_utils::test_theme};
 
 	use super::*;
 
@@ -220,7 +227,15 @@ mod tests {
 		.unwrap();
 
 		module_manager
-			.apply(&config, &test_theme(), false, Some(&["test".to_string()]))
+			.apply(
+				&config,
+				&test_theme(),
+				&ApplyParams {
+					reload: false,
+					check_deps: true,
+				},
+				Some(&["test".to_string()]),
+			)
 			.unwrap();
 	}
 
@@ -251,7 +266,15 @@ mod tests {
 
 		// This should not error, instead there should be a log message
 		module_manager
-			.apply(&config, &test_theme(), false, Some(&["test".to_string()]))
+			.apply(
+				&config,
+				&test_theme(),
+				&ApplyParams {
+					reload: false,
+					check_deps: true,
+				},
+				Some(&["test".to_string()]),
+			)
 			.unwrap();
 	}
 }

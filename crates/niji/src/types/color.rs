@@ -23,13 +23,25 @@ pub struct Color {
 }
 
 impl Color {
-	pub fn new_rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
+	pub const BLACK: Color = Color::new_rgba(0, 0, 0, 255);
+	pub const WHITE: Color = Color::new_rgba(255, 255, 255, 255);
+	pub const TRANSPARENT: Color = Color::new_rgba(0, 0, 0, 0);
+
+	pub const fn new_rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
 		Self { a, b, g, r }
 	}
 
 	#[inline]
 	pub fn alpha(self) -> f32 {
 		f32::from(self.a) / 255.0
+	}
+
+	pub fn lightness(self) -> f32 {
+		self.into_oklch().lightness()
+	}
+
+	pub fn contrast(self, other: Color) -> f32 {
+		f32::abs(self.lightness() - other.lightness())
 	}
 
 	pub fn lighten(self, amount: f32) -> Self {

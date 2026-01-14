@@ -30,7 +30,7 @@ local function apply_tweaks(config, theme)
 	niji.console.debug("Injecting tweaks")
 
 	local tweaks = tweaks_temp_template:render {
-		variant = theme.ui.color_scheme,
+		variant = theme.kind,
 		opacity = config.opacity or "default",
 		compact = config.compact or "false",
 		translucent = config.translucent or "false",
@@ -139,9 +139,9 @@ function M.install(config, theme)
 	apply_tweaks(config, theme)
 	inject_colors(theme)
 	prepare_output_theme()
-	-- install_gnome_shell(theme.color_scheme)
-	install_gtk3(theme.color_scheme)
-	install_gtk4(theme.color_scheme)
+	-- install_gnome_shell(theme.kind)
+	install_gtk3(theme.kind)
+	install_gtk4(theme.kind)
 	cleanup_tmp()
 end
 

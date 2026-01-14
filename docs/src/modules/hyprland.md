@@ -43,10 +43,7 @@ Additionally, these module-specific configuration options can be added to
 ```toml
 [hyprland]
 
-# Can be either "background", "surface", "primary" or "secondary".
-# This value determines which theme color is used for focused window borders.
-focused_color = "surface"
-
-# Suppress the warning that is displayed when the generated config file hasn't been sourced
-suppress_not_sourced_warning = false
+# Set to true to use a muted border color for focused windows instead of
+# the accent color
+muted_border = false
 ```

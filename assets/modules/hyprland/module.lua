@@ -7,12 +7,23 @@ function M.apply(config, theme)
 		niji.console.debug("Configuring cursor theme \"" .. config.cursor_theme .. "\" " .. config.cursor_size)
 	end
 
+	-- TODO: accent color mechanism
+	local accent = theme.palette.teal
+	local active_border = accent
+	if config.muted_border then
+		active_border = theme.ui.border
+	end
+
+	if config.focused_color then
+		niji.console.warn("The option `focused_color` for the hyprland module is deprecated and has no effect.")
+	end
+
 	local theme_conf = template:render {
 		configure_cursor = configure_cursor,
 		cursor_theme = config.cursor_theme,
 		cursor_size = config.cursor_size,
 		border_color = theme.ui.background,
-		active_border_color = theme.ui[config.focused_color or "surface"],
+		active_border_color = active_border,
 		shadow_color = theme.ui.shadow
 	}
 

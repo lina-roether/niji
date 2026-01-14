@@ -3,24 +3,34 @@ local M = {}
 local template = niji.Template:load("theme.mustache")
 
 function M.apply(config, theme)
-	local focused_color = config.focused_color or "surface";
-	local focused_text_color = "text_" .. focused_color;
-	local indicator_color = config.indicator_color or "surface";
+	-- TODO: accent color mechanism
+	local accent = theme.palette.teal;
+
+	local focused_color = accent;
+	if config.muted_border then
+		focused_color = theme.ui.surface;
+	end
+	local focused_text_color = theme.ui:text_on(focused_color);
+
+	local indicator_color = theme.ui.background;
+	if config.show_indicator then
+		indicator_color = theme.ui.surface;
+	end
 
 	local wallpaper = nil
 	if config.disable_wallpaper ~= true then
 		wallpaper = niji.util.by_theme(theme, config.wallpaper)
 	end
 
-	local theme = template:render {
+	local sway_cfg = template:render {
 		unfocused = theme.ui.background,
-		text_unfocused = theme.ui.text_background,
-		focused = theme.ui[focused_color],
-		text_focused = theme.ui[focused_text_color],
+		text_unfocused = theme.ui.text_default,
+		focused = focused_color,
+		text_focused = focused_text_color,
 		font = config.font_family,
 		font_size = niji.util.font_size(config, 12),
 		notify = theme.ui.warning,
-		text_notify = theme.ui.text_warning,
+		text_notify = theme.ui:text_on(theme.ui.warning),
 		indicator = theme.ui[indicator_color],
 		cursor = config.cursor_theme,
 		cursor_size = config.cursor_size,
@@ -29,7 +39,7 @@ function M.apply(config, theme)
 
 	niji.fs.output_artifact(config, {
 		out = "theme",
-		content = theme,
+		content = sway_cfg,
 		sourced_by_config = "sway/config",
 		line_pattern = "^%s*include%s+.*niji/sway/theme",
 		hint = "include = ~/.local/share/niji/sway/theme"

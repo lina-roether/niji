@@ -1,0 +1,13 @@
+kind = "dark"
+
+[palette]
+pink = "#e87fe6"
+red = "#e02629"
+orange = "#e07026"
+yellow = "#e0c726"
+green = "#26e038"
+teal = "#26e0ab"
+blue = "#2c26e0"
+purple = "#9e0c96"
+white = "#d7dce5"
+black = "#181819"

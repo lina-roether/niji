@@ -15,6 +15,7 @@ mod filesystem;
 mod module_meta;
 mod os;
 mod template;
+mod theme;
 mod util;
 mod xdg;
 
