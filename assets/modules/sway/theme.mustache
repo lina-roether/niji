@@ -1,4 +1,4 @@
-{{% "color" : "{rx}{gx}{bx}" %}}
+{{% "color" : "#{rx}{gx}{bx}{ax}" %}}
 
 client.focused {{focused}} {{focused}} {{text_focused}} {{focused}} {{indicator}}
 client.focused_inactive {{focused}} {{focused}} {{text_focused}} {{focused}} {{indicator}}
@@ -17,3 +17,17 @@ seat seat0 xcursor_theme "{{cursor}}" {{cursor_size}}
 {{#wallpaper}}
 output * bg "{{.}}" fill
 {{/wallpaper}}
+
+{{#swaybar}}
+bar {
+	colors {
+		background {{bar_background}}
+		statusline {{bar_statusline}}
+		separator {{bar_separator}}
+		focused_workspace {{accent}} {{accent}} {{text_accent}}
+		active_workspace {{active}} {{active}} {{text_active}}
+		inactive_workspace {{bar_background}} {{bar_background}} {{text_bar_background}}
+		urgent_workspace {{notify}} {{notify}} {{text_notify}}
+	}
+}	
+{{/swaybar}}

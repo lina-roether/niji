@@ -53,4 +53,7 @@ show_indicator = false
 
 # Set to true to prevent niji from managing the wallpaper via swaybg
 disable_wallpaper = false
+
+# Set to true to prevent niji from setting swaybar styles
+disable_swaybar
 ```
