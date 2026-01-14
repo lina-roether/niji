@@ -8,3 +8,7 @@ pre_bump_hooks = [
 	"just test",
 	"cargo set-version -p niji {{version}}",
 ]
+
+post_bump_hooks = [
+	"git push origin {{version_tag}}"
+]
