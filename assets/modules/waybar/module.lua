@@ -2,13 +2,10 @@ local M = {}
 
 local style_css = niji.Template:load("style.css.mustache")
 
-function M.apply(config, theme)
+function M.apply(config, theme, accent)
 	local custom_style = config.custom_style_file and niji.fs.read_config_asset(config.custom_style_file)
 	local show_shadow = true
 	if config.show_shadow ~= nil then show_shadow = config.show_shadow end
-
-	-- TODO: accent color mechanism
-	local accent = theme.palette.teal;
 
 	local style = style_css:render {
 		icon_font = config.icon_font,

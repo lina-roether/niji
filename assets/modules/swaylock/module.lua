@@ -3,11 +3,8 @@ local M = {}
 local template = niji.Template:load("config.mustache")
 template:set_format("color", "{rx}{gx}{bx}{ax}")
 
-function M.apply(config, theme)
+function M.apply(config, theme, accent)
 	local custom_config = config.custom_config_file and niji.fs.read_config_asset(config.custom_config_file)
-
-	-- TODO: accent color mechanism
-	local accent = theme.palette.teal;
 
 	local config = template:render {
 		inside_color = theme.ui.background,

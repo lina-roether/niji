@@ -10,14 +10,11 @@ local function srgb_to_linear(alpha)
 	end
 end
 
-function M.apply(config, theme)
+function M.apply(config, theme, accent)
 	local foreground_color = theme.terminal.default;
 	if config.foreground then
 		foreground_color = theme.terminal[config.foreground] or config.foreground
 	end
-
-	-- TODO: accent color mechanism
-	local accent = theme.palette.teal;
 
 	local theme = template:render {
 		background = theme.ui.background,

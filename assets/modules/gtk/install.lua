@@ -47,10 +47,10 @@ local function apply_tweaks(config, theme)
 	file:close()
 end
 
-local function inject_colors(theme)
+local function inject_colors(theme, accent)
 	niji.console.debug("Injecting colors")
 
-	local colors_scss = colors_scss_template:render(colors.make_colors(theme))
+	local colors_scss = colors_scss_template:render(colors.make_colors(theme, accent))
 
 	local file = io.open(THEME_LOCATION_TMP .. "/sass/_colors.scss", "w")
 	if file == nil then
@@ -131,13 +131,13 @@ local function install_gtk4(color_scheme)
 	sass_compile(THEME_LOCATION_TMP .. "/main/gtk-4.0/gtk-Dark.scss", dest .. "/gtk-dark.css")
 end
 
-function M.install(config, theme)
+function M.install(config, theme, accent)
 	niji.console.info("Installing " .. THEME_NAME .. " gtk theme...")
 	niji.console.debug("Install location is " .. THEME_LOCATION)
 
 	tmp_copy_theme()
 	apply_tweaks(config, theme)
-	inject_colors(theme)
+	inject_colors(theme, accent)
 	prepare_output_theme()
 	-- install_gnome_shell(theme.kind)
 	install_gtk3(theme.kind)

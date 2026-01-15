@@ -57,16 +57,13 @@ local function overlay_colors(theme)
 	}
 end
 
-function M.make_colors(theme)
+function M.make_colors(theme, accent)
 	local tooltip_opacity = 0.9
 	local panel_opacity = 0.9
 	local bg = background_colors(theme)
 	local fill = fill_color(theme)
 	local txt = text_colors(theme)
 	local overlay = overlay_colors(theme)
-
-	-- TODO: mechanism for accent colors;
-	local accent = theme.palette.teal;
 
 	return {
 		primary = accent,

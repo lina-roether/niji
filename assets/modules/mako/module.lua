@@ -2,12 +2,9 @@ local M = {}
 
 local template = niji.Template:load("config.mustache")
 
-function M.apply(config, theme)
+function M.apply(config, theme, accent)
 	local custom_config = config.custom_config_file and niji.fs.read_config_asset(config.custom_config_file)
 	local alpha = config.popup_alpha or 1.0
-
-	-- TODO: accent color mechanism
-	local accent = theme.palette.teal;
 
 	local cfg = template:render {
 		font_family = config.font_family or "sans-serif",
