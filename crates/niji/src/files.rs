@@ -13,7 +13,7 @@ use crate::utils::{
 #[derive(Debug)]
 pub struct Files {
 	config_file: PathBuf,
-	current_theme_file: PathBuf,
+	state_file: PathBuf,
 	output_dir: PathBuf,
 	themes_dirs: Vec<PathBuf>,
 	modules_dirs: Vec<PathBuf>,
@@ -28,7 +28,7 @@ pub struct Location {
 impl Files {
 	const PREFIX: &'static str = "niji";
 	const CONFIG_FILE: &'static str = "config.toml";
-	const CURRENT_THEME_FILE: &'static str = "current_theme.txt";
+	const STATE_FILE: &'static str = "state.toml";
 	const THEMES_DIR: &'static str = "themes";
 	const THEME_MAIN_FILE_NAME: &'static str = "theme.toml";
 	const MODULES_DIR: &'static str = "modules";
@@ -43,7 +43,7 @@ impl Files {
 		init_dir(&state_dir)?;
 
 		let config_file = config_dir.join(Self::CONFIG_FILE);
-		let current_theme_file = state_dir.join(Self::CURRENT_THEME_FILE);
+		let state_file = state_dir.join(Self::STATE_FILE);
 		let custom_themes_dir = config_dir.join(Self::THEMES_DIR);
 		let custom_modules_dir = config_dir.join(Self::MODULES_DIR);
 
@@ -67,7 +67,7 @@ impl Files {
 
 		log::debug!("Config file location is {}", config_file.display());
 		log::debug!("Output directory is {}", data_dir.display());
-		log::debug!("Current theme file is {}", current_theme_file.display());
+		log::debug!("State file is {}", state_file.display());
 		log::debug!(
 			"Theme directories are {}",
 			themes_dirs
@@ -88,7 +88,7 @@ impl Files {
 		Ok(Self {
 			config_file,
 			output_dir: data_dir,
-			current_theme_file,
+			state_file,
 			themes_dirs,
 			modules_dirs,
 		})
@@ -100,8 +100,8 @@ impl Files {
 	}
 
 	#[inline]
-	pub fn current_theme_file(&self) -> &Path {
-		&self.current_theme_file
+	pub fn state_file(&self) -> &Path {
+		&self.state_file
 	}
 
 	#[inline]
@@ -171,8 +171,8 @@ mod tests {
 			xdg_dirs.config_home.join("niji/config.toml")
 		);
 		assert_eq!(
-			files.current_theme_file(),
-			xdg_dirs.state_home.join("niji/current_theme.txt")
+			files.state_file(),
+			xdg_dirs.state_home.join("niji/state.toml")
 		);
 		assert_eq!(files.output_dir(), xdg_dirs.data_home.join("niji"));
 	}

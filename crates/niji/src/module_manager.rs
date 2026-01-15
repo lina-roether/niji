@@ -10,6 +10,7 @@ use crate::{
 	lua::runtime::{LuaRuntime, LuaRuntimeInit},
 	module::Module,
 	theme::Theme,
+	types::color::Color,
 	utils::xdg::XdgDirs,
 };
 
@@ -63,6 +64,7 @@ impl ModuleManager {
 		&self,
 		config: &Config,
 		theme: &Theme,
+		accent: Color,
 		params: &ApplyParams,
 		modules: Option<&[String]>,
 	) -> anyhow::Result<()> {
@@ -76,7 +78,7 @@ impl ModuleManager {
 				continue;
 			}
 
-			self.apply_module(module_descr, config, theme, params);
+			self.apply_module(module_descr, config, theme, accent, params);
 		}
 
 		if modules.is_some() {
@@ -86,7 +88,7 @@ impl ModuleManager {
 					&mut self.active_modules.lock().unwrap(),
 					&mod_name,
 				)?;
-				self.apply_module(&module_descr, config, theme, params);
+				self.apply_module(&module_descr, config, theme, accent, params);
 			}
 		}
 
@@ -121,6 +123,7 @@ impl ModuleManager {
 		module_descr: &ModuleDescriptor,
 		config: &Config,
 		theme: &Theme,
+		accent: Color,
 		params: &ApplyParams,
 	) {
 		heading!("{}", module_descr.name);
@@ -139,7 +142,7 @@ impl ModuleManager {
 			module_config.extend(specific.clone());
 		}
 
-		if let Err(err) = module.apply(module_config.clone(), theme.clone()) {
+		if let Err(err) = module.apply(module_config.clone(), theme.clone(), accent) {
 			error!("{err:?}");
 			error!("Aborting module execution");
 			niji_console::println!();
@@ -230,6 +233,7 @@ mod tests {
 			.apply(
 				&config,
 				&test_theme(),
+				Color::BLACK,
 				&ApplyParams {
 					reload: false,
 					check_deps: true,
@@ -269,6 +273,7 @@ mod tests {
 			.apply(
 				&config,
 				&test_theme(),
+				Color::BLACK,
 				&ApplyParams {
 					reload: false,
 					check_deps: true,

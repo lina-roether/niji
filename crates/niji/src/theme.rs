@@ -73,11 +73,11 @@ pub enum ColorRef {
 }
 
 impl ColorRef {
-	fn named(name: &str) -> Self {
+	pub fn named(name: &str) -> Self {
 		Self::Named(name.to_string())
 	}
 
-	fn resolve(&self, palette: &Palette) -> anyhow::Result<Color> {
+	pub fn resolve(&self, palette: &Palette) -> anyhow::Result<Color> {
 		match self {
 			Self::Named(name) => palette.get(name),
 			Self::Exact(color) => Ok(*color),

@@ -8,6 +8,7 @@ mod lua;
 mod managed_fs;
 mod module;
 mod module_manager;
+mod state_manager;
 mod template;
 mod theme;
 mod theme_manager;

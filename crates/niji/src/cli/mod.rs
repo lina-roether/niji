@@ -53,11 +53,11 @@ fn cmd(args: &ArgMatches) -> ExitCode {
 
 	niji_console::init(level, color_choice);
 
-	let app = handle!(NijiApp::init());
+	let mut app = handle!(NijiApp::init());
 
 	match args.subcommand() {
 		Some(("apply", args)) => cmd_apply(&app, args),
-		Some(("theme", args)) => cmd_theme(&app, args),
+		Some(("theme", args)) => cmd_theme(&mut app, args),
 		_ => unreachable!(),
 	}
 }
@@ -79,7 +79,7 @@ fn cmd_apply(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	ExitCode::SUCCESS
 }
 
-fn cmd_theme(app: &NijiApp, args: &ArgMatches) -> ExitCode {
+fn cmd_theme(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
 	match args.subcommand() {
 		Some(("get", _)) => cmd_theme_get(app),
 		Some(("preview", args)) => cmd_theme_preview(app, args),
@@ -120,7 +120,7 @@ fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	ExitCode::SUCCESS
 }
 
-fn cmd_theme_set(app: &NijiApp, args: &ArgMatches) -> ExitCode {
+fn cmd_theme_set(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
 	let name = args.get_one::<String>("name").unwrap().as_str();
 	let no_apply = *args.get_one::<bool>("no_apply").unwrap();
 	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
@@ -153,7 +153,7 @@ fn cmd_theme_list(app: &NijiApp) -> ExitCode {
 	ExitCode::SUCCESS
 }
 
-fn cmd_theme_unset(app: &NijiApp) -> ExitCode {
+fn cmd_theme_unset(app: &mut NijiApp) -> ExitCode {
 	handle!(app.unset_current_theme());
 	ExitCode::SUCCESS
 }
