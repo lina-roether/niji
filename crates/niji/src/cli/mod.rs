@@ -5,7 +5,7 @@ use log::{LevelFilter, error};
 use niji_console::ColorChoice;
 mod syntax;
 
-use crate::{app::NijiApp, cli::syntax::build_cmd, module_manager::ApplyParams};
+use crate::{app::NijiApp, cli::syntax::build_cmd, module_manager::ApplyParams, theme::ColorRef};
 
 macro_rules! handle {
 	($expr:expr, $cleanup:expr) => {
@@ -98,6 +98,7 @@ fn cmd_theme_get(app: &NijiApp) -> ExitCode {
 
 fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	let name = args.get_one::<String>("name");
+	let accent = args.get_one::<String>("accent");
 	let no_color = args.get_one::<bool>("no_color").unwrap();
 
 	if *no_color {
@@ -114,7 +115,17 @@ fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 		None => handle!(app.get_current_theme()),
 	};
 
+	let accent_color = handle!(
+		match accent {
+			Some(name) => ColorRef::named(name),
+			None => handle!(app.get_current_accent()),
+		}
+		.resolve(&theme.palette)
+	);
+
 	niji_console::println!("Theme \"{}\":", theme.name);
+	niji_console::println!();
+	niji_console::println!("Accent: {}", accent_color.preview());
 	niji_console::println!();
 	niji_console::println!("{theme}");
 	ExitCode::SUCCESS

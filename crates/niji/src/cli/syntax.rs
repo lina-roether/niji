@@ -83,13 +83,27 @@ pub fn build_cmd() -> Command {
 						.about("Display a preview of a theme in the console")
 						.arg(Arg::new("name").help(
 							"The theme to preview. Defaults to the current theme if not set.",
-						)),
+						))
+						.arg(
+							Arg::new("accent")
+								.long("accent")
+								.short('A')
+								.action(ArgAction::Set)
+								.help("Set the accent color to use"),
+						),
 				)
 				.subcommand(
 					Command::new("set")
 						.about("Change the current theme")
 						.arg_required_else_help(true)
 						.arg(Arg::new("name").help("The name of the theme to change to"))
+						.arg(
+							Arg::new("accent")
+								.long("accent")
+								.short('A')
+								.action(ArgAction::Set)
+								.help("Set the accent color to use"),
+						)
 						.arg(
 							Arg::new("no_apply")
 								.long("no-apply")
@@ -113,7 +127,8 @@ pub fn build_cmd() -> Command {
 								.long("ignore-deps")
 								.short('i')
 								.action(ArgAction::SetTrue)
-								.help("Ignore missing module dependencies."),
+								.help("Ignore missing module dependencies.")
+								.conflicts_with("no_apply"),
 						),
 				)
 				.subcommand(Command::new("list").about("List the names of available themes"))
