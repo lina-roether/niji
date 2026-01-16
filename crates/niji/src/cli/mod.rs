@@ -59,7 +59,12 @@ impl Niji {
 
 impl Apply {
 	fn run(&self, app: &NijiApp) -> anyhow::Result<()> {
-		app.apply(&self.apply_args.apply_params(), &self.modules)
+		let params = self.apply_args.apply_params();
+		if self.modules.is_empty() {
+			app.apply_default(&params)
+		} else {
+			app.apply(&params, &self.modules)
+		}
 	}
 }
 
