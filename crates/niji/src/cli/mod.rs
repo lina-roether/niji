@@ -3,9 +3,11 @@ use std::process::ExitCode;
 use clap::ArgMatches;
 use log::{LevelFilter, error};
 use niji_console::ColorChoice;
-mod syntax;
+mod syntax_old;
 
-use crate::{app::NijiApp, cli::syntax::build_cmd, module_manager::ApplyParams, theme::ColorRef};
+use crate::{
+	app::NijiApp, cli::syntax_old::build_cmd, module_manager::ApplyParams, theme::ColorRef,
+};
 
 macro_rules! handle {
 	($expr:expr, $cleanup:expr) => {
