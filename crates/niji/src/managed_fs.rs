@@ -68,11 +68,10 @@ fn backup_and_replace(path: &Path, string: &str, hash: u64) -> anyhow::Result<()
 	if prompt!(default: true, "Backup {} to {}", path.display(), backup_path.display()) {
 		fs::copy(path, &backup_path)
 			.context(format!("Failed to write to {}", backup_path.display()))?;
+		info!("Backup created at {}", backup_path.display());
 	}
 
 	init_new_file(path, string)?;
-
-	info!("Backup created at {}", backup_path.display());
 
 	Ok(())
 }
