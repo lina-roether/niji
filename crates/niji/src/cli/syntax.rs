@@ -6,6 +6,10 @@ pub const AUTHOR: &str = "Lina Roether <lina.roether@proton.me>";
 #[allow(clippy::too_many_lines)]
 #[must_use]
 pub fn build_cmd() -> Command {
+	let accent_parser = PossibleValuesParser::new([
+		"pink", "red", "orange", "yellow", "green", "teal", "blue", "purple", "black", "white",
+	]);
+
 	Command::new(NAME)
 		.author(AUTHOR)
 		.about("An extensible desktop theming utility")
@@ -89,6 +93,7 @@ pub fn build_cmd() -> Command {
 								.long("accent")
 								.short('A')
 								.action(ArgAction::Set)
+								.value_parser(accent_parser.clone())
 								.help("Set the accent color to use"),
 						),
 				)
@@ -102,6 +107,7 @@ pub fn build_cmd() -> Command {
 								.long("accent")
 								.short('A')
 								.action(ArgAction::Set)
+								.value_parser(accent_parser.clone())
 								.help("Set the accent color to use"),
 						)
 						.arg(
@@ -148,10 +154,7 @@ pub fn build_cmd() -> Command {
 						.arg_required_else_help(true)
 						.arg(
 							Arg::new("name")
-								.value_parser(PossibleValuesParser::new([
-									"pink", "red", "orange", "yellow", "green", "teal", "blue",
-									"purple", "black", "white",
-								]))
+								.value_parser(accent_parser.clone())
 								.help("The name of the palette color to use as an accent color"),
 						)
 						.arg(
