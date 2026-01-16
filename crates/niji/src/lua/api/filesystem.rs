@@ -82,6 +82,26 @@ impl FilesystemApi {
 		)
 	}
 
+	fn config_exists(lua: &'_ Lua, path: String) -> mlua::Result<bool> {
+		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
+		Ok(xdg.config_home.join(expand_path(&path)).exists())
+	}
+
+	fn state_exists(lua: &'_ Lua, path: String) -> mlua::Result<bool> {
+		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
+		Ok(xdg.config_home.join(expand_path(&path)).exists())
+	}
+
+	fn data_exists(lua: &'_ Lua, path: String) -> mlua::Result<bool> {
+		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
+		let expanded_path = expand_path(&path);
+		Ok(xdg.data_home.join(&expanded_path).exists()
+			|| xdg
+				.data_dirs
+				.iter()
+				.any(|dir| dir.join(&expanded_path).exists()))
+	}
+
 	fn read_config(lua: &'_ Lua, path: String) -> mlua::Result<String> {
 		let xdg = lua.app_data_ref::<Rc<XdgDirs>>().unwrap();
 		fs::read_to_string(xdg.config_home.join(expand_path(&path))).map_err(mlua::Error::runtime)
@@ -243,6 +263,9 @@ impl ApiModule for FilesystemApi {
 			lua.create_function(Self::output_artifact)?,
 		)?;
 		module.raw_set("get_output_dir", lua.create_function(Self::get_output_dir)?)?;
+		module.raw_set("config_exists", lua.create_function(Self::config_exists)?)?;
+		module.raw_set("state_exists", lua.create_function(Self::state_exists)?)?;
+		module.raw_set("data_exists", lua.create_function(Self::data_exists)?)?;
 		module.raw_set("read_config", lua.create_function(Self::read_config)?)?;
 		module.raw_set("read_state", lua.create_function(Self::read_state)?)?;
 		module.raw_set("read_data", lua.create_function(Self::read_data)?)?;
