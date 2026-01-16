@@ -73,7 +73,7 @@ fn preview_themes() {
 				"XDG_CONFIG_HOME",
 				concat!(env!("CARGO_MANIFEST_DIR"), "/tests/theme.in"),
 			)
-			.args(["-v", "theme", "preview", theme])
+			.args(["-v", "theme", "preview", theme, "--accent", "red"])
 			.assert()
 			.success();
 	}
