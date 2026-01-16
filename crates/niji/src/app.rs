@@ -31,7 +31,6 @@ impl NijiApp {
 		let module_manager = Rc::new(ModuleManager::new(ModuleManagerInit {
 			xdg: Rc::clone(&xdg),
 			files: Rc::clone(&files),
-			config: Rc::clone(&config),
 		})?);
 
 		Ok(Self {
@@ -64,7 +63,12 @@ impl NijiApp {
 		self.theme_manager.list_themes()
 	}
 
-	pub fn apply(&self, params: &ApplyParams, modules: Option<&[String]>) -> anyhow::Result<()> {
+	pub fn apply_default(&self, params: &ApplyParams) -> anyhow::Result<()> {
+		self.apply(params, &self.config.modules)?;
+		Ok(())
+	}
+
+	pub fn apply(&self, params: &ApplyParams, modules: &[String]) -> anyhow::Result<()> {
 		let theme = self.get_current_theme()?;
 		let accent = self
 			.get_current_accent()?

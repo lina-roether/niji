@@ -1,213 +1,223 @@
+#![allow(clippy::unused_self)]
+
 use std::process::ExitCode;
 
-use clap::ArgMatches;
-use log::{LevelFilter, error};
+use anyhow::anyhow;
+use clap::Parser;
+use log::LevelFilter;
 use niji_console::ColorChoice;
-mod syntax_old;
+mod syntax;
 
 use crate::{
-	app::NijiApp, cli::syntax_old::build_cmd, module_manager::ApplyParams, theme::ColorRef,
+	app::NijiApp,
+	cli::syntax::{
+		Accent, AccentCommand, AccentGet, AccentParams, AccentSet, AccentUnset, Apply, ApplyArgs,
+		GlobalArgs, Niji, NijiCommand, PaletteColor, Theme, ThemeCommand, ThemeGet, ThemeList,
+		ThemePreview, ThemeSet, ThemeUnset, UpdateArgs,
+	},
+	module_manager::ApplyParams,
+	theme::ColorRef,
 };
-
-macro_rules! handle {
-	($expr:expr, $cleanup:expr) => {
-		match $expr {
-			Ok(val) => val,
-			Err(err) => {
-				log::error!("{err:?}");
-
-				#[allow(clippy::redundant_closure_call)]
-				$cleanup();
-
-				return ::std::process::ExitCode::FAILURE;
-			}
-		}
-	};
-	($expr:expr) => {
-		handle!($expr, || ())
-	};
-}
 
 #[must_use]
 pub fn run() -> ExitCode {
-	let matches = build_cmd().get_matches();
-	cmd(&matches)
-}
-
-fn cmd(args: &ArgMatches) -> ExitCode {
-	let quiet = *args.get_one::<bool>("quiet").unwrap();
-	let verbose = *args.get_one::<bool>("verbose").unwrap();
-	let no_color = *args.get_one::<bool>("no_color").unwrap();
-
-	let level = if quiet {
-		LevelFilter::Off
-	} else if verbose {
-		LevelFilter::Debug
-	} else {
-		LevelFilter::Info
-	};
-
-	let color_choice = if no_color {
-		ColorChoice::Never
-	} else {
-		ColorChoice::Auto
-	};
-
-	niji_console::init(level, color_choice);
-
-	let mut app = handle!(NijiApp::init());
-
-	match args.subcommand() {
-		Some(("apply", args)) => cmd_apply(&app, args),
-		Some(("theme", args)) => cmd_theme(&mut app, args),
-		Some(("accent", args)) => cmd_accent(&mut app, args),
-		_ => unreachable!(),
-	}
-}
-
-fn cmd_apply(app: &NijiApp, args: &ArgMatches) -> ExitCode {
-	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
-	let ignore_deps = *args.get_one::<bool>("ignore_deps").unwrap();
-
-	let params = ApplyParams {
-		reload: !no_reload,
-		check_deps: !ignore_deps,
-	};
-
-	let modules: Option<Vec<String>> = args
-		.get_many::<String>("modules")
-		.map(|v| v.cloned().collect());
-
-	handle!(app.apply(&params, modules.as_deref()));
-	ExitCode::SUCCESS
-}
-
-fn cmd_theme(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
-	match args.subcommand() {
-		Some(("get", _)) => cmd_theme_get(app),
-		Some(("preview", args)) => cmd_theme_preview(app, args),
-		Some(("set", args)) => cmd_theme_set(app, args),
-		Some(("list", _)) => cmd_theme_list(app),
-		Some(("unset", _)) => cmd_theme_unset(app),
-		_ => unreachable!(),
-	}
-}
-
-fn cmd_theme_get(app: &NijiApp) -> ExitCode {
-	let theme = handle!(app.get_current_theme());
-	niji_console::println!("{}", theme.name);
-	ExitCode::SUCCESS
-}
-
-fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) -> ExitCode {
-	let name = args.get_one::<String>("name");
-	let accent = args.get_one::<String>("accent");
-	let no_color = args.get_one::<bool>("no_color").unwrap();
-
-	if *no_color {
-		error!(
-			"Theme display is not supported in no-color mode. You can query the theme name by \
-			 using `niji theme get`."
-		);
+	let niji = syntax::Niji::parse();
+	if let Err(err) = niji.run() {
+		log::error!("{err:?}");
 		return ExitCode::FAILURE;
 	}
+	ExitCode::SUCCESS
+}
 
-	let theme = match name {
-		Some(name) => handle!(app.get_theme(name)),
+impl Niji {
+	fn run(&self) -> anyhow::Result<()> {
+		let level = if self.global_args.quiet {
+			LevelFilter::Off
+		} else if self.global_args.verbose {
+			LevelFilter::Debug
+		} else {
+			LevelFilter::Info
+		};
 
-		None => handle!(app.get_current_theme()),
-	};
+		let color_choice = if self.global_args.no_color {
+			ColorChoice::Never
+		} else {
+			ColorChoice::Auto
+		};
 
-	let accent_color = handle!(
-		match accent {
-			Some(name) => ColorRef::named(name),
-			None => handle!(app.get_current_accent()),
+		niji_console::init(level, color_choice);
+
+		let mut app = NijiApp::init()?;
+
+		match &self.command {
+			NijiCommand::Apply(apply) => apply.run(&app),
+			NijiCommand::Theme(theme) => theme.run(&mut app, &self.global_args),
+			NijiCommand::Accent(accent) => accent.run(&mut app),
 		}
-		.resolve(&theme.palette)
-	);
-
-	niji_console::println!("Theme \"{}\":", theme.name);
-	niji_console::println!();
-	niji_console::println!("Accent: {}", accent_color.preview());
-	niji_console::println!();
-	niji_console::println!("{theme}");
-	ExitCode::SUCCESS
+	}
 }
 
-fn cmd_theme_set(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
-	let name = args.get_one::<String>("name").unwrap().as_str();
-	let accent = args.get_one::<String>("accent");
-	let no_apply = *args.get_one::<bool>("no_apply").unwrap();
-	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
-	let ignore_deps = *args.get_one::<bool>("ignore_deps").unwrap();
-
-	let params = ApplyParams {
-		reload: !no_reload,
-		check_deps: !ignore_deps,
-	};
-
-	handle!(app.set_current_theme(name));
-	if let Some(accent) = accent {
-		handle!(app.set_current_accent(ColorRef::named(accent)));
+impl Apply {
+	fn run(&self, app: &NijiApp) -> anyhow::Result<()> {
+		app.apply(&self.apply_args.apply_params(), &self.modules)
 	}
-	if !no_apply {
-		handle!(app.apply(&params, None));
-	}
-	ExitCode::SUCCESS
 }
 
-fn cmd_theme_list(app: &NijiApp) -> ExitCode {
-	let mut empty = true;
+impl Theme {
+	fn run(&self, app: &mut NijiApp, args: &GlobalArgs) -> anyhow::Result<()> {
+		match &self.command {
+			ThemeCommand::Get(get) => get.run(app),
+			ThemeCommand::Set(set) => set.run(app),
+			ThemeCommand::List(list) => list.run(app),
+			ThemeCommand::Unset(unset) => unset.run(app),
+			ThemeCommand::Preview(preview) => preview.run(app, args),
+		}
+	}
+}
 
-	for theme in app.list_themes() {
-		empty = false;
+impl ThemeGet {
+	fn run(&self, app: &NijiApp) -> anyhow::Result<()> {
+		let theme = app.get_current_theme()?;
+		niji_console::println!("{}", theme.name);
+		Ok(())
+	}
+}
+
+impl ThemePreview {
+	fn run(&self, app: &NijiApp, args: &GlobalArgs) -> anyhow::Result<()> {
+		if args.no_color {
+			return Err(anyhow!(
+				"Theme display is not supported in no-color mode. You can query the theme name by \
+				 using `niji theme get`."
+			));
+		}
+
+		let theme = match &self.name {
+			Some(name) => app.get_theme(name)?,
+			None => app.get_current_theme()?,
+		};
+
+		let accent_color = match self.accent_args.accent_color() {
+			Some(color) => color.resolve(&theme.palette)?,
+			None => app.get_current_accent()?.resolve(&theme.palette)?,
+		};
+
+		niji_console::println!("Theme \"{}\":", theme.name);
+		niji_console::println!();
+		niji_console::println!("Accent: {}", accent_color.preview());
+		niji_console::println!();
 		niji_console::println!("{theme}");
-	}
-
-	if empty {
-		error!("No usable themes were found");
-		return ExitCode::FAILURE;
-	}
-	ExitCode::SUCCESS
-}
-
-fn cmd_theme_unset(app: &mut NijiApp) -> ExitCode {
-	handle!(app.unset_current_theme());
-	ExitCode::SUCCESS
-}
-fn cmd_accent(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
-	match args.subcommand() {
-		Some(("get", _)) => cmd_accent_get(app),
-		Some(("set", args)) => cmd_accent_set(app, args),
-		Some(("unset", _)) => cmd_accent_unset(app),
-		_ => unreachable!(),
+		Ok(())
 	}
 }
 
-fn cmd_accent_get(app: &NijiApp) -> ExitCode {
-	let color = handle!(app.get_current_accent());
-	niji_console::println!("{color}");
-	ExitCode::SUCCESS
-}
+impl ThemeSet {
+	fn run(&self, app: &mut NijiApp) -> anyhow::Result<()> {
+		app.set_current_theme(&self.name)?;
+		if let Some(accent) = self.accent_args.accent_color() {
+			app.set_current_accent(accent)?;
+		}
 
-fn cmd_accent_set(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
-	let name = args.get_one::<String>("name").unwrap().as_str();
-	let no_apply = *args.get_one::<bool>("no_apply").unwrap();
-	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
-	let ignore_deps = *args.get_one::<bool>("ignore_deps").unwrap();
-	let params = ApplyParams {
-		reload: !no_reload,
-		check_deps: !ignore_deps,
-	};
+		if let Some(params) = self.update_args.apply_params() {
+			app.apply_default(&params)?;
+		}
 
-	handle!(app.set_current_accent(ColorRef::named(name)));
-	if !no_apply {
-		handle!(app.apply(&params, None));
+		Ok(())
 	}
-	ExitCode::SUCCESS
 }
 
-fn cmd_accent_unset(app: &mut NijiApp) -> ExitCode {
-	handle!(app.unset_current_accent());
-	ExitCode::SUCCESS
+impl ThemeList {
+	fn run(&self, app: &NijiApp) -> anyhow::Result<()> {
+		let themes = app.list_themes();
+		if themes.is_empty() {
+			return Err(anyhow!("No usable themes were found"));
+		}
+
+		for theme in themes {
+			niji_console::println!("{theme}");
+		}
+
+		Ok(())
+	}
+}
+
+impl ThemeUnset {
+	fn run(&self, app: &mut NijiApp) -> anyhow::Result<()> {
+		app.unset_current_theme()
+	}
+}
+
+impl AccentParams {
+	pub fn accent_color(&self) -> Option<ColorRef> {
+		self.accent.map(ColorRef::from)
+	}
+}
+
+impl Accent {
+	fn run(&self, app: &mut NijiApp) -> anyhow::Result<()> {
+		match &self.command {
+			AccentCommand::Get(get) => get.run(app),
+			AccentCommand::Set(set) => set.run(app),
+			AccentCommand::Unset(unset) => unset.run(app),
+		}
+	}
+}
+
+impl AccentGet {
+	fn run(&self, app: &NijiApp) -> anyhow::Result<()> {
+		let color = app.get_current_accent()?;
+		niji_console::println!("{color}");
+		Ok(())
+	}
+}
+
+impl AccentSet {
+	fn run(&self, app: &mut NijiApp) -> anyhow::Result<()> {
+		app.set_current_accent(self.color.into())?;
+		if let Some(params) = self.update_args.apply_params() {
+			app.apply_default(&params)?;
+		}
+		Ok(())
+	}
+}
+
+impl AccentUnset {
+	fn run(&self, app: &mut NijiApp) -> anyhow::Result<()> {
+		app.unset_current_accent()
+	}
+}
+
+impl From<PaletteColor> for ColorRef {
+	fn from(value: PaletteColor) -> Self {
+		match value {
+			PaletteColor::Pink => ColorRef::named("pink"),
+			PaletteColor::Red => ColorRef::named("red"),
+			PaletteColor::Orange => ColorRef::named("orange"),
+			PaletteColor::Yellow => ColorRef::named("yellow"),
+			PaletteColor::Green => ColorRef::named("green"),
+			PaletteColor::Teal => ColorRef::named("teal"),
+			PaletteColor::Blue => ColorRef::named("blue"),
+			PaletteColor::Purple => ColorRef::named("purple"),
+			PaletteColor::Black => ColorRef::named("black"),
+			PaletteColor::White => ColorRef::named("white"),
+		}
+	}
+}
+
+impl UpdateArgs {
+	fn apply_params(&self) -> Option<ApplyParams> {
+		if self.no_apply {
+			return None;
+		}
+		Some(self.apply_args.apply_params())
+	}
+}
+
+impl ApplyArgs {
+	fn apply_params(&self) -> ApplyParams {
+		ApplyParams {
+			reload: !self.no_reload,
+			check_deps: !self.ignore_deps,
+		}
+	}
 }
