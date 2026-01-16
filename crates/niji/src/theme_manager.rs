@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs, path::PathBuf, rc::Rc};
+use std::{collections::HashSet, path::PathBuf, rc::Rc};
 
 use anyhow::{Context, anyhow};
 use log::debug;
@@ -33,45 +33,9 @@ impl ThemeManager {
 		themes
 	}
 
-	pub fn get_current_theme(&self) -> anyhow::Result<Theme> {
-		if !self.files.current_theme_file().exists() {
-			self.unset_current_theme()?;
-		}
-
-		let current_theme = fs::read_to_string(self.files.current_theme_file())
-			.context("Failed to access theme state")?;
-
-		if current_theme.is_empty() {
-			return Err(anyhow!("No theme is selected"));
-		}
-
-		let theme: Option<Theme> = self.read_theme(&current_theme)?;
-		let Some(theme) = theme else {
-			return Err(anyhow!(
-				"Current theme is \"{current_theme}\", but that theme doesn't exist!",
-			));
-		};
-		assert_eq!(theme.name, current_theme);
-
-		Ok(theme)
-	}
-
 	pub fn get_theme(&self, name: &str) -> anyhow::Result<Theme> {
 		self.read_theme(name)?
 			.ok_or_else(|| anyhow!("Theme \"{name}\" doesn't exist!"))
-	}
-
-	pub fn set_current_theme(&self, name: String) -> anyhow::Result<()> {
-		if self.find_theme_path(&name).is_none() {
-			return Err(anyhow!("Theme \"{name}\" doesn't exist!"));
-		}
-		fs::write(self.files.current_theme_file(), name).context("Failed to access theme state")?;
-		Ok(())
-	}
-
-	pub fn unset_current_theme(&self) -> anyhow::Result<()> {
-		fs::write(self.files.current_theme_file(), "").context("Failed to access theme state")?;
-		Ok(())
 	}
 
 	fn find_theme_path(&self, name: &str) -> Option<PathBuf> {
@@ -100,6 +64,8 @@ impl ThemeManager {
 
 #[cfg(test)]
 mod tests {
+	use std::fs;
+
 	use tempfile::tempdir;
 
 	use crate::{
@@ -147,102 +113,5 @@ mod tests {
 		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
 
 		theme_manager.get_theme("theme1").unwrap_err();
-	}
-
-	#[test]
-	fn get_current_theme() {
-		let tempdir = tempdir().unwrap();
-		let xdg = XdgDirs::in_tempdir(&tempdir);
-		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
-
-		fs::write(xdg.state_home.join("niji/current_theme.txt"), "test_theme").unwrap();
-		fs::write(
-			xdg.config_home.join("niji/themes/test_theme.toml"),
-			TEST_THEME_STR,
-		)
-		.unwrap();
-
-		assert_eq!(theme_manager.get_current_theme().unwrap(), test_theme());
-	}
-
-	#[test]
-	fn get_nonexistent_current_theme() {
-		let tempdir = tempdir().unwrap();
-		let xdg = XdgDirs::in_tempdir(&tempdir);
-		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
-
-		fs::write(xdg.state_home.join("niji/current_theme.txt"), "test_theme").unwrap();
-
-		theme_manager.get_current_theme().unwrap_err();
-	}
-
-	#[test]
-	fn get_unset_current_theme() {
-		let tempdir = tempdir().unwrap();
-		let xdg = XdgDirs::in_tempdir(&tempdir);
-		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
-
-		fs::write(xdg.state_home.join("niji/current_theme.txt"), "").unwrap();
-		fs::write(
-			xdg.config_home.join("niji/themes/theme1.toml"),
-			TEST_THEME_STR,
-		)
-		.unwrap();
-
-		theme_manager.get_current_theme().unwrap_err();
-	}
-
-	#[test]
-	fn set_current_theme() {
-		let tempdir = tempdir().unwrap();
-		let xdg = XdgDirs::in_tempdir(&tempdir);
-		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
-
-		fs::write(
-			xdg.config_home.join("niji/themes/test_theme.toml"),
-			TEST_THEME_STR,
-		)
-		.unwrap();
-
-		theme_manager
-			.set_current_theme("test_theme".to_string())
-			.unwrap();
-
-		assert_eq!(
-			fs::read_to_string(xdg.state_home.join("niji/current_theme.txt")).unwrap(),
-			"test_theme"
-		);
-	}
-
-	#[test]
-	fn set_current_theme_to_nonexistent() {
-		let tempdir = tempdir().unwrap();
-		let xdg = XdgDirs::in_tempdir(&tempdir);
-		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
-
-		fs::write(xdg.state_home.join("niji/current_theme.txt"), "").unwrap();
-		theme_manager
-			.set_current_theme("theme1".to_string())
-			.unwrap_err();
-
-		assert_eq!(
-			fs::read_to_string(xdg.state_home.join("niji/current_theme.txt")).unwrap(),
-			""
-		);
-	}
-
-	#[test]
-	fn unset_current_theme() {
-		let tempdir = tempdir().unwrap();
-		let xdg = XdgDirs::in_tempdir(&tempdir);
-		let theme_manager = ThemeManager::new(Rc::new(Files::new(&xdg).unwrap()));
-
-		fs::write(xdg.state_home.join("niji/current_theme.txt"), "aaaaaaa").unwrap();
-		theme_manager.unset_current_theme().unwrap();
-
-		assert_eq!(
-			fs::read_to_string(xdg.state_home.join("niji/current_theme.txt")).unwrap(),
-			""
-		);
 	}
 }

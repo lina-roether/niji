@@ -2,8 +2,8 @@ local M = {}
 
 local install = require("./install")
 
-function M.apply(config, theme)
-	install.install(config, theme)
+function M.apply(config, theme, accent)
+	install.install(config, theme, accent)
 end
 
 function M.reload(config)

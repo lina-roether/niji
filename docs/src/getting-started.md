@@ -10,11 +10,10 @@ Arch Linux users can install niji from the AUR using the `niji-git` package.
 
 To install niji manually from source, do the following steps:
 
-1. Clone the git repository and enter the folder
-2. Install using cargo: `cargo install --path ./crates/main`
-3. Create the config directory: `mkdir ~/.config/niji`
-4. Install the builtin modules: `cp ./assets/modules ~/.config/niji/modules`
-5. Install the builtin themes: `cp ./assets/themes ~/.config/niji/themes`
+1. Make sure you have the rust toolchain and _just_ installed
+2. Clone the git repository and enter the folder
+3. Build the project using `just build`
+4. Install niji using `sudo just install`
 
 ## Initial Configuration
 
@@ -45,8 +44,15 @@ Lastly, be sure to refer to the
 available configuration options and additional necessary steps for activation.
 
 You can now list available themes using `niji theme list`, and preview them
-using `niji theme show <name>`. If you've picked one, apply it using
-`niji theme set <name>`.
+using `niji theme preview <name>`. You can also choose an accent color out of
+`pink`, `red`, `orange`, `yellow`, `green`, `teal`, `blue`, `purple`, `black`
+and `white`.
+
+If you've picked a theme and accent color, apply it using:
+
+```sh
+niji theme set <theme> --accent <accent>
+```
 
 ## Next Steps
 

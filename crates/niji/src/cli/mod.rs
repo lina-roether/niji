@@ -5,7 +5,7 @@ use log::{LevelFilter, error};
 use niji_console::ColorChoice;
 mod syntax;
 
-use crate::{app::NijiApp, cli::syntax::build_cmd, module_manager::ApplyParams};
+use crate::{app::NijiApp, cli::syntax::build_cmd, module_manager::ApplyParams, theme::ColorRef};
 
 macro_rules! handle {
 	($expr:expr, $cleanup:expr) => {
@@ -53,11 +53,12 @@ fn cmd(args: &ArgMatches) -> ExitCode {
 
 	niji_console::init(level, color_choice);
 
-	let app = handle!(NijiApp::init());
+	let mut app = handle!(NijiApp::init());
 
 	match args.subcommand() {
 		Some(("apply", args)) => cmd_apply(&app, args),
-		Some(("theme", args)) => cmd_theme(&app, args),
+		Some(("theme", args)) => cmd_theme(&mut app, args),
+		Some(("accent", args)) => cmd_accent(&mut app, args),
 		_ => unreachable!(),
 	}
 }
@@ -79,7 +80,7 @@ fn cmd_apply(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	ExitCode::SUCCESS
 }
 
-fn cmd_theme(app: &NijiApp, args: &ArgMatches) -> ExitCode {
+fn cmd_theme(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
 	match args.subcommand() {
 		Some(("get", _)) => cmd_theme_get(app),
 		Some(("preview", args)) => cmd_theme_preview(app, args),
@@ -98,6 +99,7 @@ fn cmd_theme_get(app: &NijiApp) -> ExitCode {
 
 fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	let name = args.get_one::<String>("name");
+	let accent = args.get_one::<String>("accent");
 	let no_color = args.get_one::<bool>("no_color").unwrap();
 
 	if *no_color {
@@ -114,14 +116,25 @@ fn cmd_theme_preview(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 		None => handle!(app.get_current_theme()),
 	};
 
+	let accent_color = handle!(
+		match accent {
+			Some(name) => ColorRef::named(name),
+			None => handle!(app.get_current_accent()),
+		}
+		.resolve(&theme.palette)
+	);
+
 	niji_console::println!("Theme \"{}\":", theme.name);
+	niji_console::println!();
+	niji_console::println!("Accent: {}", accent_color.preview());
 	niji_console::println!();
 	niji_console::println!("{theme}");
 	ExitCode::SUCCESS
 }
 
-fn cmd_theme_set(app: &NijiApp, args: &ArgMatches) -> ExitCode {
+fn cmd_theme_set(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
 	let name = args.get_one::<String>("name").unwrap().as_str();
+	let accent = args.get_one::<String>("accent");
 	let no_apply = *args.get_one::<bool>("no_apply").unwrap();
 	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
 	let ignore_deps = *args.get_one::<bool>("ignore_deps").unwrap();
@@ -132,6 +145,9 @@ fn cmd_theme_set(app: &NijiApp, args: &ArgMatches) -> ExitCode {
 	};
 
 	handle!(app.set_current_theme(name));
+	if let Some(accent) = accent {
+		handle!(app.set_current_accent(ColorRef::named(accent)));
+	}
 	if !no_apply {
 		handle!(app.apply(&params, None));
 	}
@@ -153,7 +169,43 @@ fn cmd_theme_list(app: &NijiApp) -> ExitCode {
 	ExitCode::SUCCESS
 }
 
-fn cmd_theme_unset(app: &NijiApp) -> ExitCode {
+fn cmd_theme_unset(app: &mut NijiApp) -> ExitCode {
 	handle!(app.unset_current_theme());
+	ExitCode::SUCCESS
+}
+fn cmd_accent(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
+	match args.subcommand() {
+		Some(("get", _)) => cmd_accent_get(app),
+		Some(("set", args)) => cmd_accent_set(app, args),
+		Some(("unset", _)) => cmd_accent_unset(app),
+		_ => unreachable!(),
+	}
+}
+
+fn cmd_accent_get(app: &NijiApp) -> ExitCode {
+	let color = handle!(app.get_current_accent());
+	niji_console::println!("{color}");
+	ExitCode::SUCCESS
+}
+
+fn cmd_accent_set(app: &mut NijiApp, args: &ArgMatches) -> ExitCode {
+	let name = args.get_one::<String>("name").unwrap().as_str();
+	let no_apply = *args.get_one::<bool>("no_apply").unwrap();
+	let no_reload = *args.get_one::<bool>("no_reload").unwrap();
+	let ignore_deps = *args.get_one::<bool>("ignore_deps").unwrap();
+	let params = ApplyParams {
+		reload: !no_reload,
+		check_deps: !ignore_deps,
+	};
+
+	handle!(app.set_current_accent(ColorRef::named(name)));
+	if !no_apply {
+		handle!(app.apply(&params, None));
+	}
+	ExitCode::SUCCESS
+}
+
+fn cmd_accent_unset(app: &mut NijiApp) -> ExitCode {
+	handle!(app.unset_current_accent());
 	ExitCode::SUCCESS
 }

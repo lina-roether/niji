@@ -6,10 +6,6 @@ use serde_with::DeserializeFromStr;
 
 use crate::types::color::Color;
 
-fn colored_square(color: Color) -> String {
-	format!("\x1b[48;2;{};{};{}m   \x1b[0m", color.r, color.g, color.b)
-}
-
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Palette {
 	pub pink: Color,
@@ -51,16 +47,16 @@ impl Palette {
 
 impl fmt::Display for Palette {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str(&colored_square(self.pink))?;
-		f.write_str(&colored_square(self.red))?;
-		f.write_str(&colored_square(self.orange))?;
-		f.write_str(&colored_square(self.yellow))?;
-		f.write_str(&colored_square(self.green))?;
-		f.write_str(&colored_square(self.teal))?;
-		f.write_str(&colored_square(self.blue))?;
-		f.write_str(&colored_square(self.purple))?;
-		f.write_str(&colored_square(self.black))?;
-		f.write_str(&colored_square(self.white))?;
+		f.write_str(&self.pink.preview())?;
+		f.write_str(&self.red.preview())?;
+		f.write_str(&self.orange.preview())?;
+		f.write_str(&self.yellow.preview())?;
+		f.write_str(&self.green.preview())?;
+		f.write_str(&self.teal.preview())?;
+		f.write_str(&self.blue.preview())?;
+		f.write_str(&self.purple.preview())?;
+		f.write_str(&self.black.preview())?;
+		f.write_str(&self.white.preview())?;
 
 		Ok(())
 	}
@@ -73,11 +69,11 @@ pub enum ColorRef {
 }
 
 impl ColorRef {
-	fn named(name: &str) -> Self {
+	pub fn named(name: &str) -> Self {
 		Self::Named(name.to_string())
 	}
 
-	fn resolve(&self, palette: &Palette) -> anyhow::Result<Color> {
+	pub fn resolve(&self, palette: &Palette) -> anyhow::Result<Color> {
 		match self {
 			Self::Named(name) => palette.get(name),
 			Self::Exact(color) => Ok(*color),
@@ -359,7 +355,7 @@ impl fmt::Display for UiTheme {
 			"{}",
 			color_display("Surface", self.surface, self.text_on(self.surface))
 		)?;
-		writeln!(f, "Border: {}", colored_square(self.border))?;
+		writeln!(f, "Border: {}", self.border.preview())?;
 
 		writeln!(f)?;
 
@@ -553,29 +549,29 @@ pub struct TerminalTheme {
 
 impl fmt::Display for TerminalTheme {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str(&colored_square(self.default))?;
+		f.write_str(&self.default.preview())?;
 
 		writeln!(f)?;
 
-		f.write_str(&colored_square(self.dark_black))?;
-		f.write_str(&colored_square(self.dark_red))?;
-		f.write_str(&colored_square(self.dark_green))?;
-		f.write_str(&colored_square(self.dark_yellow))?;
-		f.write_str(&colored_square(self.dark_blue))?;
-		f.write_str(&colored_square(self.dark_magenta))?;
-		f.write_str(&colored_square(self.dark_cyan))?;
-		f.write_str(&colored_square(self.dark_white))?;
+		f.write_str(&self.dark_black.preview())?;
+		f.write_str(&self.dark_red.preview())?;
+		f.write_str(&self.dark_green.preview())?;
+		f.write_str(&self.dark_yellow.preview())?;
+		f.write_str(&self.dark_blue.preview())?;
+		f.write_str(&self.dark_magenta.preview())?;
+		f.write_str(&self.dark_cyan.preview())?;
+		f.write_str(&self.dark_white.preview())?;
 
 		writeln!(f)?;
 
-		f.write_str(&colored_square(self.bright_black))?;
-		f.write_str(&colored_square(self.bright_red))?;
-		f.write_str(&colored_square(self.bright_green))?;
-		f.write_str(&colored_square(self.bright_yellow))?;
-		f.write_str(&colored_square(self.bright_blue))?;
-		f.write_str(&colored_square(self.bright_magenta))?;
-		f.write_str(&colored_square(self.bright_cyan))?;
-		f.write_str(&colored_square(self.bright_white))?;
+		f.write_str(&self.bright_black.preview())?;
+		f.write_str(&self.bright_red.preview())?;
+		f.write_str(&self.bright_green.preview())?;
+		f.write_str(&self.bright_yellow.preview())?;
+		f.write_str(&self.bright_blue.preview())?;
+		f.write_str(&self.bright_magenta.preview())?;
+		f.write_str(&self.bright_cyan.preview())?;
+		f.write_str(&self.bright_white.preview())?;
 
 		Ok(())
 	}
@@ -665,11 +661,7 @@ pub struct Theme {
 
 impl fmt::Display for Theme {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(
-			f,
-			"Theme '{}':\n{}\n{}\n{}",
-			self.name, self.palette, self.ui, self.terminal
-		)
+		write!(f, "{}\n{}\n{}", self.palette, self.ui, self.terminal)
 	}
 }
 

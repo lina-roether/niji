@@ -12,6 +12,7 @@ use crate::{
 	config::ModuleConfig,
 	lua::runtime::{LuaModule, LuaRuntime},
 	theme::Theme,
+	types::color::Color,
 };
 
 #[derive(Debug)]
@@ -32,12 +33,12 @@ impl<'lua> Module<'lua> {
 		self.0.has_function("reload").unwrap_or(false)
 	}
 
-	pub fn apply(&self, config: ModuleConfig, theme: Theme) -> anyhow::Result<()> {
+	pub fn apply(&self, config: ModuleConfig, theme: Theme, accent: Color) -> anyhow::Result<()> {
 		if !self.0.has_function("apply")? {
 			return Err(anyhow!("Module is missing an apply function"));
 		}
 
-		Ok(self.0.call("apply", (config, theme))?)
+		Ok(self.0.call("apply", (config, theme, accent))?)
 	}
 
 	pub fn reload(&self, config: ModuleConfig) -> anyhow::Result<()> {
@@ -222,7 +223,9 @@ mod tests {
 
 		let module =
 			Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap();
-		module.apply(HashMap::new(), test_theme()).unwrap();
+		module
+			.apply(HashMap::new(), test_theme(), Color::BLACK)
+			.unwrap();
 	}
 
 	#[test]
@@ -245,7 +248,9 @@ mod tests {
 
 		let module =
 			Module::load(&runtime, &xdg.config_home.join("niji/modules/test"), true).unwrap();
-		module.apply(HashMap::new(), test_theme()).unwrap_err();
+		module
+			.apply(HashMap::new(), test_theme(), Color::BLACK)
+			.unwrap_err();
 	}
 
 	#[test]

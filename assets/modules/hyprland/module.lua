@@ -1,14 +1,12 @@
 local M = {}
 
 local template = niji.Template:load("theme.conf.mustache")
-function M.apply(config, theme)
+function M.apply(config, theme, accent)
 	local configure_cursor = config.cursor_theme ~= nil and config.cursor_size ~= nil
 	if configure_cursor then
 		niji.console.debug("Configuring cursor theme \"" .. config.cursor_theme .. "\" " .. config.cursor_size)
 	end
 
-	-- TODO: accent color mechanism
-	local accent = theme.palette.teal
 	local active_border = accent
 	if config.muted_border then
 		active_border = theme.ui.border

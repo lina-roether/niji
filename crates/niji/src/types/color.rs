@@ -75,6 +75,10 @@ impl Color {
 		Self::new_rgba(self.r, self.g, self.b, discretize(alpha))
 	}
 
+	pub fn preview(self) -> String {
+		format!("\x1b[48;2;{};{};{}m   \x1b[0m", self.r, self.g, self.b)
+	}
+
 	fn into_oklch(self) -> OklchColor {
 		OklchColor::from_srgb(self.r, self.g, self.b)
 	}

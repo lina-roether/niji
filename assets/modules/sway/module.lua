@@ -2,10 +2,7 @@ local M = {}
 
 local template = niji.Template:load("theme.mustache")
 
-function M.apply(config, theme)
-	-- TODO: accent color mechanism
-	local accent = theme.palette.teal;
-
+function M.apply(config, theme, accent)
 	local focused_color = accent;
 	if config.muted_border then
 		focused_color = theme.ui.surface;
