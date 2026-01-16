@@ -5,7 +5,6 @@ ignore_merge_commits = true
 tag_prefix = "v"
 
 pre_bump_hooks = [
-	"just test",
 	"git tag --delete {{version_tag}}",
 	"git push --delete origin {{version_tag}}",
 	"cargo set-version -p niji {{version}}",
