@@ -12,7 +12,7 @@ The heart of a niji module is a lua module in the module folder called
 ```lua
 local M = {}
 
-function M.apply(config, theme)
+function M.apply(config, theme, accent)
     -- Apply the theme here
 end
 
@@ -25,10 +25,10 @@ return M
 
 The module defines two handlers, `apply` and `reload`.
 
-The `apply` handler receives the [module config](#module-config) and the
-[theme](#theme) as parameters. It is responsible for taking the theme,
-transforming its contents and writing them to where they need to go for the
-theming target to use them.
+The `apply` handler receives the [module config](#module-config), the
+[theme](#theme) and the [accent color](./lua-api-reference#class-nijicolor) as
+parameters. It is responsible for taking the theme, transforming its contents
+and writing them to where they need to go for the theming target to use them.
 
 The `reload` handler is optional. It is responsible for reloading the theming
 target to apply the new config. The reason why these two are separate is so that
@@ -55,9 +55,19 @@ conform to certain global configuration options like `font_scale`.
 
 ## Theme
 
-The theme is a table that corresponds directly to the theme format documented in
-[Custom Themes](../custom-themes.md). All color values in the theme table are
-passed as a [`niji.Color`](./lua-api-reference.md#class-nijicolor) instance.
+The theme has fields that corresponds directly to the theme format documented in
+[Custom Themes](../custom-themes.md). All color values in the theme are passed
+as a [`niji.Color`](./lua-api-reference.md#class-nijicolor) instance.
+
+It also provides some additional utilities related to text colors:
+
+```lua
+-- Get the default text color
+niji.ui.text_default
+
+-- Get the text color for a specific background color:
+niji.ui:text_on(background_color)
+```
 
 ## Lua API
 
