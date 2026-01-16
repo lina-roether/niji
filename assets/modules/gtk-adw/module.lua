@@ -3,12 +3,22 @@ local M = {}
 local template_gtk3 = niji.Template:load("./assets/gtk3.css.mustache");
 local template_gtk4 = niji.Template:load("./assets/gtk4.css.mustache");
 
+local function check_adw_gtk3()
+	if not niji.fs.data_exists("themes/adw-gtk3") then
+		niji.console.warning("adw-gtk3 isn't installed. Without it, theming GTK3 applications won't work!")
+	end
+end
+
 function M.apply(config, theme, accent)
+	if not config.skip_adw_gtk3_check then
+		check_adw_gtk3()
+	end
+
 	local colors = {
 		window_bg_color = theme.ui.background,
 		window_fg_color = theme.ui:text_on(theme.ui.background),
-		view_bg_color = theme.ui.surface,
-		view_fg_color = theme.ui:text_on(theme.ui.surface),
+		view_bg_color = theme.ui.background,
+		view_fg_color = theme.ui:text_on(theme.ui.background),
 		accent_bg_color = accent,
 		accent_fg_color = theme.ui:text_on(accent),
 		headerbar_bg_color = theme.ui.background,
@@ -21,7 +31,7 @@ function M.apply(config, theme, accent)
 		card_fg_color = theme.ui:text_on(theme.ui.surface),
 		sidebar_bg_color = theme.ui.surface,
 		sidebar_fg_color = theme.ui:text_on(theme.ui.surface),
-		sidebar_shade_color = theme.ui.shadow,
+		sidebar_shade_color = theme.ui.surface,
 		sidebar_border_color = theme.ui.border,
 		destructive_bg_color = theme.ui.error,
 		success_bg_color = theme.ui.success,
@@ -42,7 +52,9 @@ function M.apply(config, theme, accent)
 	local gtk4 = template_gtk4:render(colors);
 
 	niji.fs.write_config("gtk-3.0/gtk.css", gtk3);
+	niji.fs.write_config("gtk-3.0/gtk-dark.css", gtk3);
 	niji.fs.write_config("gtk-4.0/gtk.css", gtk4);
+	niji.fs.write_config("gtk-4.0/gtk-dark.css", gtk4);
 end
 
 function M.reload(config)
