@@ -1,7 +1,6 @@
 [book]
 authors = ["Lina Roether"]
 language = "en"
-multilingual = false
 src = "src"
 title = "niji Documentation"
 description = "Bringing comfortable theming to the tinkerer's desktop"
