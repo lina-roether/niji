@@ -29,6 +29,58 @@ fn init_new_file(path: &Path, string: &str) -> anyhow::Result<()> {
 	Ok(())
 }
 
+fn write_to_unmanaged(path: &Path, string: &str, hash: u64) -> anyhow::Result<()> {
+	let meta = fs::symlink_metadata(path).context(format!(
+		"Failed to read file metadata of '{}'",
+		path.display()
+	))?;
+
+	if meta.is_symlink() {
+		let target = fs::read_link(path).context(format!(
+			"Failed to read symlink target of '{}'",
+			path.display()
+		))?;
+
+		warn!(
+			"In order to apply your configuration, niji needs to write to {}. This path is \
+			 currently symlinked to {}. You can choose to let niji unlink and overwrite the file, \
+			 or cancel the process.",
+			path.display(),
+			target.display()
+		);
+		if !prompt!(default: false, "Unlink and overwrite {}?", path.display()) {
+			return Err(anyhow!(
+				"Writing to {} was cancelled by the user",
+				path.display()
+			));
+		}
+
+		// for some reason `remove_file` corresponds to unlink on unix
+		debug!("Unlinking {}...", path.display());
+		fs::remove_file(path).context(anyhow!("Failed to unlink '{}'", path.display()))?;
+
+		init_new_file(path, string)?;
+	} else {
+		warn!(
+			"In order to apply your configuration, niji needs to write to {}. This would \
+			 overwrite a previous version of that file that is not managed by niji. You can \
+			 choose to let niji overwrite the file, or cancel the process. If you overwrite the \
+			 file, you may choose to back up the previous version.",
+			path.display(),
+		);
+		if !prompt!(default: false, "Overwrite {}?", path.display()) {
+			return Err(anyhow!(
+				"Writing to {} was cancelled by the user",
+				path.display()
+			));
+		}
+
+		backup_and_replace(path, string, hash)?;
+	}
+
+	Ok(())
+}
+
 fn manage_existing_file(path: &Path, string: &str) -> anyhow::Result<()> {
 	let current_hash = hash_contents(path)?;
 	debug!("{} has current hash {current_hash}", path.display());
@@ -45,25 +97,11 @@ fn manage_existing_file(path: &Path, string: &str) -> anyhow::Result<()> {
 		debug!("{} is not in the managed files table", path.display());
 	}
 
-	backup_and_replace(path, string, current_hash)
+	write_to_unmanaged(path, string, current_hash)
 }
 
 fn backup_and_replace(path: &Path, string: &str, hash: u64) -> anyhow::Result<()> {
 	let backup_path = get_backup_path(path, hash);
-
-	warn!(
-		"In order to apply your configuration, niji needs to write to {}. This would overwrite a \
-		 previous version of that file that is not managed by niji. You can choose to let niji \
-		 overwrite the file, or cancel the process. If you overwrite the file, you may choose to \
-		 back up the previous version.",
-		path.display(),
-	);
-	if !prompt!(default: false, "Overwrite {}?", path.display()) {
-		return Err(anyhow!(
-			"Writing to {} was cancelled by the user",
-			path.display()
-		));
-	}
 
 	if prompt!(default: true, "Backup {} to {}", path.display(), backup_path.display()) {
 		fs::copy(path, &backup_path)
