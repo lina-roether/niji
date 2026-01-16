@@ -6,11 +6,11 @@ tag_prefix = "v"
 
 pre_bump_hooks = [
 	"just test",
-	"git tag --delete {{version_tag}}"
-	"git push --delete origin {{version_tag}}"
+	"git tag --delete {{version_tag}}",
+	"git push --delete origin {{version_tag}}",
 	"cargo set-version -p niji {{version}}",
 ]
 
 post_bump_hooks = [
-	"git push origin {{version_tag}}"
+	"git push origin {{version_tag}}",
 ]
