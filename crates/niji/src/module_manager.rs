@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::PathBuf, rc::Rc, sync::Mutex};
+use std::{path::PathBuf, rc::Rc};
 
 use anyhow::{Context, anyhow};
 use log::{debug, error, info};
@@ -17,7 +17,6 @@ use crate::{
 pub struct ModuleManagerInit {
 	pub xdg: Rc<XdgDirs>,
 	pub files: Rc<Files>,
-	pub config: Rc<Config>,
 }
 
 #[derive(Debug, Clone)]
@@ -34,19 +33,11 @@ struct ModuleDescriptor {
 
 pub struct ModuleManager {
 	files: Rc<Files>,
-	active_modules: Mutex<Vec<ModuleDescriptor>>,
 	lua_runtime: LuaRuntime,
 }
 
 impl ModuleManager {
-	pub fn new(
-		ModuleManagerInit { xdg, files, config }: ModuleManagerInit,
-	) -> anyhow::Result<Self> {
-		let mut active_modules = Vec::<ModuleDescriptor>::with_capacity(config.modules.len());
-		for mod_name in &config.modules {
-			Self::activate(&files, &mut active_modules, mod_name)?;
-		}
-
+	pub fn new(ModuleManagerInit { xdg, files }: ModuleManagerInit) -> anyhow::Result<Self> {
 		let lua_runtime = LuaRuntime::new(LuaRuntimeInit {
 			xdg: Rc::clone(&xdg),
 			files: Rc::clone(&files),
@@ -55,7 +46,6 @@ impl ModuleManager {
 
 		Ok(Self {
 			files: Rc::clone(&files),
-			active_modules: Mutex::new(active_modules),
 			lua_runtime,
 		})
 	}
@@ -66,45 +56,22 @@ impl ModuleManager {
 		theme: &Theme,
 		accent: Color,
 		params: &ApplyParams,
-		modules: Option<&[String]>,
+		modules: &[String],
 	) -> anyhow::Result<()> {
-		let mut remaining = HashSet::<String>::new();
-		if let Some(modules) = modules {
-			remaining.extend(modules.iter().cloned());
-		}
-
-		for module_descr in &*self.active_modules.lock().unwrap() {
-			if modules.is_some() && !remaining.remove(&module_descr.name.clone()) {
-				continue;
-			}
-
-			self.apply_module(module_descr, config, theme, accent, params);
-		}
-
-		if modules.is_some() {
-			for mod_name in remaining {
-				let module_descr = Self::activate(
-					&self.files,
-					&mut self.active_modules.lock().unwrap(),
-					&mod_name,
-				)?;
-				self.apply_module(&module_descr, config, theme, accent, params);
-			}
+		for mod_name in modules {
+			let module_descr = Self::load(&self.files, mod_name)?;
+			self.apply_module(&module_descr, config, theme, accent, params);
 		}
 
 		Ok(())
 	}
 
-	fn activate(
-		files: &Files,
-		active_modules: &mut Vec<ModuleDescriptor>,
-		mod_name: &str,
-	) -> anyhow::Result<ModuleDescriptor> {
+	fn load(files: &Files, mod_name: &str) -> anyhow::Result<ModuleDescriptor> {
 		let module_dir = Self::find_module_dir(files, mod_name)
 			.ok_or_else(|| anyhow!("Module \"{mod_name}\" does not exist"))?;
 
 		debug!(
-			"Activating module \"{mod_name}\" at path {}",
+			"Loading module \"{mod_name}\" from path {}",
 			module_dir.display()
 		);
 
@@ -112,8 +79,6 @@ impl ModuleManager {
 			name: mod_name.to_string(),
 			path: module_dir,
 		};
-
-		active_modules.push(module_descr.clone());
 
 		Ok(module_descr)
 	}
@@ -195,13 +160,7 @@ mod tests {
 		let tempdir = tempdir().unwrap();
 		let xdg = Rc::new(XdgDirs::in_tempdir(&tempdir));
 		let files = Rc::new(Files::new(&xdg).unwrap());
-		let config = Rc::new(Config {
-			modules: vec![],
-			disable_reloads: DisableReloads::None,
-			global: HashMap::new(),
-			module_config: HashMap::new(),
-		});
-		ModuleManager::new(ModuleManagerInit { xdg, files, config }).unwrap();
+		ModuleManager::new(ModuleManagerInit { xdg, files }).unwrap();
 	}
 
 	#[test]
@@ -218,7 +177,6 @@ mod tests {
 		let module_manager = ModuleManager::new(ModuleManagerInit {
 			xdg: xdg.clone(),
 			files,
-			config: config.clone(),
 		})
 		.unwrap();
 
@@ -238,7 +196,7 @@ mod tests {
 					reload: false,
 					check_deps: true,
 				},
-				Some(&["test".to_string()]),
+				&["test".to_string()],
 			)
 			.unwrap();
 	}
@@ -257,7 +215,6 @@ mod tests {
 		let module_manager = ModuleManager::new(ModuleManagerInit {
 			xdg: xdg.clone(),
 			files,
-			config: config.clone(),
 		})
 		.unwrap();
 
@@ -278,7 +235,7 @@ mod tests {
 					reload: false,
 					check_deps: true,
 				},
-				Some(&["test".to_string()]),
+				&["test".to_string()],
 			)
 			.unwrap();
 	}

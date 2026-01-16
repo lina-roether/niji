@@ -1,191 +1,207 @@
-use clap::{Arg, ArgAction, Command, builder::PossibleValuesParser};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
-pub const NAME: &str = "niji";
-pub const AUTHOR: &str = "Lina Roether <lina.roether@proton.me>";
+#[derive(Parser, Debug)]
+#[command(
+    bin_name = "niji",
+    author = "Lina Roether <lina.roether@proton.me>",
+    version = env!("CARGO_PKG_VERSION"),
+    about = "An extensible desktop theming utility",
+)]
+pub struct Niji {
+	#[command(flatten)]
+	pub global_args: GlobalArgs,
 
-#[allow(clippy::too_many_lines)]
-#[must_use]
-pub fn build_cmd() -> Command {
-	let accent_parser = PossibleValuesParser::new([
-		"pink", "red", "orange", "yellow", "green", "teal", "blue", "purple", "black", "white",
-	]);
-
-	Command::new(NAME)
-		.author(AUTHOR)
-		.about("An extensible desktop theming utility")
-		.version(env!("CARGO_PKG_VERSION"))
-		.subcommand_required(true)
-		.arg_required_else_help(true)
-		.arg(
-			Arg::new("quiet")
-				.long("quiet")
-				.short('q')
-				.action(ArgAction::SetTrue)
-				.conflicts_with("verbose")
-				.global(true)
-				.help("Disables all log messages"),
-		)
-		.arg(
-			Arg::new("verbose")
-				.long("verbose")
-				.short('v')
-				.action(ArgAction::SetTrue)
-				.conflicts_with("quiet")
-				.global(true)
-				.help("Prints additional debug output"),
-		)
-		.arg(
-			Arg::new("no_color")
-				.long("no-color")
-				.short('b')
-				.action(ArgAction::SetTrue)
-				.global(true)
-				.help("Disable color output"),
-		)
-		.subcommand(
-			Command::new("apply")
-				.about("Apply (or re-apply) the current theme and and configuration")
-				.arg(
-					Arg::new("modules")
-						.long("module")
-						.short('M')
-						.action(ArgAction::Append)
-						.help(
-							"The module to apply the config to. Can be set multiple times to \
-							 apply to multiple modules. If not set, all active modules will be \
-							 applied.",
-						),
-				)
-				.arg(
-					Arg::new("no_reload")
-						.long("no-reload")
-						.short('k')
-						.action(ArgAction::SetTrue)
-						.help(
-							"Do not reload the module targets to apply the changes immediately. \
-							 Changes will only take effect after a restart.",
-						),
-				)
-				.arg(
-					Arg::new("ignore_deps")
-						.long("ignore-deps")
-						.short('i')
-						.action(ArgAction::SetTrue)
-						.help("Ignore missing module dependencies."),
-				),
-		)
-		.subcommand(
-			Command::new("theme")
-				.about(
-					"Perform actions related to themes, such as changing the theme or listing \
-					 available themes",
-				)
-				.subcommand_required(true)
-				.subcommand(Command::new("get").about("Get the name of the current theme"))
-				.subcommand(
-					Command::new("preview")
-						.about("Display a preview of a theme in the console")
-						.arg(Arg::new("name").help(
-							"The theme to preview. Defaults to the current theme if not set.",
-						))
-						.arg(
-							Arg::new("accent")
-								.long("accent")
-								.short('A')
-								.action(ArgAction::Set)
-								.value_parser(accent_parser.clone())
-								.help("Set the accent color to use"),
-						),
-				)
-				.subcommand(
-					Command::new("set")
-						.about("Change the current theme")
-						.arg_required_else_help(true)
-						.arg(Arg::new("name").help("The name of the theme to change to"))
-						.arg(
-							Arg::new("accent")
-								.long("accent")
-								.short('A')
-								.action(ArgAction::Set)
-								.value_parser(accent_parser.clone())
-								.help("Set the accent color to use"),
-						)
-						.arg(
-							Arg::new("no_apply")
-								.long("no-apply")
-								.short('n')
-								.action(ArgAction::SetTrue)
-								.help("Don't apply the theme after setting it")
-								.conflicts_with("no_reload"),
-						)
-						.arg(
-							Arg::new("no_reload")
-								.long("no-reload")
-								.short('k')
-								.action(ArgAction::SetTrue)
-								.help(
-									"Do not reload the module targets to apply the changes \
-									 immediately. Changes will only take effect after a restart.",
-								),
-						)
-						.arg(
-							Arg::new("ignore_deps")
-								.long("ignore-deps")
-								.short('i')
-								.action(ArgAction::SetTrue)
-								.help("Ignore missing module dependencies.")
-								.conflicts_with("no_apply"),
-						),
-				)
-				.subcommand(Command::new("list").about("List the names of available themes"))
-				.subcommand(Command::new("unset").about(
-					"Unset the current theme. Note that this will not make any changes to the \
-					 emitted files!",
-				)),
-		)
-		.subcommand(
-			Command::new("accent")
-				.about("Query or set the current accent color")
-				.subcommand_required(true)
-				.subcommand(Command::new("get").about("Print the name of the current accent color"))
-				.subcommand(
-					Command::new("set")
-						.about("Set the current accent color")
-						.arg_required_else_help(true)
-						.arg(
-							Arg::new("name")
-								.value_parser(accent_parser.clone())
-								.help("The name of the palette color to use as an accent color"),
-						)
-						.arg(
-							Arg::new("no_apply")
-								.long("no-apply")
-								.short('n')
-								.action(ArgAction::SetTrue)
-								.help("Don't apply the accent color after setting it")
-								.conflicts_with("no_reload"),
-						)
-						.arg(
-							Arg::new("no_reload")
-								.long("no-reload")
-								.short('k')
-								.action(ArgAction::SetTrue)
-								.help(
-									"Do not reload the module targets to apply the changes \
-									 immediately. Changes will only take effect after a restart.",
-								),
-						)
-						.arg(
-							Arg::new("ignore_deps")
-								.long("ignore-deps")
-								.short('i')
-								.action(ArgAction::SetTrue)
-								.help("Ignore missing module dependencies.")
-								.conflicts_with("no_apply"),
-						),
-				)
-				.subcommand(Command::new("unset").about(
-					"Unset the accent color. Will cause an error on next module application.",
-				)),
-		)
+	#[command(subcommand)]
+	pub command: NijiCommand,
 }
+
+#[derive(Args, Debug)]
+pub struct GlobalArgs {
+	#[arg(
+		short = 'q',
+		long = "quiet",
+		global = true,
+		conflicts_with = "verbose",
+		help = "Disables all log messages"
+	)]
+	pub quiet: bool,
+
+	#[arg(
+		short = 'v',
+		long = "verbose",
+		global = true,
+		conflicts_with = "quiet",
+		help = "Prints additional debug output"
+	)]
+	pub verbose: bool,
+
+	#[arg(
+		short = 'b',
+		long = "no-color",
+		global = true,
+		help = "Disable colored output"
+	)]
+	pub no_color: bool,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum NijiCommand {
+	Apply(Apply),
+	Theme(Theme),
+	Accent(Accent),
+}
+
+#[derive(Args, Debug)]
+pub struct ApplyArgs {
+	#[arg(
+		short = 'k',
+		long = "no-reload",
+		help = "Do not reload the module targets to apply the changes immediately. Changes will \
+		        only take effect after a restart."
+	)]
+	pub no_reload: bool,
+
+	#[arg(
+		short = 'i',
+		long = "ignore-deps",
+		help = "Ignore missing module dependencies"
+	)]
+	pub ignore_deps: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct UpdateArgs {
+	#[arg(
+		short = 'n',
+		long = "no-apply",
+		help = "Don't apply the new styles after setting them. The changes won't be visible until \
+		        applied."
+	)]
+	pub no_apply: bool,
+
+	#[command(flatten)]
+	pub apply_args: ApplyArgs,
+}
+
+#[derive(Parser, Debug)]
+#[command(about = "Apply (or re-apply) the current theme and configuration")]
+pub struct Apply {
+	#[arg(
+		short = 'M',
+		long = "module",
+		help = "The module to apply the config to. Can be set multiple times to apply to multiple \
+		        modules. If not set, all active modules will be applied."
+	)]
+	pub modules: Vec<String>,
+
+	#[command(flatten)]
+	pub apply_args: ApplyArgs,
+}
+
+#[derive(Parser, Debug)]
+#[command(
+	about = "Perform actions related to themes, such as changing the theme or listing available \
+	         themes"
+)]
+pub struct Theme {
+	#[command(subcommand)]
+	pub command: ThemeCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum ThemeCommand {
+	Get(ThemeGet),
+	Preview(ThemePreview),
+	Set(ThemeSet),
+	List(ThemeList),
+	Unset(ThemeUnset),
+}
+
+#[derive(ValueEnum, Debug, Clone, Copy)]
+pub enum PaletteColor {
+	Pink,
+	Red,
+	Orange,
+	Yellow,
+	Green,
+	Teal,
+	Blue,
+	Purple,
+	Black,
+	White,
+}
+
+#[derive(Args, Debug)]
+pub struct AccentParams {
+	#[arg(short = 'A', long = "accent", help = "Set the accent color to use")]
+	pub accent: Option<PaletteColor>,
+}
+
+#[derive(Parser, Debug)]
+#[command(about = "Get the name of the current theme")]
+pub struct ThemeGet;
+
+#[derive(Parser, Debug)]
+#[command(about = "Display a preview of a theme in the terminal")]
+pub struct ThemePreview {
+	#[arg(help = "The name of the theme to preview. Defaults to the current theme if not set.")]
+	pub name: Option<String>,
+
+	#[command(flatten)]
+	pub accent_args: AccentParams,
+}
+
+#[derive(Parser, Debug)]
+#[command(about = "Change the current theme")]
+pub struct ThemeSet {
+	#[arg(help = "THe name of the theme to change to")]
+	pub name: String,
+
+	#[command(flatten)]
+	pub update_args: UpdateArgs,
+
+	#[command(flatten)]
+	pub accent_args: AccentParams,
+}
+
+#[derive(Parser, Debug)]
+#[command(about = "List the names of available themes")]
+pub struct ThemeList;
+
+#[derive(Parser, Debug)]
+#[command(about = "Unset the current theme. This will cause an error on the next application.")]
+pub struct ThemeUnset;
+
+#[derive(Parser, Debug)]
+#[command(about = "Query or set the current accent color")]
+pub struct Accent {
+	#[command(subcommand)]
+	pub command: AccentCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum AccentCommand {
+	Get(AccentGet),
+	Set(AccentSet),
+	Unset(AccentUnset),
+}
+
+#[derive(Parser, Debug)]
+#[command(about = "Print the name of the current accent color")]
+pub struct AccentGet;
+
+#[derive(Parser, Debug)]
+#[command(about = "Set the current accent color")]
+pub struct AccentSet {
+	#[arg(help = "The name of the palette color to use")]
+	pub color: PaletteColor,
+
+	#[command(flatten)]
+	pub update_args: UpdateArgs,
+}
+
+#[derive(Parser, Debug)]
+#[command(
+	about = "Unset the current accent color. This will cause an error on the next application."
+)]
+pub struct AccentUnset;
