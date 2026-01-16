@@ -164,7 +164,12 @@ impl Template {
 						.map(String::as_str),
 				)?,
 			),
-			Value::Nil => (),
+			Value::Nil => {
+				return Err(anyhow!(
+					"Named value `{}` isn't set and can't be inserted",
+					insert.name
+				))
+			}
 		}
 
 		Ok(())
