@@ -32,6 +32,10 @@ Beyond that, these module-specific configuration options can be added to
 # Set to true to show the hyprland splash text on the wallpaper
 splash = false
 
+# Set the fit mode. See the hyprland docs for details:
+# <https://wiki.hypr.land/Hypr-Ecosystem/hyprpaper/>
+fit_mode = "cover"
+
 # The command to be used to start hyprpaper when restarting it
 hyprpaper_command = "hyprpaper > /dev/null"
 ```
