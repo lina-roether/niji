@@ -6,7 +6,8 @@ function M.apply(config, theme)
 	local hyprpaper_conf = template:render {
 		wallpaper = niji.util.by_theme(theme, config.wallpaper),
 		splash = config.splash,
-		splash_offset = config.splash_offset
+		splash_offset = config.splash_offset,
+		fit_mode = config.fit_mode
 	}
 
 	niji.fs.write_config("hypr/hyprpaper.conf", hyprpaper_conf)
