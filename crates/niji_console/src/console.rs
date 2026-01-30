@@ -152,7 +152,7 @@ where
 
 		stdout.set_color(&decoration_color).unwrap();
 
-		write!(stdout, " ==== [ ")?;
+		write!(stdout, "\n ==== [ ")?;
 
 		stdout
 			.set_color(

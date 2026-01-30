@@ -132,7 +132,6 @@ impl ModuleManager {
 			}
 		}
 		info!("Done!");
-		niji_console::println!();
 	}
 
 	fn find_module_dir(files: &Files, name: &str) -> Option<PathBuf> {

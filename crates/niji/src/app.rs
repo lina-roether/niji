@@ -43,15 +43,27 @@ impl NijiApp {
 		})
 	}
 
+	pub fn is_theme_set(&self) -> bool {
+		self.state_manager.get_theme().is_some()
+	}
+
+	pub fn is_accent_set(&self) -> bool {
+		self.state_manager.get_accent().is_some()
+	}
+
 	pub fn get_current_theme(&self) -> anyhow::Result<Theme> {
-		let theme_name = self.state_manager.get_theme()?;
+		let theme_name = self.state_manager.get_theme().ok_or(anyhow!(
+			"No theme set; use `niji theme set <name>` to specify a theme."
+		))?;
 		self.theme_manager
 			.get_theme(theme_name)
 			.context("Cannot get current theme")
 	}
 
 	pub fn get_current_accent(&self) -> anyhow::Result<ColorRef> {
-		let name = self.state_manager.get_accent()?;
+		let name = self.state_manager.get_accent().ok_or(anyhow!(
+			"No accent color set; use `niji accent set <name>` to specify an accent color."
+		))?;
 		Ok(ColorRef::named(name))
 	}
 
@@ -75,21 +87,33 @@ impl NijiApp {
 			.resolve(&theme.palette)
 			.context("Invalid accent color set")?;
 
+		log::info!("Applying changes to target modules...");
+
 		self.module_manager
 			.apply(&self.config, &theme, accent, params, modules)?;
 		Ok(())
 	}
 
 	pub fn unset_current_theme(&mut self) -> anyhow::Result<()> {
-		self.state_manager.unset_theme()
+		self.state_manager.unset_theme()?;
+		log::warn!(
+			"Unset current theme. niji will be unable to apply your configuration until you set a theme again."
+		);
+		Ok(())
 	}
 
 	pub fn unset_current_accent(&mut self) -> anyhow::Result<()> {
-		self.state_manager.unset_accent()
+		self.state_manager.unset_accent()?;
+		log::warn!(
+			"Unset current accent color. niji will be unable to apply your configuration until you set a theme again."
+		);
+		Ok(())
 	}
 
 	pub fn set_current_theme(&mut self, name: &str) -> anyhow::Result<()> {
-		self.state_manager.set_theme(name.to_string())
+		self.state_manager.set_theme(name.to_string())?;
+		log::info!("Set current theme to '{name}'");
+		Ok(())
 	}
 
 	pub fn set_current_accent(&mut self, color: ColorRef) -> anyhow::Result<()> {
@@ -98,6 +122,8 @@ impl NijiApp {
 				"Setting non-palette accent colors is not supported!"
 			));
 		};
-		self.state_manager.set_accent(name)
+		self.state_manager.set_accent(name.clone())?;
+		log::info!("Set current accent to {name}");
+		Ok(())
 	}
 }
