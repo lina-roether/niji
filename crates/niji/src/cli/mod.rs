@@ -23,7 +23,7 @@ use crate::{
 pub fn run() -> ExitCode {
 	let niji = syntax::Niji::parse();
 	if let Err(err) = niji.run() {
-		log::error!("{err:?}");
+		log::error!("{err:#}");
 		return ExitCode::FAILURE;
 	}
 	ExitCode::SUCCESS
