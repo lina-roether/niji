@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fs, path::Path};
 
+use anyhow::Context;
 use niji_macros::IntoLua;
 use serde::{Deserialize, Serialize};
 
@@ -71,6 +72,7 @@ pub fn read_config(path: impl AsRef<Path>) -> anyhow::Result<Config> {
 		return Ok(Config::default());
 	}
 	let config_str = fs::read_to_string(&path)?;
-	let config: Config = toml::from_str(&config_str)?;
+	let config: Config = toml::from_str(&config_str)
+		.with_context(|| format!("Syntax error in {}", path.as_ref().display()))?;
 	Ok(config)
 }
