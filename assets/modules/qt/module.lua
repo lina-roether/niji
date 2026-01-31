@@ -35,19 +35,21 @@ function M.apply(config, theme, accent)
 		no_role = theme.palette.black
 	}
 
-	local disabled_color = niji.Color:blend(colors.base, colors.button, 0.7)
+	local DISABLED_OPACITY = 0.6;
+
+	local disabled_color = niji.Color:blend(colors.base, colors.button, DISABLED_OPACITY)
 
 	local colors_disabled = {
 		window = colors.window,
-		window_text = niji.Color:blend(colors.window, colors.window_text, 0.7),
+		window_text = niji.Color:blend(colors.window, colors.window_text, DISABLED_OPACITY),
 		base = colors.base,
 		alternate_base = colors.alternate_base,
 		tool_tip_base = colors.tool_tip_base,
 		tool_tip_text = colors.tool_tip_text,
 		placeholder_text = colors.placeholder_text,
-		text = niji.Color:blend(colors.base, colors.text, 0.7),
+		text = niji.Color:blend(colors.base, colors.text, DISABLED_OPACITY),
 		button = disabled_color,
-		button_text = niji.Color:blend(disabled_color, colors.button_text, 0.7),
+		button_text = niji.Color:blend(disabled_color, colors.button_text, DISABLED_OPACITY),
 		bright_text = colors.bright_text,
 		light = colors.light,
 		midlight = colors.midlight,
@@ -69,6 +71,7 @@ function M.apply(config, theme, accent)
 	}
 
 	niji.fs.write_config("qt6ct/colors/niji.conf", colors)
+	niji.fs.write_config("qt5ct/colors/niji.conf", colors)
 end
 
 return M

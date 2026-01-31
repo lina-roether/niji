@@ -1,1 +1,2 @@
 qt6ct
+qt5ct
