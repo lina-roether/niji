@@ -307,7 +307,7 @@ mod tests {
 
 		assert_eq!(
 			String::from_utf8_lossy(&out.into_inner()),
-			" ==== [ TEST :) ] ====\n"
+			"\n ==== [ TEST :) ] ====\n"
 		);
 		assert_eq!(&err.into_inner(), b"");
 	}
