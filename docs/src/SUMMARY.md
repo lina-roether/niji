@@ -8,6 +8,7 @@
 - [Built-in Themes](./builtin-themes.md)
 - [Built-in Modules](./modules/README.md)
   - [gtk](./modules/gtk.md)
+  - [qt](./modules/qt.md)
   - [hyprland](./modules/hyprland.md)
   - [hyprpaper](./modules/hyprpaper.md)
   - [kitty](./modules/kitty.md)

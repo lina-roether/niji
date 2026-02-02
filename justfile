@@ -1,5 +1,5 @@
 build:
-	cargo build --frozen --release
+	cargo build --locked --release
 
 [working-directory: "docs"]
 build-docs:
