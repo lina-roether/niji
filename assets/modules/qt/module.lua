@@ -2,7 +2,19 @@ local M = {}
 
 local template = niji.Template:load("niji.conf.mustache")
 
+local function check_platform_theme()
+	local platform_theme = os.getenv("QT_QPA_PLATFORMTHEME")
+	if platform_theme ~= "qt5ct" and platform_theme ~= "qt6ct" then
+		niji.console.error("In order for niji's QT theme to apply, you must set `QT_QPA_PLATFORMTHEME` to \"qt6ct\"!")
+		error("Platform theme check failed")
+	end
+end
+
 function M.apply(config, theme, accent)
+	if config.skip_platform_theme_check ~= true then
+		check_platform_theme()
+	end
+
 	local base_color = niji.Color:blend(theme.ui.background, theme.ui.surface, 0.5)
 	local base_text_color = theme.ui:text_on(base_color)
 	local bright_text_color = theme.ui.text_light
