@@ -10,6 +10,22 @@ local function check_platform_theme()
 	end
 end
 
+local function check_color_scheme()
+	local qt6ct_conf = niji.fs.read_config("qt6ct/qt6ct.conf")
+	local qt5ct_conf = niji.fs.read_config("qt5ct/qt5ct.conf")
+	local pattern = "\ncolor_scheme_path%s*=.*niji.conf%s*\n"
+
+	if not qt6ct_conf:match(pattern) then
+		niji.console.warn(
+			"In order for niji's styles to apply to QT6 applications, you have to select 'niji' as the color scheme in qt6ct!");
+	end
+
+	if not qt5ct_conf:match(pattern) then
+		niji.console.warn(
+			"In order for niji's styles to apply to QT5 applications, you have to select 'niji' as the color scheme in qt5ct!");
+	end
+end
+
 function M.apply(config, theme, accent)
 	if config.skip_platform_theme_check ~= true then
 		check_platform_theme()
@@ -86,7 +102,10 @@ function M.apply(config, theme, accent)
 	niji.fs.write_config("qt5ct/colors/niji.conf", colors)
 end
 
-function M.reload()
+function M.reload(config)
+	if config.skip_color_scheme_check ~= true then
+		check_color_scheme()
+	end
 	-- The theme gets automatically reloaded if the config directory is touched
 	os.execute("touch \"" .. niji.xdg.config_home .. "/\"{qt6ct,qt5ct}");
 end
