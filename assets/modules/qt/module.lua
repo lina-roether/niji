@@ -74,4 +74,9 @@ function M.apply(config, theme, accent)
 	niji.fs.write_config("qt5ct/colors/niji.conf", colors)
 end
 
+function M.reload()
+	-- The theme gets automatically reloaded if the config directory is touched
+	os.execute("touch \"" .. niji.xdg.config_home .. "/\"{qt6ct,qt5ct}");
+end
+
 return M
