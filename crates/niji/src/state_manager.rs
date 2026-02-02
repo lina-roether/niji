@@ -1,6 +1,6 @@
 use std::{fs, rc::Rc};
 
-use anyhow::{Context, anyhow};
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
 use crate::files::Files;
@@ -33,16 +33,12 @@ impl StateManager {
 		Ok(Self { files, state })
 	}
 
-	pub fn get_theme(&self) -> anyhow::Result<&str> {
-		self.state.theme.as_deref().ok_or(anyhow!(
-			"No theme set; use `niji theme set <name>` to specify a theme."
-		))
+	pub fn get_theme(&self) -> Option<&str> {
+		self.state.theme.as_deref()
 	}
 
-	pub fn get_accent(&self) -> anyhow::Result<&str> {
-		self.state.accent.as_deref().ok_or(anyhow!(
-			"No accent color set; use `niji accent set <name>` to specify an accent color."
-		))
+	pub fn get_accent(&self) -> Option<&str> {
+		self.state.accent.as_deref()
 	}
 
 	pub fn set_theme(&mut self, theme: String) -> anyhow::Result<()> {
@@ -129,8 +125,8 @@ mod tests {
 		let xdg = XdgDirs::in_tempdir(&tempdir);
 		let state_manager = StateManager::new(Rc::new(Files::new(&xdg).unwrap())).unwrap();
 
-		assert!(state_manager.get_theme().is_err());
-		assert!(state_manager.get_accent().is_err());
+		assert!(state_manager.get_theme().is_none());
+		assert!(state_manager.get_accent().is_none());
 	}
 
 	#[test]

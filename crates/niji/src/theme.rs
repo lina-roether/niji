@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt, fs, marker::PhantomData, path::Path, str::FromStr};
 
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use serde::Deserialize;
 use serde_with::DeserializeFromStr;
 
@@ -667,7 +667,8 @@ impl fmt::Display for Theme {
 
 pub fn read_theme(name: String, path: impl AsRef<Path>) -> anyhow::Result<Theme> {
 	let theme_str = fs::read_to_string(&path)?;
-	let theme_spec: ThemeSpec = toml::from_str(&theme_str)?;
+	let theme_spec: ThemeSpec = toml::from_str(&theme_str)
+		.with_context(|| format!("Syntax error in {}", path.as_ref().display()))?;
 	let theme = theme_spec.resolve(name)?;
 	Ok(theme)
 }

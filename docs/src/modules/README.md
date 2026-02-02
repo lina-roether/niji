@@ -8,6 +8,7 @@ respective module.
 The built-in modules currently included with niji are:
 
 - [`gtk`](./gtk.md): Theming GTK3 and GTK4 applications
+- [`qt`](./qt.md): Theming QT5 and QT6 applications
 - [`hyprland`](./hyprland.md): Theming hyprland window decorations
 - [`hyprpaper`](./hyprpaper.md): Wallpaper setting support for hyprpaper
 - [`kitty`](./kitty.md): Theming kitty window and terminal colors
@@ -16,7 +17,8 @@ The built-in modules currently included with niji are:
   wallpapers
 - [`swaylock`](./swaylock.md): Theming your swaylock lock screen
 - [`waybar`](./waybar.md): A fully managed waybar theme
+- [`wob`](./wob.md): Theming wob indicators
 
-If there is something missing from this list that you'd like to have, take a
-look at [Custom Modules](../custom-modules).
+If there is something missing from this list that you'd like to have, consider
+writing a [Custom Module](../custom-modules).
 
