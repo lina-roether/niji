@@ -7,7 +7,7 @@ function M.apply(config, theme)
 		wallpaper = niji.util.by_theme(theme, config.wallpaper),
 		splash = config.splash,
 		splash_offset = config.splash_offset,
-		fit_mode = config.fit_mode
+		fit_mode = config.fit_mode or "cover"
 	}
 
 	niji.fs.write_config("hypr/hyprpaper.conf", hyprpaper_conf)

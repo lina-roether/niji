@@ -32,7 +32,7 @@ function M.apply(config, theme, accent)
 		custom_modules = config.custom_modules or {},
 		show_shadow = show_shadow,
 		shadow = theme.ui.shadow,
-		custom_style = custom_style
+		custom_style = custom_style or ""
 	}
 
 	niji.fs.write_config("waybar/style.css", style)
