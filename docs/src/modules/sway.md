@@ -55,5 +55,5 @@ show_indicator = false
 disable_wallpaper = false
 
 # Set to true to prevent niji from setting swaybar styles
-disable_swaybar
+disable_swaybar = false
 ```
