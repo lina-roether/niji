@@ -44,7 +44,7 @@ function M.apply(config, theme, accent)
 		swaybar = swaybar,
 		bar_background = theme.ui.background,
 		text_bar_background = theme.ui:text_on(theme.ui.background),
-		bar_statusline = theme.ui.background,
+		bar_statusline = theme.ui.text_default,
 		bar_separator = theme.ui.border,
 		accent = accent,
 		text_accent = theme.ui:text_on(accent),
