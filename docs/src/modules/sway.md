@@ -22,6 +22,27 @@ include ~/.local/share/niji/sway/theme
 If you want to override any of the settings exported by niji, you can simply add
 more configuration after the include statement.
 
+## Using bars
+
+### Swaybar
+
+When using **swaybar**, make sure to explicitly reference the bar id that niji
+applies its styles to (0 by default) when configuring, otherwise a second bar
+will be created.
+
+Additionally, the default sway config sets colors for swaybar, so make sure to
+remove those to not override niji's styling.
+
+### Waybar and others
+
+When using **waybar** or otherwise not using swaybar, make sure to disable the
+swaybar styles:
+
+```toml
+[sway.swaybar]
+disabled = true
+```
+
 ## Configuration
 
 The following global configuration options are relevant to this module:
@@ -54,6 +75,11 @@ show_indicator = false
 # Set to true to prevent niji from managing the wallpaper via swaybg
 disable_wallpaper = false
 
+
+[sway.swaybar]
 # Set to true to prevent niji from setting swaybar styles
-disable_swaybar = false
+disable = false
+
+# Use to specify the bar id niji will apply its styles to
+bar_id = 0
 ```

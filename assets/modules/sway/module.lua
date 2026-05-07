@@ -19,6 +19,15 @@ function M.apply(config, theme, accent)
 		wallpaper = niji.util.by_theme(theme, config.wallpaper)
 	end
 
+	local swaybar = { bar_id = 0 }
+	if config.swaybar then
+		if config.swaybar.disabled then
+			swaybar = nil
+		else
+			swaybar.bar_id = config.swaybar.bar_id or 0
+		end
+	end
+
 	local sway_cfg = template:render {
 		unfocused = theme.ui.background,
 		text_unfocused = theme.ui.text_default,
@@ -32,7 +41,7 @@ function M.apply(config, theme, accent)
 		cursor = config.cursor_theme,
 		cursor_size = config.cursor_size,
 		wallpaper = wallpaper,
-		swaybar = not config.disable_swaybar,
+		swaybar = swaybar,
 		bar_background = theme.ui.background,
 		text_bar_background = theme.ui:text_on(theme.ui.background),
 		bar_statusline = theme.ui.background,
@@ -50,6 +59,20 @@ function M.apply(config, theme, accent)
 		line_pattern = "^%s*include%s+.*niji/sway/theme",
 		hint = "include = ~/.local/share/niji/sway/theme"
 	})
+
+	local sway_cfg = niji.fs.read_config("sway/config")
+
+	if swaybar ~= nil and (config.swaybar == nil or config.swaybar.ignore_missing_bar_id ~= true) and string.match(sway_cfg, "bar *{") then
+		niji.console.warn(
+			"Your sway config is setting bar options without setting a specific bar id. " ..
+			"This will create an additional bar instead of extending niji's base config! Consider setting the bar id explicitly:\n\n" ..
+			"bar " .. swaybar.bar_id .. " {\n" ..
+			"   # ...\n" ..
+			"}\n\n" ..
+			"You can change the bar id niji uses using the config option `swaybar.bar_id`, or ignore this warning using `swaybar.ignore_missing_bar_id`."
+
+		)
+	end
 end
 
 function M.reload(config)
