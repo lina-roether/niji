@@ -54,6 +54,9 @@ workspace_button_margin = 6
 
 # Set to the path to a css file to include arbitrary custom styles
 custom_style_file = false
+
+# Disable sway-specific behavior
+ignore_sway = false
 ```
 
 Note, in particular, the `custom_modules` option. If you use custom modules, you
@@ -67,3 +70,9 @@ fit many people's use cases. You can try to fiddle around with the
 customized waybar theme, I recommend you check out
 [Creating Custom Modules](../custom-modules/).
 
+## Sway
+
+If running under sway (determined via `XDG_CURRENT_DESKTOP`), the waybar module
+will assume that waybar was started via sway's `swaybar_command`, and reload the
+sway to apply changes instead of restarting waybar directly. This assumption can
+be overridden by setting `ignore_sway` to true.

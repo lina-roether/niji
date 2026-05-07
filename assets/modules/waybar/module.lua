@@ -39,6 +39,19 @@ function M.apply(config, theme, accent)
 end
 
 function M.reload(config)
+	if os.getenv("XDG_CURRENT_DESKTOP") == "sway" then
+		if config.ignore_sway ~= true then
+			niji.console.debug(
+			"Assuming waybar is managed by sway. Set the `ignore_sway` config option to change this behavior")
+			niji.console.info("Reloading sway config...")
+			os.execute("swaymsg reload")
+			return
+		else
+			niji.console.debug(
+			"Sway was detected, but the `ignore_sway` config option is set. Waybar will be restarted independently")
+		end
+	end
+
 	niji.console.info("Restarting waybar...")
 	os.execute("killall waybar")
 	niji.os.exec_detached(config.waybar_command or "waybar &> /dev/null")
