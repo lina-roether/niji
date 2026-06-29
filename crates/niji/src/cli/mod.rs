@@ -102,16 +102,7 @@ impl ThemePreview {
 			None => app.get_current_theme()?,
 		};
 
-		let accent_color = if let Some(color) = self.accent_args.accent_color() {
-			color.resolve(&theme.palette)?
-		} else {
-			if !app.is_accent_set() {
-				return Err(anyhow!(
-					"No accent color set. Consider using `niji preview <name> --accent <color>` to specify which accent color to use for the preview."
-				));
-			}
-			app.get_current_accent()?.resolve(&theme.palette)?
-		};
+		let accent_color = app.get_accent(&theme)?;
 
 		niji_console::println!("Theme \"{}\":", theme.name);
 		niji_console::println!();
@@ -130,10 +121,8 @@ impl ThemeSet {
 		}
 
 		if let Some(params) = self.update_args.apply_params() {
-			if !app.is_accent_set() {
-				return Err(anyhow!(
-					"Cannot apply changes since no accent color is set. Consider using `niji theme set <name> --accent <color>` to set an accent color along with the theme, or use `niji theme set --no-apply <name>` to skip this step."
-				));
+			if !app.is_user_accent_set() {
+				log::info!("Using the theme's inherent default accent color since none is set");
 			}
 			app.apply_default(&params)?;
 		}
@@ -172,7 +161,10 @@ impl AccentParams {
 impl Accent {
 	fn run(&self, app: &mut NijiApp) -> anyhow::Result<()> {
 		match &self.command {
-			AccentCommand::Get(get) => get.run(app),
+			AccentCommand::Get(get) => {
+				get.run(app);
+				Ok(())
+			}
 			AccentCommand::Set(set) => set.run(app),
 			AccentCommand::Unset(unset) => unset.run(app),
 		}
@@ -180,10 +172,12 @@ impl Accent {
 }
 
 impl AccentGet {
-	fn run(&self, app: &NijiApp) -> anyhow::Result<()> {
-		let color = app.get_current_accent()?;
-		niji_console::println!("{color}");
-		Ok(())
+	fn run(&self, app: &NijiApp) {
+		if let Some(color) = app.get_user_accent() {
+			niji_console::println!("{color}");
+		} else {
+			log::info!("No accent color set; using the theme's inherent default accent color");
+		}
 	}
 }
 
@@ -193,7 +187,9 @@ impl AccentSet {
 		if let Some(params) = self.update_args.apply_params() {
 			if !app.is_theme_set() {
 				return Err(anyhow!(
-					"Cannot apply changes since no theme is set. Consider setting a theme using `niji theme set <name>`, or use `niji accent set --no-apply <color>` to skip this step."
+					"Cannot apply changes since no theme is set. Consider setting a theme using \
+					 `niji theme set <name>`, or use `niji accent set --no-apply <color>` to skip \
+					 this step."
 				));
 			}
 			app.apply_default(&params)?;

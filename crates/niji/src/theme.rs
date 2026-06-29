@@ -583,6 +583,8 @@ pub enum ThemeSpec {
 	Dark {
 		palette: Palette,
 
+		default_accent: ColorSpec,
+
 		#[serde(default)]
 		ui: UiThemeSpec<Dark>,
 
@@ -591,6 +593,8 @@ pub enum ThemeSpec {
 	},
 	Light {
 		palette: Palette,
+
+		default_accent: ColorSpec,
 
 		#[serde(default)]
 		ui: UiThemeSpec<Light>,
@@ -602,23 +606,27 @@ pub enum ThemeSpec {
 
 impl ThemeSpec {
 	fn resolve(self, name: String) -> anyhow::Result<Theme> {
-		let (kind, ui, terminal, palette) = match self {
+		let (kind, default_accent, ui, terminal, palette) = match self {
 			Self::Dark {
 				palette,
+				default_accent,
 				ui,
 				terminal,
 			} => (
 				ThemeKind::Dark,
+				default_accent.resolve(&palette)?,
 				ui.resolve(&palette)?,
 				terminal.resolve(&palette)?,
 				palette,
 			),
 			Self::Light {
 				palette,
+				default_accent,
 				ui,
 				terminal,
 			} => (
 				ThemeKind::Light,
+				default_accent.resolve(&palette)?,
 				ui.resolve(&palette)?,
 				terminal.resolve(&palette)?,
 				palette,
@@ -628,6 +636,7 @@ impl ThemeSpec {
 		Ok(Theme {
 			name,
 			kind,
+			default_accent,
 			palette,
 			ui,
 			terminal,
@@ -654,6 +663,7 @@ impl fmt::Display for ThemeKind {
 pub struct Theme {
 	pub name: String,
 	pub kind: ThemeKind,
+	pub default_accent: Color,
 	pub palette: Palette,
 	pub ui: UiTheme,
 	pub terminal: TerminalTheme,

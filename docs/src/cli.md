@@ -13,23 +13,29 @@ niji theme list
 To preview a theme from the list, use:
 
 ```sh
+niji theme preview <theme>
+```
+
+Optionally, specify an explicit accent color to use:
+
+```sh
 niji theme preview <theme> --accent <accent>
 ```
 
 `<accent>` can be one of `pink`, `red`, `orange`, `yellow`, `green`, `teal`,
 `blue`, `purple`, `black` or `white`.
 
-To set a theme with a certain accent color use:
-
-```sh
-niji theme set <theme> --accent <accent>
-```
-
-To set the theme individually and keep the current accent color, simply omit the
-accent argument:
+To set a theme, use:
 
 ```sh
 niji theme set <theme>
+```
+
+If you want to use an accent color other than the default, you may specify it as
+follows:
+
+```sh
+niji theme set <theme> --accent <accent>
 ```
 
 To change the accent color and keep the current theme, use:

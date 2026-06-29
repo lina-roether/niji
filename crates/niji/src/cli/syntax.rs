@@ -202,6 +202,7 @@ pub struct AccentSet {
 
 #[derive(Parser, Debug)]
 #[command(
-	about = "Unset the current accent color. This will cause an error on the next application."
+	about = "Unset the current accent color. niji will use the theme's inherent default accent \
+	         color instead."
 )]
 pub struct AccentUnset;

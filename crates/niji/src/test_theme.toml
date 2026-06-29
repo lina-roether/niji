@@ -1,4 +1,5 @@
 kind = "dark"
+default_accent = "red"
 
 [palette]
 pink = "#e87fe6"

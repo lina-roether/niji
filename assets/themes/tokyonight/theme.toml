@@ -1,4 +1,5 @@
 kind = "dark"
+default_accent = "blue"
 
 [palette]
 blue = "#7aa2f7"

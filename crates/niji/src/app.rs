@@ -9,6 +9,7 @@ use crate::{
 	state_manager::StateManager,
 	theme::{ColorRef, Theme},
 	theme_manager::ThemeManager,
+	types::color::Color,
 	utils::xdg::XdgDirs,
 };
 
@@ -47,7 +48,7 @@ impl NijiApp {
 		self.state_manager.get_theme().is_some()
 	}
 
-	pub fn is_accent_set(&self) -> bool {
+	pub fn is_user_accent_set(&self) -> bool {
 		self.state_manager.get_accent().is_some()
 	}
 
@@ -60,11 +61,19 @@ impl NijiApp {
 			.context("Cannot get current theme")
 	}
 
-	pub fn get_current_accent(&self) -> anyhow::Result<ColorRef> {
-		let name = self.state_manager.get_accent().ok_or(anyhow!(
-			"No accent color set; use `niji accent set <name>` to specify an accent color."
-		))?;
-		Ok(ColorRef::named(name))
+	pub fn get_user_accent(&self) -> Option<ColorRef> {
+		self.state_manager.get_accent().map(ColorRef::named)
+	}
+
+	pub fn get_accent(&self, theme: &Theme) -> anyhow::Result<Color> {
+		let accent_color = if let Some(accent_ref) = self.get_user_accent() {
+			accent_ref
+				.resolve(&theme.palette)
+				.context("Invalid accent color set")?
+		} else {
+			theme.default_accent
+		};
+		Ok(accent_color)
 	}
 
 	pub fn get_theme(&self, name: &str) -> anyhow::Result<Theme> {
@@ -82,10 +91,13 @@ impl NijiApp {
 
 	pub fn apply(&self, params: &ApplyParams, modules: &[String]) -> anyhow::Result<()> {
 		let theme = self.get_current_theme()?;
-		let accent = self
-			.get_current_accent()?
-			.resolve(&theme.palette)
-			.context("Invalid accent color set")?;
+		let accent = if let Some(accent_ref) = self.get_user_accent() {
+			accent_ref
+				.resolve(&theme.palette)
+				.context("Invalid accent color set")?
+		} else {
+			theme.default_accent
+		};
 
 		log::info!("Applying changes to target modules...");
 
@@ -97,15 +109,16 @@ impl NijiApp {
 	pub fn unset_current_theme(&mut self) -> anyhow::Result<()> {
 		self.state_manager.unset_theme()?;
 		log::warn!(
-			"Unset current theme. niji will be unable to apply your configuration until you set a theme again."
+			"Unset current theme. niji will be unable to apply your configuration until you set a \
+			 theme again."
 		);
 		Ok(())
 	}
 
 	pub fn unset_current_accent(&mut self) -> anyhow::Result<()> {
 		self.state_manager.unset_accent()?;
-		log::warn!(
-			"Unset current accent color. niji will be unable to apply your configuration until you set a theme again."
+		log::info!(
+			"Unset accent color. niji will use your theme's inherent default accent color instead."
 		);
 		Ok(())
 	}
