@@ -11,7 +11,9 @@ let
 in
 {
   options.programs.niji = {
-    package = lib.mkPackageOption pkgs "niji" { };
+    package = lib.mkPackageOption pkgs "niji" { } // {
+	defaultText = "pkgs.niji or niji.packages.${system}.default or null";
+  };
     enable = lib.mkEnableOption { type = lib.types.bool; };
     settings = lib.mkOption {
       default = { };
