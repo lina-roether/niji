@@ -1,0 +1,83 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [published]
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+  CARGO_NET_RETRY: 10
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  RUSTFLAGS: -D warnings
+  RUSTUP_MAX_RETRIES: 10
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  Assets:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-22.04
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install rust target
+        run: |
+          cargo install cargo-generate-rpm just
+          rustup target add ${{ matrix.target }}
+
+      - uses: taiki-e/setup-cross-toolchain-action@v1
+        with:
+          target: ${{ matrix.target }}
+        if: startsWith(matrix.os, 'ubuntu') && !contains(matrix.target, '-musl')
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends libc6-dev  libfindbin-libs-perl make gcc-aarch64-linux-gnu libc6-dev-arm64-cross luajit luajit-dev
+        if: startsWith(matrix.os, 'ubuntu')
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+        if: contains(matrix.target, '-musl')
+
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: niji
+          target: ${{ matrix.target }}
+          tar: all
+          features: vendored-openssl
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build RPM package
+        run: just build-rpm-target ${{ matrix.target }}
+        if:
+          ${{ matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target ==
+          'x86_64-unknown-linux-gnu' }}
+
+      - name: Upload RPM package
+        uses: softprops/action-gh-release@v3
+        if:
+          ${{ matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target ==
+          'x86_64-unknown-linux-gnu' }}
+        with:
+          files: target/${{ matrix.target }}/generate-rpm/*.rpm

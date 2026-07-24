@@ -40,6 +40,7 @@ install-modules-themes base_dir="":
 	chown -R root:root "{{base_dir}}/usr/share/niji"
 	find "{{base_dir}}/usr/share/niji" -type d -exec chmod 755 {} \;
 	find "{{base_dir}}/usr/share/niji" -type f -exec chmod 644 {} \;
+	@echo "Installation complete!"
 
 build-nix:
     nix build .
@@ -53,3 +54,8 @@ check-format-nix:
 lint-nix:
 	statix check .
 
+build-rpm:
+    cargo generate-rpm -p crates/niji
+
+build-rpm-target target:
+    cargo generate-rpm -p crates/niji --target {{ target }}
